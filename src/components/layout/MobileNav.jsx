@@ -11,7 +11,7 @@ const navItems = [
 export default function MobileNav() {
   const location = useLocation();
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border/50 px-2 pt-3 shadow-lg" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 pt-3 shadow-sm" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
