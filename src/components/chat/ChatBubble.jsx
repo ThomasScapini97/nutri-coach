@@ -12,7 +12,7 @@ export default function ChatBubble({ message, foodEntries }) {
         {isUser ? <User className="w-5 h-5 text-foreground" /> : <Sparkles className="w-5 h-5 text-white" />}
       </div>
       <div className={cn("flex flex-col gap-3 flex-1", isUser ? "items-end" : "items-start")}>
-        <div className={cn("rounded-3xl px-5 py-3.5 max-w-2xl shadow-sm", isUser ? "bg-white border border-border/50 rounded-tr-lg" : "bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-tl-lg")}>
+        <div className={cn("rounded-3xl px-5 py-3.5 max-w-2xl shadow-sm", isUser ? "bg-white border border-border/50 rounded-tr-lg" : "bg-white border border-gray-100 rounded-tl-lg shadow-sm")}>
           {isUser ? (
             <p className="text-sm leading-relaxed text-foreground">{message.content}</p>
           ) : (
