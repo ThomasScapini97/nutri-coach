@@ -15,6 +15,9 @@ export default function Login() {
       provider: "google",
       options: {
         redirectTo: "https://nutri-coach-ashy.vercel.app",
+        queryParams: {
+          prompt: "select_account",
+        },
       },
     });
     if (error) toast.error(error.message);
