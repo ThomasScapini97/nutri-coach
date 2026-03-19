@@ -284,7 +284,7 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
   };
 
   return (
-    <div className="flex flex-col bg-background" style={{ height: "100dvh" }}>
+    <div className="flex flex-col bg-background" style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}>
       <DailyNotificationPopup evaluation={dailyEvaluation} onClose={() => setDailyEvaluation(null)} />
       <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-white shadow-sm">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center md:hidden shadow-sm">
