@@ -1,0 +1,17 @@
+{
+  "name": "NutriCoach",
+  "short_name": "NutriCoach",
+  "description": "Your personal AI nutrition coach",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0fdf4",
+  "theme_color": "#10b981",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
