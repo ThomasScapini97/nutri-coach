@@ -18,7 +18,7 @@ const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "prima
         </div>
         <div className="text-xs font-semibold text-foreground">{Math.round(value)}<span className="text-muted-foreground font-normal">/{max}</span>{unit}</div>
       </div>
-      <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+      <div className="relative h-1.5 bg-gray-200 rounded-full overflow-hidden">
         <motion.div initial={{ width: 0 }} animate={{ width: `${percentage}%` }} transition={{ duration: 0.6 }} className={cn("h-full rounded-full", barColor)} />
       </div>
     </div>
