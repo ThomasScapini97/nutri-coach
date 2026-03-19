@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -29,51 +29,60 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Sparkles className="w-8 h-8 text-white" />
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+          {/* Logo */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-4 shadow-sm">
+              <span className="text-5xl">🍎</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome to NutriCoach AI</h1>
+            <p className="text-gray-500 mt-1">{isLogin ? "Sign in to continue" : "Create your account"}</p>
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">NutriCoach</h1>
-          <p className="text-muted-foreground">Your personal wellness companion</p>
-        </div>
-        <div className="bg-white rounded-3xl shadow-lg p-8 border border-border/50">
-          <h2 className="text-xl font-bold text-foreground mb-6">
-            {isLogin ? "Sign in" : "Create account"}
-          </h2>
+
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Email</label>
-              <input
-                type="email" value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full rounded-xl border-2 border-input bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">✉️</span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Password</label>
-              <input
-                type="password" value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                className="w-full rounded-xl border-2 border-input bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+              </div>
             </div>
+
             <button
               onClick={handleSubmit}
               disabled={loading || !email || !password}
-              className="w-full h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-md"
+              className="w-full h-13 rounded-2xl bg-gray-900 hover:bg-gray-800 text-white font-semibold py-4 flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm mt-2"
             >
               {loading && <Loader2 className="w-5 h-5 animate-spin" />}
               {isLogin ? "Sign in" : "Create account"}
             </button>
           </div>
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-            <button onClick={() => setIsLogin(!isLogin)} className="text-primary font-medium hover:underline">
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            {isLogin ? "Need an account?" : "Already have an account?"}{" "}
+            <button onClick={() => setIsLogin(!isLogin)} className="text-gray-900 font-semibold hover:underline">
               {isLogin ? "Sign up" : "Sign in"}
             </button>
           </p>
