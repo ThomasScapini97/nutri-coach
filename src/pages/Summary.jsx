@@ -117,7 +117,7 @@ export default function Summary() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-background pb-24">
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6 pb-2">
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6 pb 0">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-border/50">
           <Button variant="ghost" size="icon" onClick={() => navigateDay(-1)} className="rounded-xl"><ChevronLeft className="w-5 h-5" /></Button>
           <div className="flex items-center gap-3">
