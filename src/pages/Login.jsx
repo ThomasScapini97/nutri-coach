@@ -50,7 +50,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{backgroundColor: "#d0e6d5"}}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{backgroundColor: "#d0f0fdf4e6d5"}}>
       <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8" style={{backgroundColor: "#ffffff"}}>
           {/* Logo */}
