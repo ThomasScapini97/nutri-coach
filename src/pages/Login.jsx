@@ -52,7 +52,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{background: "linear-gradient(135deg, #38ff48 0%, #2d6fff 50%, #eb2222 100%)"}}>
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8" style={{backgroundColor: "#bfca1e"}}>
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-4 shadow-sm">
