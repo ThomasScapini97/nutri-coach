@@ -13,7 +13,7 @@ export default function ChatInput({ onSend, isLoading }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="px-5 pt-5 bg-white border-t border-border/50" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 70px)" }}>
+    <form onSubmit={handleSubmit} className="px-5 pt-3 pb-4 bg-white border-t border-border/50 fixed bottom-16 left-0 right-0 z-40">
       <div className="max-w-4xl mx-auto flex items-end gap-3">
         <textarea
           value={message}
