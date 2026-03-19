@@ -69,7 +69,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
               <motion.div initial={{ width: 0 }} animate={{ width: `${caloriePercentage}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", isDanger ? "bg-destructive" : isWarning ? "bg-accent" : "bg-gradient-to-r from-primary to-primary/90")} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-3 border-t border-border/30">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-3">
             <MacroProgressMini label="Protein" value={protein} max={proteinGoal} unit="g" icon={Drumstick} color="chart-4" />
             <MacroProgressMini label="Carbs" value={carbs} max={carbsGoal} unit="g" icon={Wheat} color="chart-3" />
             <MacroProgressMini label="Fats" value={fats} max={fatsGoal} unit="g" icon={Droplets} color="blue-500" />
