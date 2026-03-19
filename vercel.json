@@ -1,16 +1,5 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
-```
-
-Salva con **Ctrl+S**, poi nel terminale incolla questi comandi uno alla volta:
-```
-git add .
-```
-```
-git commit -m "add vercel routing fix"
-```
-```
-git push
