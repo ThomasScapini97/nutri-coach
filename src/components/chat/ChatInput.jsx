@@ -21,7 +21,7 @@ export default function ChatInput({ onSend, isLoading }) {
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(e); } }}
           placeholder="Tell me what you ate today... 🥗"
           rows={1}
-          className="flex-1 resize-none rounded-2xl border-2 border-input bg-background/50 px-5 py-3.5 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all min-h-[52px] max-h-32"
+          className="flex-1 resize-none rounded-2xl border border-gray-200 bg-white px-5 py-3.5 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all min-h-[52px] max-h-32 shadow-sm"
           style={{ fontSize: "16px" }}
         />
         <Button type="submit" size="icon" disabled={!message.trim() || isLoading} className="h-[52px] w-[52px] rounded-2xl shrink-0 bg-primary hover:bg-primary/90 shadow-md">
