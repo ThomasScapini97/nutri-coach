@@ -65,7 +65,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
               <span className="text-xs font-medium text-muted-foreground">{burnedCalories > 0 ? "Net calories" : "Calories"}</span>
               <div className="text-sm font-bold text-foreground">{Math.round(netCalories)}<span className="text-muted-foreground font-normal"> / {calorieGoal} kcal</span></div>
             </div>
-            <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
+            <div className="relative h-2.5 bg-gray-200 rounded-full overflow-hidden">
               <motion.div initial={{ width: 0 }} animate={{ width: `${caloriePercentage}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", isDanger ? "bg-destructive" : isWarning ? "bg-accent" : "bg-gradient-to-r from-primary to-primary/90")} />
             </div>
           </div>
