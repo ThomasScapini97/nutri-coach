@@ -50,7 +50,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{background: "linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 50%, #e0f2f1 100%)"}}>
       <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
           {/* Logo */}
