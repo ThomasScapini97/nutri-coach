@@ -7,13 +7,21 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!email || !password) return;
+    if (!email || (!isForgotPassword && !password)) return;
     setLoading(true);
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: "https://nutri-coach-ashy.vercel.app/reset-password",
+        });
+        if (error) throw error;
+        toast.success("Email sent! Check your inbox 📧");
+        setIsForgotPassword(false);
+      } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back! 👋");
@@ -37,8 +45,12 @@ export default function Login() {
             <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-4 shadow-sm">
               <span className="text-5xl">🍎</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome to NutriCoach AI</h1>
-            <p className="text-gray-500 mt-1">{isLogin ? "Sign in to continue" : "Create your account"}</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {isForgotPassword ? "Reset Password" : "Welcome to NutriCoach AI"}
+            </h1>
+            <p className="text-gray-500 mt-1">
+              {isForgotPassword ? "Enter your email to reset your password" : isLogin ? "Sign in to continue" : "Create your account"}
+            </p>
           </div>
 
           <div className="space-y-4">
@@ -55,37 +67,59 @@ export default function Login() {
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                />
+
+            {!isForgotPassword && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <button
               onClick={handleSubmit}
-              disabled={loading || !email || !password}
-              className="w-full h-13 rounded-2xl bg-gray-900 hover:bg-gray-800 text-white font-semibold py-4 flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm mt-2"
+              disabled={loading || !email || (!isForgotPassword && !password)}
+              className="w-full rounded-2xl bg-gray-900 hover:bg-gray-800 text-white font-semibold py-4 flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm mt-2"
             >
               {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-              {isLogin ? "Sign in" : "Create account"}
+              {isForgotPassword ? "Send reset email" : isLogin ? "Sign in" : "Create account"}
             </button>
           </div>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
-            {isLogin ? "Need an account?" : "Already have an account?"}{" "}
-            <button onClick={() => setIsLogin(!isLogin)} className="text-gray-900 font-semibold hover:underline">
-              {isLogin ? "Sign up" : "Sign in"}
-            </button>
-          </p>
+          <div className="flex flex-col items-center gap-2 mt-6">
+            {isLogin && !isForgotPassword && (
+              <button
+                onClick={() => setIsForgotPassword(true)}
+                className="text-sm text-gray-500 hover:text-gray-900"
+              >
+                Forgot password?
+              </button>
+            )}
+            {isForgotPassword ? (
+              <button
+                onClick={() => setIsForgotPassword(false)}
+                className="text-sm text-gray-900 font-semibold hover:underline"
+              >
+                Back to sign in
+              </button>
+            ) : (
+              <p className="text-sm text-gray-500">
+                {isLogin ? "Need an account?" : "Already have an account?"}{" "}
+                <button onClick={() => setIsLogin(!isLogin)} className="text-gray-900 font-semibold hover:underline">
+                  {isLogin ? "Sign up" : "Sign in"}
+                </button>
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
