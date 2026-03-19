@@ -300,7 +300,7 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
       <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} />
       <ExerciseBanner burnedCalories={todayLog?.total_burned_calories} />
       {todayLog && <MotivationalBanner todayLog={todayLog} calorieGoal={calorieGoal} />}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-5 pb-32">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-5 pb-36">
         <div className="max-w-4xl mx-auto space-y-5">
           {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
           {isLoading && <TypingIndicator />}
