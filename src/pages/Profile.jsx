@@ -220,7 +220,7 @@ export default function Profile() {
           Save Profile
         </Button>
 
-        <div className="space-y-3 pb-6">
+        <div className="space-y-3 pb-2">
           <Button variant="outline" onClick={handleLogout} className="w-full h-12 text-base font-semibold rounded-2xl border-2">
             <LogOut className="w-5 h-5 mr-2" /> Log Out
           </Button>
