@@ -48,7 +48,10 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
                 <Flame className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-foreground">Today's Progress</h3>
+                <div className="flex items-center gap-2">
+  <span className="text-xl">🔥</span>
+  <h3 className="text-sm font-bold text-foreground">Today's Progress</h3>
+</div>
                 <p className="text-[10px] text-muted-foreground">{caloriesRemaining > 0 ? `${caloriesRemaining} kcal left` : "Goal reached! 🎉"}</p>
               </div>
             </div>
