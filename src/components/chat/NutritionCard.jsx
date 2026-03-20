@@ -64,17 +64,17 @@ export default function NutritionCard({ nutrition, foodEntries }) {
               <p className="text-xs text-muted-foreground">{group.foods.join(", ")}</p>
             </div>
           </div>
-          <div className="grid grid-cols-5 gap-3">
-            {macros.map(({ key, label, unit, icon: Icon, color, bgColor }) => (
-              <div key={key} className="flex flex-col items-center text-center">
-                <div className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center mb-1.5`}>
-                  <Icon className={`w-4 h-4 ${color}`} />
-                </div>
-                <span className="text-sm font-bold text-foreground">{Math.round(group[key] ?? 0)}</span>
-                <span className="text-[10px] text-muted-foreground">{unit}</span>
-              </div>
-            ))}
-          </div>
+          <div className="grid grid-cols-5 gap-2 mt-2">
+  {macros.map(({ key, label, unit, icon: Icon, color, bgColor }) => (
+    <div key={key} className="flex flex-col items-center text-center gap-1">
+      <div className={`w-9 h-9 rounded-full ${bgColor} flex items-center justify-center`}>
+        <Icon className={`w-4 h-4 ${color}`} />
+      </div>
+      <span className="text-xs font-bold text-foreground">{Math.round(group[key] ?? 0)}<span className="text-[10px] font-normal text-muted-foreground">{unit}</span></span>
+      <span className="text-[10px] text-muted-foreground leading-tight">{label}</span>
+    </div>
+  ))}
+</div>
         </div>
       ))}
     </motion.div>
