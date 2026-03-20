@@ -27,7 +27,7 @@ const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "prima
 };
 
 export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, carbsGoal, fatsGoal, fiberGoal }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const calories = todayLog?.total_calories || 0;
   const protein = todayLog?.total_protein || 0;
@@ -43,7 +43,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
 
   return (
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-4 mb-3">
-      <div className="rounded-3xl transition-all" style={{backgroundColor: "rgba(255,255,255,0.85)", backdropFilter: "blur(10px)"}}>
+      <div className="bg-white rounded-3xl shadow-lg transition-all">
         {/* Header — sempre visibile */}
         <div
           className="flex items-center justify-between p-4 cursor-pointer"
@@ -65,7 +65,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
         {/* Barra calorie — sempre visibile */}
         <div className="px-4 pb-3">
           <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-            <motion.div initial={{ width: 0 }} animate={{ width: `${caloriePercentage}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", isDanger ? "bg-red-500" : isWarning ? "bg-orange-400" : "bg-rose-500")} />
+            <motion.div initial={{ width: 0 }} animate={{ width: `${caloriePercentage}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", isDanger ? "bg-destructive" : isWarning ? "bg-accent" : "bg-gradient-to-r from-primary to-primary/90")} />
           </div>
         </div>
 
