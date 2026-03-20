@@ -188,10 +188,8 @@ export default function Chat() {
 
     try {
       const systemPrompt = buildSystemPrompt(profile, todayLog, foodEntries || []);
-      const recentMessages = [...messages, userMessage].filter(m => m.id !== "welcome_message").slice(-6).map(m => ({
-        role: m.role === 'user' ? 'user' : 'assistant',
-        content: m.content,
-      }));
+      const recentMessages = [{ role: 'user', content: userMessage.content }];
+
 
    const response = await fetch("https://api.anthropic.com/v1/messages", {
   method: "POST",
@@ -288,7 +286,7 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
       <DailyNotificationPopup evaluation={dailyEvaluation} onClose={() => setDailyEvaluation(null)} />
       <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 bg-white shadow-sm">
         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center md:hidden shadow-sm">
-          <span className="text-2xl">🍎</span>
+          <Sparkles className="w-5 h-5 text-white" />
         </div>
         <div>
           <h2 className="font-bold text-foreground text-lg">Chat with NutriCoach</h2>
