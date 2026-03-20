@@ -303,6 +303,7 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
           {isLoading && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
+        <div className="pointer-events-none sticky bottom-0 h-12 w-full" style={{background: "linear-gradient(to bottom, transparent, #f0fcf3)"}}></div>
       </div>
       <ChatInput onSend={handleSend} isLoading={isLoading} />
     </div>
