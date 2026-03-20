@@ -41,7 +41,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
   return (
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-4 mb-3">
       <Link to="/Summary">
-        <div className="bg-white rounded-3xl px-3 py-4 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+        <div className="bg-white rounded-3xl px-0 py-4 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
           <div className="flex items-center justify-between mb-4 w-full">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
