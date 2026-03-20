@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { Flame, Wheat, Drumstick, Droplets, Salad, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Flame, Wheat, Drumstick, Droplets, Salad, ChevronRight, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,8 @@ const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "prima
 };
 
 export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, carbsGoal, fatsGoal, fiberGoal }) {
+  const [expanded, setExpanded] = useState(false);
+
   const calories = todayLog?.total_calories || 0;
   const protein = todayLog?.total_protein || 0;
   const carbs = todayLog?.total_carbs || 0;
@@ -40,43 +43,55 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
 
   return (
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-4 mb-3">
-      <Link to="/Summary">
-        <div className="bg-white rounded-3xl p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
-          <div className="flex items-center justify-between mb-4 w-full">
-            <div className="flex items-center gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-  <span className="text-xl">🔥</span>
-  <h3 className="text-sm font-bold text-foreground">Today's Progress</h3>
-</div>
-                <p className="text-[10px] text-muted-foreground">{caloriesRemaining > 0 ? `${caloriesRemaining} kcal left` : "Goal reached! 🎉"}</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-          </div>
-          <div className="space-y-2 mb-4">
-            {burnedCalories > 0 && (
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
-                <span>🍽 Eaten: <strong className="text-foreground">{Math.round(calories)}</strong> kcal</span>
-                <span>🔥 Burned: <strong className="text-orange-500">{Math.round(burnedCalories)}</strong> kcal</span>
-              </div>
-            )}
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">{burnedCalories > 0 ? "Net calories" : "Calories"}</span>
-              <div className="text-sm font-bold text-foreground">{Math.round(netCalories)}<span className="text-muted-foreground font-normal"> / {calorieGoal} kcal</span></div>
-            </div>
-            <div className="relative h-2.5 bg-gray-200 rounded-full overflow-hidden">
-              <motion.div initial={{ width: 0 }} animate={{ width: `${caloriePercentage}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", isDanger ? "bg-destructive" : isWarning ? "bg-accent" : "bg-gradient-to-r from-primary to-primary/90")} />
+      <div className="bg-white rounded-3xl shadow-lg transition-all">
+        {/* Header — sempre visibile */}
+        <div
+          className="flex items-center justify-between p-4 cursor-pointer"
+          onClick={() => setExpanded(!expanded)}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🔥</span>
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Today's Progress</h3>
+              <p className="text-[10px] text-muted-foreground">{caloriesRemaining > 0 ? `${caloriesRemaining} kcal left` : "Goal reached! 🎉"}</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-3">
-            <MacroProgressMini label="Protein" value={protein} max={proteinGoal} unit="g" icon={Drumstick} color="chart-4" />
-            <MacroProgressMini label="Carbs" value={carbs} max={carbsGoal} unit="g" icon={Wheat} color="chart-3" />
-            <MacroProgressMini label="Fats" value={fats} max={fatsGoal} unit="g" icon={Droplets} color="blue-500" />
-            <MacroProgressMini label="Fiber" value={fiber} max={fiberGoal} unit="g" icon={Salad} color="primary" />
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-foreground">{Math.round(netCalories)}<span className="text-muted-foreground font-normal text-xs"> / {calorieGoal}</span></span>
+            <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", expanded && "rotate-180")} />
           </div>
         </div>
-      </Link>
+
+        {/* Barra calorie — sempre visibile */}
+        <div className="px-4 pb-3">
+          <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+            <motion.div initial={{ width: 0 }} animate={{ width: `${caloriePercentage}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", isDanger ? "bg-destructive" : isWarning ? "bg-accent" : "bg-gradient-to-r from-primary to-primary/90")} />
+          </div>
+        </div>
+
+        {/* Dettagli macros — visibili solo se expanded */}
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-gray-100 pt-3">
+                <MacroProgressMini label="Protein" value={protein} max={proteinGoal} unit="g" icon={Drumstick} color="chart-4" />
+                <MacroProgressMini label="Carbs" value={carbs} max={carbsGoal} unit="g" icon={Wheat} color="chart-3" />
+                <MacroProgressMini label="Fats" value={fats} max={fatsGoal} unit="g" icon={Droplets} color="blue-500" />
+                <MacroProgressMini label="Fiber" value={fiber} max={fiberGoal} unit="g" icon={Salad} color="primary" />
+              </div>
+              <Link to="/Summary" className="flex items-center justify-center gap-1 pb-3 text-xs text-primary font-medium">
+                View full summary <ChevronRight className="w-3 h-3" />
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
