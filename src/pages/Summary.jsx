@@ -152,15 +152,16 @@ export default function Summary() {
           </Button>
         </motion.div>
 
-                {/* Hero calorie card */}
+        {/* Hero calorie card */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="bg-gradient-to-br from-green-600 to-green-700 text-white"
           style={{
+            background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
             borderRadius: "20px",
             padding: "18px",
+            color: "white",
             position: "relative",
             overflow: "hidden",
           }}
@@ -324,14 +325,3 @@ export default function Summary() {
     </div>
   );
 }
-```
-
----
-
-## 🚀 Deploy
-
-Quando hai sostituito tutti e 3 i file, apri il terminale nella cartella del progetto e lancia:
-```
-git add .
-git commit -m "redesign Summary: hero card, macro grid 2x2, weekly chart verde"
-git push
