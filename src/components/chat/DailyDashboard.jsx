@@ -8,7 +8,7 @@ const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "prima
   const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   const isDanger = percentage >= 100;
   const isWarning = percentage >= 85 && !isDanger;
-  const barColor = isDanger ? "bg-destructive" : isWarning ? "bg-accent" : color === "chart-4" ? "bg-red-400" : color === "chart-3" ? "bg-amber-400" : color === "blue-500" ? "bg-blue-500" : "bg-primary";
+  const barColor = isDanger ? "bg-destructive" : isWarning ? "bg-accent" : color === "chart-4" ? "bg-red-400" : color === "chart-3" ? "bg-amber-400" : color === "blue-500" ? "bg-blue-500" : "bg-emerald-500";
   const iconColor = isDanger ? "text-destructive" : isWarning ? "text-accent" : color === "chart-4" ? "text-red-400" : color === "chart-3" ? "text-amber-400" : color === "blue-500" ? "text-blue-500" : "text-primary";
   return (
     <div className="space-y-1.5">
