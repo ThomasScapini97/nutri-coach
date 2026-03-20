@@ -296,6 +296,7 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
         </div>
       </div>
       <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} />
+      <div className="pointer-events-none h-6 -mt-4 z-10" style={{background: "linear-gradient(to bottom, white, #f0fcf3)"}}></div>
       <ExerciseBanner burnedCalories={todayLog?.total_burned_calories} />
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-5 pb-40" style={{backgroundColor: "#f0fcf3"}}>
         <div className="max-w-4xl mx-auto space-y-5">
