@@ -39,7 +39,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
   const isWarning = caloriePercentage >= 85 && !isDanger;
 
   return (
-    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-4 mb-3">
+    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-2 mt-4 mb-3">
       <Link to="/Summary">
         <div className="bg-white rounded-3xl p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
           <div className="flex items-center justify-between mb-4 w-full">
