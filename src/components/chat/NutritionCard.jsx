@@ -6,7 +6,7 @@ const macros = [
   { key: "carbs", label: "Carbs", unit: "g", icon: Wheat, color: "text-amber-400", bgColor: "bg-amber-400/10" },
   { key: "protein", label: "Protein", unit: "g", icon: Drumstick, color: "text-red-400", bgColor: "bg-red-400/10" },
   { key: "fats", label: "Fats", unit: "g", icon: Droplets, color: "text-blue-500", bgColor: "bg-blue-500/10" },
-  { key: "fiber", label: "Fiber", unit: "g", icon: Salad, color: "text-primary", bgColor: "bg-primary/10" },
+  { key: "fiber", label: "Fiber", unit: "g", icon: Salad, color: "text-emerald-500", bgColor: "bg-emerald-100" },
 ];
 
 const mealEmojis = {
