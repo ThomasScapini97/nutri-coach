@@ -66,13 +66,13 @@ export default function NutritionCard({ nutrition, foodEntries }) {
           </div>
           <div className="grid grid-cols-5 gap-2 mt-2">
   {macros.map(({ key, label, unit, icon: Icon, color, bgColor }) => (
-    <div key={key} className="flex flex-col items-center text-center gap-1">
-      <div className={`w-9 h-9 rounded-full ${bgColor} flex items-center justify-center`}>
-        <Icon className={`w-4 h-4 ${color}`} />
-      </div>
-      <span className="text-xs font-bold text-foreground">{Math.round(group[key] ?? 0)}<span className="text-[10px] font-normal text-muted-foreground">{unit}</span></span>
-      <span className="text-[10px] text-muted-foreground leading-tight">{label}</span>
-    </div>
+<div key={key} className="flex flex-col items-center text-center gap-1">
+  <div className={`w-9 h-9 rounded-full ${bgColor} flex items-center justify-center`}>
+    <Icon className={`w-4 h-4 ${color}`} />
+  </div>
+  <span className="text-[10px] text-muted-foreground leading-tight">{label}</span>
+  <span className="text-xs font-bold text-foreground">{Math.round(group[key] ?? 0)}<span className="text-[10px] font-normal text-muted-foreground">{unit}</span></span>
+</div>
   ))}
 </div>
         </div>
