@@ -27,7 +27,7 @@ const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "prima
 };
 
 export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, carbsGoal, fatsGoal, fiberGoal }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   const calories = todayLog?.total_calories || 0;
   const protein = todayLog?.total_protein || 0;
