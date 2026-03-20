@@ -44,9 +44,6 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
         <div className="bg-white rounded-3xl p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
           <div className="flex items-center justify-between mb-4 w-full">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                <Flame className="w-4 h-4 text-white" />
-              </div>
               <div>
                 <div className="flex items-center gap-2">
   <span className="text-xl">🔥</span>
