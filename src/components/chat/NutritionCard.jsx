@@ -9,36 +9,59 @@ const macros = [
   { key: "fiber", label: "Fiber", unit: "g", icon: Salad, color: "text-primary", bgColor: "bg-primary/10" },
 ];
 
-const foodEmojis = {
-  pasta: "🍝", chicken: "🐔", beef: "🥩", fish: "🐟", salmon: "🐟",
-  rice: "🍚", bread: "🍞", egg: "🥚", cheese: "🧀", milk: "🥛",
-  apple: "🍎", banana: "🍌", orange: "🍊", yogurt: "🥛", nuts: "🥜",
-  salad: "🥗", pizza: "🍕", burger: "🍔", oatmeal: "🥣", potato: "🥔",
+const mealEmojis = {
+  breakfast: "🌅",
+  lunch: "☀️",
+  dinner: "🌙",
+  snack: "🍎",
 };
 
-function getFoodEmoji(foodName) {
-  const name = foodName.toLowerCase();
-  for (const [key, emoji] of Object.entries(foodEmojis)) {
-    if (name.includes(key)) return emoji;
-  }
-  return "🍽️";
-}
+const mealLabels = {
+  breakfast: "Breakfast",
+  lunch: "Lunch",
+  dinner: "Dinner",
+  snack: "Snack",
+};
 
 export default function NutritionCard({ nutrition, foodEntries }) {
   if (!nutrition?.foods?.length || !foodEntries?.length) return null;
+
   const entryIds = nutrition.foods.map(f => f.entry_id).filter(Boolean);
   const rawEntries = entryIds.map(id => foodEntries.find(e => e.id === id)).filter(Boolean);
   if (rawEntries.length === 0) return null;
 
+  // Raggruppa per meal_type
+  const grouped = rawEntries.reduce((acc, entry) => {
+    const meal = entry.meal_type || "snack";
+    if (!acc[meal]) {
+      acc[meal] = {
+        meal_type: meal,
+        foods: [],
+        calories: 0,
+        carbs: 0,
+        protein: 0,
+        fats: 0,
+        fiber: 0,
+      };
+    }
+    acc[meal].foods.push(entry.food_name);
+    acc[meal].calories += entry.calories || 0;
+    acc[meal].carbs += entry.carbs || 0;
+    acc[meal].protein += entry.protein || 0;
+    acc[meal].fats += entry.fats || 0;
+    acc[meal].fiber += entry.fiber || 0;
+    return acc;
+  }, {});
+
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-2xl">
-      {rawEntries.map((entry, i) => (
-        <div key={entry.id} className="mb-3 last:mb-0 bg-white rounded-2xl p-4 shadow-md border border-border/50">
+      {Object.values(grouped).map((group, i) => (
+        <div key={i} className="mb-3 last:mb-0 bg-white rounded-2xl p-4 shadow-md border border-border/50">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-2xl">{getFoodEmoji(entry.food_name)}</span>
+            <span className="text-2xl">{mealEmojis[group.meal_type] || "🍽️"}</span>
             <div>
-              <p className="text-sm font-semibold text-foreground">{entry.food_name}</p>
-              <p className="text-xs text-muted-foreground">{entry.meal_type}</p>
+              <p className="text-sm font-semibold text-foreground">{mealLabels[group.meal_type] || group.meal_type}</p>
+              <p className="text-xs text-muted-foreground">{group.foods.join(", ")}</p>
             </div>
           </div>
           <div className="grid grid-cols-5 gap-3">
@@ -47,7 +70,7 @@ export default function NutritionCard({ nutrition, foodEntries }) {
                 <div className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center mb-1.5`}>
                   <Icon className={`w-4 h-4 ${color}`} />
                 </div>
-                <span className="text-sm font-bold text-foreground">{entry[key] ?? 0}</span>
+                <span className="text-sm font-bold text-foreground">{Math.round(group[key] ?? 0)}</span>
                 <span className="text-[10px] text-muted-foreground">{unit}</span>
               </div>
             ))}
