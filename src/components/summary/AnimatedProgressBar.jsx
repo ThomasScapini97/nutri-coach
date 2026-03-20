@@ -1,25 +1,65 @@
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
-export default function AnimatedProgressBar({ label, value, max, unit, icon: Icon, color = "primary" }) {
+export default function AnimatedProgressBar({ label, value, max, unit, color = "primary" }) {
   const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   const isDanger = percentage >= 100;
   const isWarning = percentage >= 85 && !isDanger;
-  const barColor = isDanger ? "bg-destructive" : isWarning ? "bg-accent" : color === "chart-4" ? "bg-red-400" : color === "chart-3" ? "bg-amber-400" : color === "blue-500" ? "bg-blue-500" : "bg-emerald-500";
-  const iconColor = isDanger ? "text-destructive" : isWarning ? "text-accent" : color === "chart-4" ? "text-red-400" : color === "chart-3" ? "text-amber-400" : color === "blue-500" ? "text-blue-500" : "text-emerald-500";
-  const bgColor = isDanger ? "bg-destructive/10" : isWarning ? "bg-accent/10" : color === "chart-4" ? "bg-red-400/10" : color === "chart-3" ? "bg-amber-400/10" : color === "blue-500" ? "bg-blue-500/10" : "bg-emerald-500/10";
+
+  const barColor = isDanger
+    ? "#ef4444"
+    : isWarning
+    ? "#f97316"
+    : color === "chart-4" ? "#ef4444"
+    : color === "chart-3" ? "#f59e0b"
+    : color === "blue-500" ? "#3b82f6"
+    : "#10b981";
+
+  const bgColor = isDanger
+    ? "#fee2e2"
+    : isWarning
+    ? "#ffedd5"
+    : color === "chart-4" ? "#fee2e2"
+    : color === "chart-3" ? "#fef3c7"
+    : color === "blue-500" ? "#dbeafe"
+    : "#dcfce7";
 
   return (
-    <div className="space-y-2.5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {Icon && <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", bgColor)}><Icon className={cn("w-4 h-4", iconColor)} /></div>}
-          <span className="text-sm font-medium text-foreground">{label}</span>
-        </div>
-        <div className="text-sm font-semibold text-foreground">{Math.round(value)}{unit} <span className="text-muted-foreground font-normal">/ {max}{unit}</span></div>
+    <div
+      style={{
+        background: "white",
+        borderRadius: "14px",
+        padding: "12px",
+        border: "0.5px solid rgba(0,0,0,0.06)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+        <div
+          style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            background: barColor,
+            flexShrink: 0,
+          }}
+        />
+        <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: 400 }}>{label}</span>
       </div>
-      <div className="relative h-3 bg-muted rounded-full overflow-hidden shadow-inner">
-        <motion.div initial={{ width: 0 }} animate={{ width: `${percentage}%` }} transition={{ duration: 0.8, ease: "easeOut" }} className={cn("h-full rounded-full", barColor)} />
+
+      <div style={{ display: "flex", alignItems: "baseline", gap: "2px", marginBottom: "6px" }}>
+        <span style={{ fontSize: "18px", fontWeight: 500, color: "#1a3a22", lineHeight: 1 }}>
+          {Math.round(value)}
+        </span>
+        <span style={{ fontSize: "11px", color: "#9ca3af" }}>{unit}</span>
+        <span style={{ fontSize: "11px", color: "#9ca3af", marginLeft: "2px" }}>/ {max}{unit}</span>
+      </div>
+
+      <div style={{ background: "#f3f4f6", height: "4px", borderRadius: "99px", overflow: "hidden" }}>
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${percentage}%` }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          style={{ height: "100%", borderRadius: "99px", background: barColor }}
+        />
       </div>
     </div>
   );
