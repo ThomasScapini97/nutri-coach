@@ -287,8 +287,8 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
     <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)", borderRadius: "20px", backgroundColor: "#f0fcf3" }}>
       <DailyNotificationPopup evaluation={dailyEvaluation} onClose={() => setDailyEvaluation(null)} />
       <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 bg-white shadow-sm">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center md:hidden shadow-sm">
-          <Sparkles className="w-5 h-5 text-white" />
+        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center md:hidden shadow-sm">
+          <span className="text-2xl">🍎</span>
         </div>
         <div>
           <h2 className="font-bold text-foreground text-lg">Chat with NutriCoach</h2>
