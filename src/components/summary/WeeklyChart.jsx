@@ -1,9 +1,26 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 export default function WeeklyChart({ data, calorieGoal = 2000 }) {
-  if (!data || data.length === 0) return null;
+  const isEmpty = !data || data.every(d => d.calories === 0);
 
-  const today = data[data.length - 1];
+  if (isEmpty) {
+    return (
+      <div style={{
+        display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", gap: "8px", padding: "24px 0",
+      }}>
+        <div style={{
+          width: "44px", height: "44px", borderRadius: "14px",
+          background: "#f0fdf4", display: "flex", alignItems: "center",
+          justifyContent: "center", fontSize: "22px",
+        }}>📊</div>
+        <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>No data this week</p>
+        <p style={{ fontSize: "11px", color: "#9ca3af", textAlign: "center", lineHeight: 1.5 }}>
+          Start logging meals in the chat{"\n"}and your weekly trend will appear here
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ height: "80px" }}>
@@ -23,13 +40,16 @@ export default function WeeklyChart({ data, calorieGoal = 2000 }) {
               fontSize: "12px",
               boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
             }}
-            formatter={(v) => [`${v} kcal`, ""]}
+            formatter={(v) => [v > 0 ? `${v} kcal` : "No data", ""]}
           />
           <Bar dataKey="calories" radius={[4, 4, 0, 0]}>
             {data.map((entry, index) => {
               const isToday = index === data.length - 1;
+              const isEmpty = entry.calories === 0;
               const pct = calorieGoal > 0 ? entry.calories / calorieGoal : 0;
-              const color = isToday
+              const color = isEmpty
+                ? "#f3f4f6"
+                : isToday
                 ? "#16a34a"
                 : pct >= 0.9 && pct <= 1.1
                 ? "#4ade80"
