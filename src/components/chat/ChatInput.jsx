@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, ScanLine } from "lucide-react";
 
-export default function ChatInput({ onSend, isLoading }) {
+export default function ChatInput({ onSend, isLoading, onScannerOpen }) {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e) => {
@@ -14,7 +14,20 @@ export default function ChatInput({ onSend, isLoading }) {
 
   return (
     <form onSubmit={handleSubmit} className="px-5 pt-3 pb-4 bg-white border-t border-gray-200 fixed bottom-20 left-0 right-0 z-40">
-      <div className="max-w-4xl mx-auto flex items-end gap-3">
+      <div className="max-w-4xl mx-auto flex items-end gap-2">
+        <button
+          type="button"
+          onClick={onScannerOpen}
+          style={{
+            width: "52px", height: "52px", borderRadius: "16px",
+            background: "#f0fcf3", border: "1px solid #bbf7d0",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", flexShrink: 0,
+          }}
+        >
+          <ScanLine style={{ width: "22px", height: "22px", color: "#16a34a" }} />
+        </button>
+
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
