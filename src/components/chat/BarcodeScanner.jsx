@@ -141,8 +141,29 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
     }
   };
 
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [grams, setGrams] = useState("100");
+
   const handleSelectProduct = (product) => {
-    onProductFound(product);
+    setSelectedProduct(product);
+    setGrams("100");
+  };
+
+  const handleConfirm = () => {
+    const g = parseFloat(grams) || 100;
+    const ratio = g / 100;
+    onProductFound({
+      ...selectedProduct,
+      grams: g,
+      per100: selectedProduct.per100,
+      adjusted: {
+        calories: Math.round(selectedProduct.per100.calories * ratio),
+        carbs: Math.round(selectedProduct.per100.carbs * ratio * 10) / 10,
+        protein: Math.round(selectedProduct.per100.protein * ratio * 10) / 10,
+        fats: Math.round(selectedProduct.per100.fats * ratio * 10) / 10,
+        fiber: Math.round(selectedProduct.per100.fiber * ratio * 10) / 10,
+      }
+    });
     onClose();
   };
 
@@ -333,6 +354,93 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
           )}
         </div>
       </div>
+      {/* Quantity selector popup */}
+      {selectedProduct && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 99999,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "24px",
+        }}>
+          <div style={{
+            background: "white", borderRadius: "20px",
+            padding: "20px", width: "100%", maxWidth: "320px",
+          }}>
+            <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22", marginBottom: "4px" }}>
+              {selectedProduct.name}
+            </p>
+            <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "16px" }}>
+              {selectedProduct.per100.calories} kcal per 100g
+            </p>
+
+            <label style={{ fontSize: "11px", color: "#9ca3af", letterSpacing: "0.3px", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
+              How many grams?
+            </label>
+            <input
+              type="number"
+              value={grams}
+              onChange={(e) => setGrams(e.target.value)}
+              autoFocus
+              style={{
+                width: "100%", background: "#f9fafb",
+                border: "0.5px solid #e5e7eb", borderRadius: "10px",
+                padding: "10px 14px", fontSize: "20px", fontWeight: 500,
+                color: "#1a3a22", outline: "none", fontFamily: "inherit",
+                textAlign: "center", marginBottom: "12px",
+              }}
+            />
+
+            {/* Macro preview aggiornato in tempo reale */}
+            {parseFloat(grams) > 0 && (() => {
+              const ratio = parseFloat(grams) / 100;
+              return (
+                <div style={{
+                  display: "grid", gridTemplateColumns: "repeat(4,1fr)",
+                  gap: "6px", marginBottom: "16px",
+                }}>
+                  {[
+                    { label: "Kcal", value: Math.round(selectedProduct.per100.calories * ratio), color: "#dc2626" },
+                    { label: "Carbs", value: Math.round(selectedProduct.per100.carbs * ratio * 10) / 10 + "g", color: "#f59e0b" },
+                    { label: "Prot", value: Math.round(selectedProduct.per100.protein * ratio * 10) / 10 + "g", color: "#ef4444" },
+                    { label: "Fats", value: Math.round(selectedProduct.per100.fats * ratio * 10) / 10 + "g", color: "#3b82f6" },
+                  ].map((m) => (
+                    <div key={m.label} style={{ background: "#f9fafb", borderRadius: "10px", padding: "8px 4px", textAlign: "center" }}>
+                      <p style={{ fontSize: "13px", fontWeight: 500, color: m.color }}>{m.value}</p>
+                      <p style={{ fontSize: "10px", color: "#9ca3af" }}>{m.label}</p>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => setSelectedProduct(null)}
+                style={{
+                  flex: 1, background: "#f9fafb", color: "#6b7280",
+                  border: "0.5px solid #e5e7eb", borderRadius: "12px",
+                  padding: "11px", fontSize: "13px", cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={!parseFloat(grams) || parseFloat(grams) <= 0}
+                style={{
+                  flex: 2, background: "#16a34a", color: "white",
+                  border: "none", borderRadius: "12px",
+                  padding: "11px", fontSize: "13px", fontWeight: 500,
+                  cursor: "pointer", fontFamily: "inherit",
+                  opacity: !parseFloat(grams) || parseFloat(grams) <= 0 ? 0.5 : 1,
+                }}
+              >
+                Log {parseFloat(grams) > 0 ? Math.round(selectedProduct.per100.calories * parseFloat(grams) / 100) : 0} kcal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );

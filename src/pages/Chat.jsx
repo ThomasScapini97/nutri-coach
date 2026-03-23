@@ -309,7 +309,9 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
        {showScanner && (
         <BarcodeScanner
           onProductFound={(product) => {
-            const msg = `I just ate ${product.name} (100g). Nutritional values per 100g: ${product.per100.calories} kcal, ${product.per100.protein}g protein, ${product.per100.carbs}g carbs, ${product.per100.fats}g fats, ${product.per100.fiber}g fiber.`;
+            const g = product.grams || 100;
+            const n = product.adjusted || product.per100;
+            const msg = `I just ate ${product.name} (${g}g): ${n.calories} kcal, ${n.protein}g protein, ${n.carbs}g carbs, ${n.fats}g fats, ${n.fiber}g fiber.`;
             handleSend(msg);
           }}
           onClose={() => setShowScanner(false)}
