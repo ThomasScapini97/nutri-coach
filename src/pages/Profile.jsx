@@ -272,7 +272,19 @@ export default function Profile() {
                 <SelectTrigger style={{ ...inputStyle, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent
+                position="popper"
+                side="bottom"
+                sideOffset={4}
+                style={{
+                  background: "white",
+                  border: "0.5px solid #e5e7eb",
+                  borderRadius: "12px",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                  zIndex: 9999,
+                  overflow: "hidden",
+                }}
+              >
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>
                 </SelectContent>
@@ -320,7 +332,19 @@ export default function Profile() {
               <SelectTrigger style={{ ...inputStyle, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                 <SelectValue placeholder="Select activity level" />
               </SelectTrigger>
-              <SelectContent position="popper" side="bottom" sideOffset={4}>
+              <SelectContent
+                position="popper"
+                side="bottom"
+                sideOffset={4}
+                style={{
+                  background: "white",
+                  border: "0.5px solid #e5e7eb",
+                  borderRadius: "12px",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                  zIndex: 9999,
+                  overflow: "hidden",
+                }}
+              >
                 {ACTIVITY_LEVELS.map((l) => (
                   <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
                 ))}
