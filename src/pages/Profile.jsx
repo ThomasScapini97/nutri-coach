@@ -320,7 +320,7 @@ export default function Profile() {
               <SelectTrigger style={{ ...inputStyle, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                 <SelectValue placeholder="Select activity level" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" side="bottom" sideOffset={4}>
                 {ACTIVITY_LEVELS.map((l) => (
                   <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
                 ))}
