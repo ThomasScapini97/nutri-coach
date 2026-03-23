@@ -158,7 +158,7 @@ export default function Chat() {
 
   useEffect(() => {
     if (chatMessages?.length > 0) {
-      setMessages([WELCOME_MESSAGE, ...chatMessages]);
+      setMessages(chatMessages);
     } else {
       setMessages([WELCOME_MESSAGE]);
     }
