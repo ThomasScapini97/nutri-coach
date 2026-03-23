@@ -15,6 +15,7 @@ import { evaluateDailyNutrition } from "../components/notifications/DailyEvaluat
 import { useMealReminderCheck } from "../components/notifications/MealReminderToast";
 import { toast } from "sonner";
 import { recalculateTotals } from "@/lib/nutritionUtils";
+import BarcodeScanner from "../components/chat/BarcodeScanner";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -105,6 +106,7 @@ export default function Chat() {
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
   const [dailyEvaluation, setDailyEvaluation] = useState(null);
+  const [showScanner, setShowScanner] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -304,7 +306,16 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
           <div ref={messagesEndRef} />
         </div>
       </div>
-      <ChatInput onSend={handleSend} isLoading={isLoading} />
+       {showScanner && (
+        <BarcodeScanner
+          onProductFound={(product) => {
+            const msg = `I just ate ${product.name} (100g). Nutritional values per 100g: ${product.per100.calories} kcal, ${product.per100.protein}g protein, ${product.per100.carbs}g carbs, ${product.per100.fats}g fats, ${product.per100.fiber}g fiber.`;
+            handleSend(msg);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+      <ChatInput onSend={handleSend} isLoading={isLoading} onScannerOpen={() => setShowScanner(true)} />
     </div>
   );
 }
