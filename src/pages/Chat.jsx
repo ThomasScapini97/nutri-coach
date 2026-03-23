@@ -191,7 +191,12 @@ export default function Chat() {
 
     try {
       const systemPrompt = buildSystemPrompt(profile, todayLog, foodEntries || []);
-      const recentMessages = [{ role: 'user', content: userMessage.content }];
+      const history = messages
+  .filter(m => m.id !== "welcome_message" && (m.role === "user" || m.role === "assistant"))
+  .slice(-10)
+  .map(m => ({ role: m.role, content: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }));
+
+const recentMessages = [...history, { role: "user", content: userMessage.content }];
 
 
    const response = await fetch("https://api.anthropic.com/v1/messages", {
