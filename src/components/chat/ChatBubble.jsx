@@ -12,7 +12,7 @@ export default function ChatBubble({ message, foodEntries }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn("flex gap-3 w-full", isUser ? "ml-auto flex-row-reverse" : "mr-auto")}
-      style={{ maxWidth: "100%", overflow: "hidden" }}
+      style={{ maxWidth: "100%", overflow: "hidden", width: "100%" }}
     >
       <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-1 shadow-sm", isUser ? "bg-secondary" : "bg-gradient-to-br from-primary to-primary/80")}>
         {isUser ? <User className="w-5 h-5 text-foreground" /> : <Sparkles className="w-5 h-5 text-white" />}
@@ -26,7 +26,7 @@ export default function ChatBubble({ message, foodEntries }) {
             backgroundColor: !isUser ? "#eafff1" : undefined,
             wordBreak: "break-word",
             overflowWrap: "break-word",
-            maxWidth: "85%",
+            maxWidth: "min(85%, 520px)",
             overflow: "hidden",
           }}
           className={cn(
