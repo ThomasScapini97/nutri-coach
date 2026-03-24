@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 
 const GOAL = 8;
 
@@ -8,13 +9,33 @@ export default function WaterTracker({ todayLog, onUpdate }) {
   const glasses = todayLog?.water_glasses || 0;
   const [loading, setLoading] = useState(false);
 
-  const updateGlasses = async (newCount) => {
-    if (!todayLog?.id || loading) return;
+const updateGlasses = async (newCount) => {
+    if (loading) return;
     setLoading(true);
-    await supabase
-      .from("food_logs")
-      .update({ water_glasses: newCount })
-      .eq("id", todayLog.id);
+
+    let logId = todayLog?.id;
+
+    // Se non esiste ancora un food_log per oggi, crealo
+    if (!logId) {
+      const { data: created } = await supabase
+        .from("food_logs")
+        .insert({
+          date: format(new Date(), "yyyy-MM-dd"),
+          user_id: (await supabase.auth.getUser()).data.user.id,
+          total_calories: 0, total_carbs: 0, total_protein: 0,
+          total_fats: 0, total_fiber: 0, total_burned_calories: 0,
+          water_glasses: newCount,
+        })
+        .select()
+        .single();
+      logId = created?.id;
+    } else {
+      await supabase
+        .from("food_logs")
+        .update({ water_glasses: newCount })
+        .eq("id", logId);
+    }
+
     onUpdate();
     setLoading(false);
   };
