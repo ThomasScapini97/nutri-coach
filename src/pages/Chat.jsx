@@ -86,6 +86,7 @@ Today's total burned so far: ${burnedToday} kcal
 
 **CRITICAL: Multi-Food Parsing**
 When user mentions multiple foods, split into SEPARATE objects in "foods" array.
+When user mentions multiple quantities of the SAME food (e.g. "2 eggs", "3 biscuits"), create SEPARATE individual entries for each unit. Example: "2 eggs" → two separate {"food_name": "egg", ...} objects with calories for ONE egg each. NEVER multiply calories by quantity — always log single unit values repeated N times.
 
 **CRITICAL: Food vs Question vs Exercise**
 1. User ATE something → LOG IT (foods array)
