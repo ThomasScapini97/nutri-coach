@@ -70,6 +70,7 @@ function buildSystemPrompt(profile, todayLog, entries = []) {
 - Friendly, warm, and encouraging like a supportive personal coach
 - Clear and helpful without being overly technical
 - Remember previous meals today and reference them naturally
+- Response style: ${profile?.chat_style === 'detailed' ? 'Be detailed, give advice, explain nutritional values and suggest improvements. Be like a personal coach.' : 'BE CONCISE: Max 3-4 lines. Bold key numbers. Only give advice if explicitly asked.'}
 
 **User Profile:**
 ${profile ? `Age: ${profile.age || 'not set'}, Weight: ${profile.weight || 'not set'}kg, Height: ${profile.height || 'not set'}cm, Activity: ${profile.activity_level || 'not set'}, Goal: ${profile.goal || 'maintain'}` : 'Not configured yet'}

@@ -2,27 +2,27 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { Loader2, ArrowRight, ArrowLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 const ACTIVITY_LEVELS = [
-  { value: "sedentary", label: "Sedentary (little exercise)" },
-  { value: "light", label: "Light (1-3 days/week)" },
-  { value: "moderate", label: "Moderate (3-5 days/week)" },
-  { value: "active", label: "Active (6-7 days/week)" },
-  { value: "very_active", label: "Very Active (intense daily)" },
+  { value: "sedentary", label: "Sedentario", sub: "Poco o nessun esercizio", emoji: "🛋️" },
+  { value: "light", label: "Leggero", sub: "1-3 giorni a settimana", emoji: "🚶" },
+  { value: "moderate", label: "Moderato", sub: "3-5 giorni a settimana", emoji: "🏃" },
+  { value: "active", label: "Attivo", sub: "6-7 giorni a settimana", emoji: "💪" },
+  { value: "very_active", label: "Molto attivo", sub: "Allenamento intenso quotidiano", emoji: "🔥" },
 ];
 
 const GOALS = [
-  { value: "lose_weight", label: "Lose weight", emoji: "🎯" },
-  { value: "maintain", label: "Maintain weight", emoji: "⚖️" },
-  { value: "gain_muscle", label: "Gain muscle", emoji: "💪" },
+  { value: "lose_weight", label: "Perdere peso", emoji: "🎯", sub: "Deficit calorico controllato" },
+  { value: "maintain", label: "Mantenere il peso", emoji: "⚖️", sub: "Bilancio calorico stabile" },
+  { value: "gain_muscle", label: "Aumentare la massa", emoji: "💪", sub: "Surplus calorico + proteine" },
+];
+
+const CHAT_STYLES = [
+  { value: "concise", label: "Sintetico", emoji: "⚡", sub: "Risposte brevi e dirette al punto" },
+  { value: "detailed", label: "Dettagliato", emoji: "🧑‍🏫", sub: "Consigli approfonditi e spiegazioni" },
 ];
 
 function calculateCalorieGoal(profile) {
@@ -40,37 +40,58 @@ function calculateCalorieGoal(profile) {
   return Math.round(tdee);
 }
 
+const inputStyle = {
+  background: "#f9fafb",
+  border: "0.5px solid #e5e7eb",
+  borderRadius: "12px",
+  padding: "12px 16px",
+  fontSize: "16px",
+  color: "#1a3a22",
+  width: "100%",
+  outline: "none",
+  fontFamily: "inherit",
+};
+
+const slideVariants = {
+  enter: (dir) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir) => ({ x: dir > 0 ? -300 : 300, opacity: 0 }),
+};
+
 export default function Onboarding({ onComplete }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [step, setStep] = useState(0);
+  const [dir, setDir] = useState(1);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    age: "", weight: "", height: "", gender: "", activity_level: "", goal: "",
+    display_name: "",
+    age: "", weight: "", height: "", gender: "",
+    activity_level: "", goal: "", chat_style: "concise",
   });
 
-  const age = Number(form.age);
-  const weight = Number(form.weight);
-  const height = Number(form.height);
+  const TOTAL_STEPS = 5;
 
-  const ageValid = form.age !== "" && age >= 10 && age <= 100;
-  const weightValid = form.weight !== "" && weight >= 30 && weight <= 250;
-  const heightValid = form.height !== "" && height >= 120 && height <= 230;
+  const goNext = () => { setDir(1); setStep(s => s + 1); };
+  const goPrev = () => { setDir(-1); setStep(s => s - 1); };
 
-  const ageError = form.age !== "" && !ageValid;
-  const weightError = form.weight !== "" && !weightValid;
-  const heightError = form.height !== "" && !heightValid;
-
-  const isValid = ageValid && weightValid && heightValid && form.gender && form.activity_level && form.goal;
+  const canNext = () => {
+    if (step === 0) return form.display_name.trim().length >= 2;
+    if (step === 1) {
+      const age = Number(form.age);
+      const weight = Number(form.weight);
+      const height = Number(form.height);
+      return form.gender && age >= 10 && age <= 100 && weight >= 30 && weight <= 250 && height >= 120 && height <= 230;
+    }
+    if (step === 2) return !!form.activity_level;
+    if (step === 3) return !!form.goal && !!form.chat_style;
+    return true;
+  };
 
   const handleSave = async () => {
-    if (!isValid) return;
     setSaving(true);
-
     const calorieGoal = calculateCalorieGoal({
-      ...form,
-      weight: Number(form.weight),
-      height: Number(form.height),
-      age: Number(form.age),
+      ...form, weight: Number(form.weight), height: Number(form.height), age: Number(form.age),
     });
     const proteinGoal = form.goal === "gain_muscle"
       ? Math.round(Number(form.weight) * 2)
@@ -80,96 +101,259 @@ export default function Onboarding({ onComplete }) {
 
     const { error } = await supabase.from('user_profiles').upsert({
       user_id: user.id,
+      display_name: form.display_name.trim(),
       age: Number(form.age),
       weight: Number(form.weight),
       height: Number(form.height),
       gender: form.gender,
       activity_level: form.activity_level,
       goal: form.goal,
+      chat_style: form.chat_style,
       calorie_goal: calorieGoal,
       protein_goal: proteinGoal,
       fats_goal: fatsGoal,
       carbs_goal: carbsGoal,
     }, { onConflict: 'user_id' });
 
-    if (error) {
-      toast.error("Error saving profile");
-      setSaving(false);
-      return;
-    }
-
+    if (error) { toast.error("Errore nel salvataggio"); setSaving(false); return; }
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     setSaving(false);
-    toast.success("Profile saved! 🎉", { description: `Your daily goal: ${calorieGoal} kcal.`, duration: 3000 });
     onComplete();
   };
 
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Welcome to NutriCoach</h1>
-          <p className="text-muted-foreground">Let's set up your profile to personalize your nutrition goals.</p>
+  const steps = [
+    /* Step 0 — Nome */
+    <div key="name" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: "56px", marginBottom: "12px" }}>👋</div>
+        <h2 style={{ fontSize: "24px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Ciao! Come ti chiami?</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Useremo il tuo nome per personalizzare la tua esperienza</p>
+      </div>
+      <input
+        type="text"
+        placeholder="Il tuo nome o nickname..."
+        value={form.display_name}
+        onChange={(e) => setForm({ ...form, display_name: e.target.value })}
+        onKeyDown={(e) => e.key === "Enter" && canNext() && goNext()}
+        autoFocus
+        style={{ ...inputStyle, fontSize: "20px", textAlign: "center", padding: "16px" }}
+      />
+    </div>,
+
+    /* Step 1 — Dati personali */
+    <div key="personal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: "56px", marginBottom: "12px" }}>📋</div>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>I tuoi dati</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Servono per calcolare il tuo fabbisogno calorico preciso</p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+        <div>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Età</label>
+          <input type="number" placeholder="25" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} style={inputStyle} />
         </div>
-        <Card className="shadow-lg border-border/50">
-          <CardContent className="pt-6 space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="font-medium">Age</Label>
-                <Input type="number" min="10" max="100" placeholder="25" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} className={`rounded-xl border-2 h-11 ${ageError ? "border-red-500 bg-red-50" : ""}`} />
-                {ageError && <p className="text-xs text-red-500">Age must be between 10 and 100</p>}
-              </div>
-              <div className="space-y-2">
-                <Label className="font-medium">Biological Sex</Label>
-                <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
-                  <SelectTrigger className="rounded-xl border-2 h-11"><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        <div>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Sesso biologico</label>
+          <div style={{ display: "flex", gap: "6px" }}>
+            {[{ v: "male", l: "👨 M" }, { v: "female", l: "👩 F" }].map(g => (
+              <button key={g.v} onClick={() => setForm({ ...form, gender: g.v })} style={{
+                flex: 1, padding: "12px", borderRadius: "12px", border: form.gender === g.v ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
+                background: form.gender === g.v ? "#f0fdf4" : "#f9fafb", cursor: "pointer",
+                fontSize: "14px", fontWeight: form.gender === g.v ? 500 : 400,
+                color: form.gender === g.v ? "#15803d" : "#6b7280", fontFamily: "inherit",
+              }}>{g.l}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Peso (kg)</label>
+          <input type="number" placeholder="70" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} style={inputStyle} />
+        </div>
+        <div>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Altezza (cm)</label>
+          <input type="number" placeholder="175" value={form.height} onChange={(e) => setForm({ ...form, height: e.target.value })} style={inputStyle} />
+        </div>
+      </div>
+    </div>,
+
+    /* Step 2 — Livello attività */
+    <div key="activity" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏃</div>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Quanto sei attivo?</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Considera la tua routine settimanale media</p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {ACTIVITY_LEVELS.map(l => (
+          <button key={l.value} onClick={() => setForm({ ...form, activity_level: l.value })} style={{
+            display: "flex", alignItems: "center", gap: "12px",
+            padding: "12px 16px", borderRadius: "14px",
+            border: form.activity_level === l.value ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
+            background: form.activity_level === l.value ? "#f0fdf4" : "#f9fafb",
+            cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+          }}>
+            <span style={{ fontSize: "24px" }}>{l.emoji}</span>
+            <div>
+              <p style={{ fontSize: "14px", fontWeight: 500, color: form.activity_level === l.value ? "#15803d" : "#1a3a22" }}>{l.label}</p>
+              <p style={{ fontSize: "12px", color: "#9ca3af" }}>{l.sub}</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="font-medium">Weight (kg)</Label>
-                <Input type="number" min="30" max="250" placeholder="70" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className={`rounded-xl border-2 h-11 ${weightError ? "border-red-500 bg-red-50" : ""}`} />
-                {weightError && <p className="text-xs text-red-500">Weight must be between 30 and 250 kg</p>}
-              </div>
-              <div className="space-y-1">
-                <Label className="font-medium">Height (cm)</Label>
-                <Input type="number" min="120" max="230" placeholder="175" value={form.height} onChange={(e) => setForm({ ...form, height: e.target.value })} className={`rounded-xl border-2 h-11 ${heightError ? "border-red-500 bg-red-50" : ""}`} />
-                {heightError && <p className="text-xs text-red-500">Height must be between 120 and 230 cm</p>}
-              </div>
+            {form.activity_level === l.value && <span style={{ marginLeft: "auto", color: "#16a34a", fontSize: "16px" }}>✓</span>}
+          </button>
+        ))}
+      </div>
+    </div>,
+
+    /* Step 3 — Obiettivo + stile chat */
+    <div key="goal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: "56px", marginBottom: "12px" }}>🎯</div>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Il tuo obiettivo</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Scegli anche come preferisci che ti risponda il coach</p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {GOALS.map(g => (
+          <button key={g.value} onClick={() => setForm({ ...form, goal: g.value })} style={{
+            display: "flex", alignItems: "center", gap: "12px",
+            padding: "12px 16px", borderRadius: "14px",
+            border: form.goal === g.value ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
+            background: form.goal === g.value ? "#f0fdf4" : "#f9fafb",
+            cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+          }}>
+            <span style={{ fontSize: "24px" }}>{g.emoji}</span>
+            <div>
+              <p style={{ fontSize: "14px", fontWeight: 500, color: form.goal === g.value ? "#15803d" : "#1a3a22" }}>{g.label}</p>
+              <p style={{ fontSize: "12px", color: "#9ca3af" }}>{g.sub}</p>
             </div>
-            <div className="space-y-2">
-              <Label className="font-medium">Activity Level</Label>
-              <Select value={form.activity_level} onValueChange={(v) => setForm({ ...form, activity_level: v })}>
-                <SelectTrigger className="rounded-xl border-2 h-11"><SelectValue placeholder="Select activity level" /></SelectTrigger>
-                <SelectContent>
-                  {ACTIVITY_LEVELS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            {form.goal === g.value && <span style={{ marginLeft: "auto", color: "#16a34a", fontSize: "16px" }}>✓</span>}
+          </button>
+        ))}
+      </div>
+      <div>
+        <p style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px" }}>Stile risposte del coach</p>
+        <div style={{ display: "flex", gap: "8px" }}>
+          {CHAT_STYLES.map(s => (
+            <button key={s.value} onClick={() => setForm({ ...form, chat_style: s.value })} style={{
+              flex: 1, padding: "12px 8px", borderRadius: "14px",
+              border: form.chat_style === s.value ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
+              background: form.chat_style === s.value ? "#f0fdf4" : "#f9fafb",
+              cursor: "pointer", fontFamily: "inherit", textAlign: "center",
+            }}>
+              <div style={{ fontSize: "24px", marginBottom: "4px" }}>{s.emoji}</div>
+              <p style={{ fontSize: "13px", fontWeight: 500, color: form.chat_style === s.value ? "#15803d" : "#1a3a22" }}>{s.label}</p>
+              <p style={{ fontSize: "10px", color: "#9ca3af", lineHeight: 1.3 }}>{s.sub}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>,
+
+    /* Step 4 — Disclaimer */
+    <div key="disclaimer" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: "56px", marginBottom: "12px" }}>📌</div>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Prima di iniziare</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Leggi queste informazioni importanti</p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {[
+          { emoji: "⚕️", title: "Non è un dispositivo medico", text: "NutriCoach è un supporto al benessere personale, non un servizio medico. Non sostituisce il parere di un nutrizionista o medico." },
+          { emoji: "⚠️", title: "Non adatto a disturbi alimentari", text: "Se soffri o hai sofferto di disturbi alimentari seri (anoressia, bulimia, BED), ti consigliamo di consultare uno specialista prima di usare questa app." },
+          { emoji: "✏️", title: "Inserisci dati accurati", text: "I calcoli calorici dipendono dai dati che inserisci. Più sono precisi, più sarà accurato il tuo piano nutrizionale." },
+          { emoji: "🤖", title: "L'AI può sbagliare", text: "Le stime caloriche dell'AI sono approssimative. Usale come riferimento, non come valori assoluti." },
+        ].map((item, i) => (
+          <div key={i} style={{
+            display: "flex", gap: "12px", padding: "12px 14px",
+            background: "#f9fafb", borderRadius: "12px",
+            border: "0.5px solid #e5e7eb",
+          }}>
+            <span style={{ fontSize: "20px", flexShrink: 0 }}>{item.emoji}</span>
+            <div>
+              <p style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22", marginBottom: "2px" }}>{item.title}</p>
+              <p style={{ fontSize: "11px", color: "#6b7280", lineHeight: 1.5 }}>{item.text}</p>
             </div>
-            <div className="space-y-2">
-              <Label className="font-medium">Wellness Goal</Label>
-              <Select value={form.goal} onValueChange={(v) => setForm({ ...form, goal: v })}>
-                <SelectTrigger className="rounded-xl border-2 h-11"><SelectValue placeholder="Select your goal" /></SelectTrigger>
-                <SelectContent>
-                  {GOALS.map((g) => <SelectItem key={g.value} value={g.value}>{g.emoji} {g.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleSave} disabled={saving || !isValid} className="w-full h-12 text-base font-semibold rounded-2xl bg-primary hover:bg-primary/90 shadow-md mt-2">
-              {saving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <ArrowRight className="w-5 h-5 mr-2" />}
-              {saving ? "Saving..." : "Get Started"}
-            </Button>
-          </CardContent>
-        </Card>
-      </motion.div>
+          </div>
+        ))}
+      </div>
+    </div>,
+  ];
+
+  return (
+    <div style={{ minHeight: "100dvh", background: "#f0fcf3", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
+      <div style={{ width: "100%", maxWidth: "420px" }}>
+
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+          <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: "linear-gradient(135deg, #16a34a, #15803d)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px", fontSize: "24px" }}>🍎</div>
+          <p style={{ fontSize: "13px", color: "#9ca3af" }}>NutriCoach AI</p>
+        </div>
+
+        {/* Progress dots */}
+        <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "24px" }}>
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            <div key={i} style={{
+              height: "4px", borderRadius: "99px",
+              background: i <= step ? "#16a34a" : "#d1fae5",
+              transition: "all 0.3s",
+              width: i === step ? "24px" : "8px",
+            }} />
+          ))}
+        </div>
+
+        {/* Card */}
+        <div style={{ background: "white", borderRadius: "24px", padding: "28px 24px", border: "0.5px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 24px rgba(0,0,0,0.06)", overflow: "hidden", position: "relative", minHeight: "420px" }}>
+          <AnimatePresence mode="wait" custom={dir}>
+            <motion.div
+              key={step}
+              custom={dir}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.28, ease: "easeInOut" }}
+            >
+              {steps[step]}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+          {step > 0 && (
+            <button onClick={goPrev} style={{
+              width: "48px", height: "52px", borderRadius: "14px",
+              background: "white", border: "0.5px solid #e5e7eb",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", flexShrink: 0,
+            }}>
+              <ArrowLeft style={{ width: "18px", height: "18px", color: "#6b7280" }} />
+            </button>
+          )}
+          {step < TOTAL_STEPS - 1 ? (
+            <button onClick={goNext} disabled={!canNext()} style={{
+              flex: 1, height: "52px", borderRadius: "14px",
+              background: canNext() ? "#16a34a" : "#d1fae5",
+              color: "white", border: "none", fontSize: "15px", fontWeight: 500,
+              cursor: canNext() ? "pointer" : "default", fontFamily: "inherit",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+              transition: "background 0.2s",
+            }}>
+              Continua <ArrowRight style={{ width: "18px", height: "18px" }} />
+            </button>
+          ) : (
+            <button onClick={handleSave} disabled={saving} style={{
+              flex: 1, height: "52px", borderRadius: "14px",
+              background: "#16a34a", color: "white", border: "none",
+              fontSize: "15px", fontWeight: 500, cursor: "pointer",
+              fontFamily: "inherit", display: "flex", alignItems: "center",
+              justifyContent: "center", gap: "8px",
+            }}>
+              {saving ? <Loader2 style={{ width: "18px", height: "18px", animation: "spin 1s linear infinite" }} /> : null}
+              {saving ? "Salvataggio..." : "Inizia ora 🚀"}
+            </button>
+          )}
+        </div>
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      </div>
     </div>
   );
 }
