@@ -28,12 +28,19 @@ export default function ChatBubble({ message, foodEntries }) {
             overflowWrap: "break-word",
             overflow: "hidden",
           }}
-          className={cn(
+                    className={cn(
             "rounded-3xl px-5 py-3.5 shadow-sm",
             isUser
-              ? "bg-white border border-border/50 rounded-tr-lg"
-              : "border border-gray-100 rounded-tl-lg"
+              ? "rounded-tr-lg"
+              : "rounded-tl-lg"
           )}
+          style={{
+            backgroundColor: !isUser ? "#eafff1" : "white",
+            border: "0.5px solid rgba(0,0,0,0.06)",
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+            overflow: "hidden",
+          }}
         >
           {isUser ? (
             <p className="text-sm leading-relaxed text-foreground" style={{ wordBreak: "break-word" }}>
