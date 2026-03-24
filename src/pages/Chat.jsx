@@ -221,9 +221,12 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
 
       let result;
       try {
-        result = JSON.parse(rawText.replace(/```json|```/g, "").trim());
+        const cleaned = rawText.replace(/```json|```/g, "").trim();
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+        if (!result || !result.message) throw new Error("Invalid");
       } catch {
-        result = { message: rawText, foods: [], burned_calories: 0 };
+        result = { message: rawText.replace(/```json|```|\{[\s\S]*\}/g, "").trim() || "Sorry, something went wrong.", foods: [], burned_calories: 0 };
       }
 
       const foods = Array.isArray(result.foods) ? result.foods : [];
