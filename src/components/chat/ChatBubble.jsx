@@ -24,7 +24,7 @@ export default function ChatBubble({ message, foodEntries }) {
         <div
           className={cn("rounded-3xl px-5 py-3.5 shadow-sm", isUser ? "rounded-tr-lg" : "rounded-tl-lg")}
                style={{
-            backgroundColor: isUser ? "white" : "#d2f7de",
+            backgroundColor: isUser ? "white" : "#ace6be",
             border: "0.5px solid rgba(0,0,0,0.06)",
             wordBreak: "break-word",
             overflowWrap: "break-word",
