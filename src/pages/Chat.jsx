@@ -193,31 +193,29 @@ export default function Chat() {
     try {
       const systemPrompt = buildSystemPrompt(profile, todayLog, foodEntries || []);
       const history = messages
-  .filter(m => m.id !== "welcome_message" && (m.role === "user" || m.role === "assistant"))
-  .slice(-10)
-  .map(m => ({ role: m.role, content: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }));
+        .filter(m => m.id !== "welcome_message" && (m.role === "user" || m.role === "assistant"))
+        .slice(-10)
+        .map(m => ({ role: m.role, content: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }));
+      const recentMessages = [...history, { role: "user", content: userMessage.content }];
 
-const recentMessages = [...history, { role: "user", content: userMessage.content }];
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 1500,
+          system: systemPrompt,
+          messages: recentMessages,
+        }),
+      });
 
-
-   const response = await fetch("https://api.anthropic.com/v1/messages", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
-    "anthropic-version": "2023-06-01",
-    "anthropic-dangerous-direct-browser-access": "true",
-  },
-  body: JSON.stringify({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 1500,
-    system: systemPrompt,
-    messages: recentMessages,
-  }),
-});
-
-const data = await response.json();
-const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not process your request.", "foods": [], "burned_calories": 0}';
+      const data = await response.json();
+      const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not process your request.", "foods": [], "burned_calories": 0}';
 
       let result;
       try {
@@ -233,7 +231,6 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
       const burnedCalories = result.burned_calories || 0;
       const assistantMessage = { id: crypto.randomUUID(), role: "assistant", content: result.message, timestamp: new Date().toISOString(), nutrition: null };
 
-      // Ensure FoodLog exists
       let currentLogId = todayLog?.id;
       if (!currentLogId) {
         const { data: created } = await supabase.from('food_logs').insert({
@@ -243,7 +240,6 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
         currentLogId = created.id;
       }
 
-      // Create food entries
       let createdEntries = [];
       if (foods.length > 0) {
         const { data: inserted } = await supabase.from('food_entries').insert(
@@ -309,20 +305,20 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
       </div>
       <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} />
       <ExerciseBanner burnedCalories={todayLog?.total_burned_calories} />
-      <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40" style={{backgroundColor: "#f0fcf3"}}>
-        <div className="max-w-4xl mx-auto space-y-5 px-4">
-          {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
-          {isLoading && <TypingIndicator />}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
       <WaterTracker
         todayLog={todayLog}
         onUpdate={() => {
           queryClient.invalidateQueries({ queryKey: ["foodlog"] });
         }}
       />
-       {showScanner && (
+      <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40" style={{ backgroundColor: "#f0fcf3" }}>
+        <div className="max-w-4xl mx-auto space-y-5 px-4">
+          {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
+          {isLoading && <TypingIndicator />}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+      {showScanner && (
         <BarcodeScanner
           onProductFound={(product) => {
             const g = product.grams || 100;
