@@ -24,8 +24,8 @@ const GOALS = [
 ];
 
 const CHAT_STYLES = [
-  { value: "concise", label: "Sintetico", emoji: "⚡", sub: "Breve e diretto" },
-  { value: "detailed", label: "Dettagliato", emoji: "🧑‍🏫", sub: "Consigli approfonditi" },
+  { value: "concise", label: "Concise", emoji: "⚡", sub: "Short and to the point" },
+  { value: "detailed", label: "Detailed", emoji: "🧑‍🏫", sub: "In-depth advice" },
 ];
 
 function calculateCalorieGoal(profile) {
