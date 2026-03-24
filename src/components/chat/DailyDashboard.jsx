@@ -93,7 +93,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
         {/* Barra calorie — sempre visibile */}
         <div className="px-4 pb-3">
           <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-            <motion.div initial={{ width: 0 }} animate={{ width: `${caloriePercentage}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", isDanger ? "bg-red-500" : isWarning ? "bg-orange-400" : "bg-rose-500")} />
+            <motion.div initial={{ width: 0 }} animate={{ width: `${caloriePercentage}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", isDanger ? "bg-rose-500" : isWarning ? "bg-rose-400" : "bg-rose-500")} />
           </div>
         </div>
 
