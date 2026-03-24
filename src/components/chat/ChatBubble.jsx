@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { User, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import NutritionCard from "./NutritionCard";
 import { motion } from "framer-motion";
@@ -15,26 +14,22 @@ export default function ChatBubble({ message, foodEntries }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={cn("flex gap-3 w-full", isUser ? "ml-auto flex-row-reverse" : "mr-auto")}
+      transition={{ duration: 0.2 }}
+      className={cn("flex w-full", isUser ? "justify-end" : "justify-start")}
       style={{ maxWidth: "100%", width: "100%" }}
     >
-      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-1 shadow-sm", isUser ? "bg-secondary" : "bg-gradient-to-br from-primary to-primary/80")}>
-        {isUser ? <User className="w-5 h-5 text-foreground" /> : <Sparkles className="w-5 h-5 text-white" />}
-      </div>
-      <div
-        className={cn("flex flex-col gap-3", isUser ? "items-end" : "items-start")}
-        style={{ flex: 1, minWidth: 0 }}
-      >
+      <div style={{ maxWidth: "78%", display: "flex", flexDirection: "column", gap: "2px", alignItems: isUser ? "flex-end" : "flex-start" }}>
         <div
-          className={cn("rounded-3xl px-5 py-3.5 shadow-sm", isUser ? "rounded-tr-lg" : "rounded-tl-lg")}
           style={{
-            backgroundColor: isUser ? "white" : "#eafff1",
+            backgroundColor: isUser ? "#dcf8c6" : "white",
             border: "0.5px solid rgba(0,0,0,0.06)",
+            borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+            padding: "8px 14px",
             wordBreak: "break-word",
             overflowWrap: "break-word",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
           }}
         >
           {isUser ? (
@@ -49,13 +44,13 @@ export default function ChatBubble({ message, foodEntries }) {
               <ReactMarkdown>{displayContent}</ReactMarkdown>
             </div>
           )}
+          {message.timestamp && (
+            <p style={{ fontSize: "10px", color: "#9ca3af", textAlign: "right", marginTop: "3px", marginBottom: "-2px" }}>
+              {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </p>
+          )}
         </div>
         {message.nutrition && <NutritionCard nutrition={message.nutrition} foodEntries={foodEntries} />}
-        {message.timestamp && (
-          <span className="text-[10px] text-muted-foreground px-2">
-            {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        )}
       </div>
     </motion.div>
   );
