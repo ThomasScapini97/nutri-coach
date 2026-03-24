@@ -16,6 +16,7 @@ import { useMealReminderCheck } from "../components/notifications/MealReminderTo
 import { toast } from "sonner";
 import { recalculateTotals } from "@/lib/nutritionUtils";
 import BarcodeScanner from "../components/chat/BarcodeScanner";
+import WaterTracker from "../components/chat/WaterTracker";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -312,6 +313,12 @@ const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not proc
           <div ref={messagesEndRef} />
         </div>
       </div>
+      <WaterTracker
+        todayLog={todayLog}
+        onUpdate={() => {
+          queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+        }}
+      />
        {showScanner && (
         <BarcodeScanner
           onProductFound={(product) => {
