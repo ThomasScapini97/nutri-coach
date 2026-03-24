@@ -26,7 +26,6 @@ export default function ChatBubble({ message, foodEntries }) {
             backgroundColor: !isUser ? "#eafff1" : undefined,
             wordBreak: "break-word",
             overflowWrap: "break-word",
-            maxWidth: "min(85%, 520px)",
             overflow: "hidden",
           }}
           className={cn(
