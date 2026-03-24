@@ -23,6 +23,11 @@ const GOALS = [
   { value: "gain_muscle", label: "Gain muscle", emoji: "💪" },
 ];
 
+const CHAT_STYLES = [
+  { value: "concise", label: "Sintetico", emoji: "⚡", sub: "Breve e diretto" },
+  { value: "detailed", label: "Dettagliato", emoji: "🧑‍🏫", sub: "Consigli approfonditi" },
+];
+
 function calculateCalorieGoal(profile) {
   if (!profile.weight || !profile.height || !profile.age || !profile.gender) return null;
   let bmr;
@@ -65,7 +70,8 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
-    age: "", weight: "", height: "", gender: "", activity_level: "", goal: "",
+    age: "", weight: "", height: "", gender: "",
+    activity_level: "", goal: "", chat_style: "concise",
   });
 
   const { data: profile, isLoading } = useQuery({
@@ -86,6 +92,7 @@ export default function Profile() {
         gender: profile.gender || "",
         activity_level: profile.activity_level || "",
         goal: profile.goal || "",
+        chat_style: profile.chat_style || "concise",
       });
     }
   }, [profile]);
@@ -112,6 +119,7 @@ export default function Profile() {
       gender: form.gender,
       activity_level: form.activity_level,
       goal: form.goal,
+      chat_style: form.chat_style,
       calorie_goal: calorieGoal,
       protein_goal: proteinGoal,
       fats_goal: fatsGoal,
@@ -174,7 +182,7 @@ export default function Profile() {
     </div>
   );
 
-  const userName = user?.email?.split("@")[0] || "You";
+  const userName = profile?.display_name || user?.email?.split("@")[0] || "You";
 
   return (
     <div className="flex-1 overflow-y-auto pb-24" style={{ background: "#f0fcf3" }}>
@@ -253,62 +261,30 @@ export default function Profile() {
             <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>👤</div>
             <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Personal info</span>
           </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1px", background: "#f3f4f6" }}>
-            {/* Age */}
             <div style={{ background: "white", padding: "10px 12px" }}>
               <label style={fieldLabelStyle}>Age</label>
-              <input
-                type="number" placeholder="25"
-                value={form.age}
-                onChange={(e) => setForm({ ...form, age: e.target.value })}
-                style={inputStyle}
-              />
+              <input type="number" placeholder="25" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} style={inputStyle} />
             </div>
-            {/* Gender */}
             <div style={{ background: "white", padding: "10px 12px" }}>
               <label style={fieldLabelStyle}>Gender</label>
               <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
                 <SelectTrigger style={{ ...inputStyle, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
-                <SelectContent
-                position="popper"
-                side="bottom"
-                sideOffset={4}
-                style={{
-                  background: "white",
-                  border: "0.5px solid #e5e7eb",
-                  borderRadius: "12px",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                  zIndex: 9999,
-                  overflow: "hidden",
-                }}
-              >
+                <SelectContent position="popper" side="bottom" sideOffset={4} style={{ background: "white", border: "0.5px solid #e5e7eb", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 9999, overflow: "hidden" }}>
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            {/* Weight */}
             <div style={{ background: "white", padding: "10px 12px" }}>
               <label style={fieldLabelStyle}>Weight (kg)</label>
-              <input
-                type="number" placeholder="70"
-                value={form.weight}
-                onChange={(e) => setForm({ ...form, weight: e.target.value })}
-                style={inputStyle}
-              />
+              <input type="number" placeholder="70" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} style={inputStyle} />
             </div>
-            {/* Height */}
             <div style={{ background: "white", padding: "10px 12px" }}>
               <label style={fieldLabelStyle}>Height (cm)</label>
-              <input
-                type="number" placeholder="175"
-                value={form.height}
-                onChange={(e) => setForm({ ...form, height: e.target.value })}
-                style={inputStyle}
-              />
+              <input type="number" placeholder="175" value={form.height} onChange={(e) => setForm({ ...form, height: e.target.value })} style={inputStyle} />
             </div>
           </div>
         </motion.div>
@@ -324,58 +300,61 @@ export default function Profile() {
             <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>⚡</div>
             <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Activity & goal</span>
           </div>
-
-          {/* Activity level */}
           <div style={{ padding: "10px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
             <label style={fieldLabelStyle}>Activity level</label>
             <Select value={form.activity_level} onValueChange={(v) => setForm({ ...form, activity_level: v })}>
               <SelectTrigger style={{ ...inputStyle, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                 <SelectValue placeholder="Select activity level" />
               </SelectTrigger>
-              <SelectContent
-                position="popper"
-                side="bottom"
-                sideOffset={4}
-                style={{
-                  background: "white",
-                  border: "0.5px solid #e5e7eb",
-                  borderRadius: "12px",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                  zIndex: 9999,
-                  overflow: "hidden",
-                }}
-              >
+              <SelectContent position="popper" side="bottom" sideOffset={4} style={{ background: "white", border: "0.5px solid #e5e7eb", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 9999, overflow: "hidden" }}>
                 {ACTIVITY_LEVELS.map((l) => (
                   <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          {/* Wellness goal pills */}
           <div style={{ padding: "10px 12px 12px" }}>
             <label style={fieldLabelStyle}>Wellness goal</label>
             <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
               {GOALS.map((g) => (
-                <button
-                  key={g.value}
-                  onClick={() => setForm({ ...form, goal: g.value })}
-                  style={{
-                    flex: 1,
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: "5px",
-                    padding: "10px 4px 8px",
-                    borderRadius: "12px",
-                    border: form.goal === g.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                    background: form.goal === g.value ? "#f0fdf4" : "#f9fafb",
-                    cursor: "pointer", fontFamily: "inherit",
-                  }}
-                >
+                <button key={g.value} onClick={() => setForm({ ...form, goal: g.value })} style={{
+                  flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "5px",
+                  padding: "10px 4px 8px", borderRadius: "12px",
+                  border: form.goal === g.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                  background: form.goal === g.value ? "#f0fdf4" : "#f9fafb",
+                  cursor: "pointer", fontFamily: "inherit",
+                }}>
                   <span style={{ fontSize: "20px" }}>{g.emoji}</span>
-                  <span style={{
-                    fontSize: "10px", textAlign: "center", lineHeight: 1.3,
-                    color: form.goal === g.value ? "#15803d" : "#6b7280",
-                    fontWeight: form.goal === g.value ? 500 : 400,
-                  }}>{g.label}</span>
+                  <span style={{ fontSize: "10px", textAlign: "center", lineHeight: 1.3, color: form.goal === g.value ? "#15803d" : "#6b7280", fontWeight: form.goal === g.value ? 500 : 400 }}>{g.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stile chat */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "11px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>💬</div>
+            <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Stile risposte coach</span>
+          </div>
+          <div style={{ padding: "10px 12px 12px" }}>
+            <div style={{ display: "flex", gap: "8px" }}>
+              {CHAT_STYLES.map((s) => (
+                <button key={s.value} onClick={() => setForm({ ...form, chat_style: s.value })} style={{
+                  flex: 1, padding: "12px 8px", borderRadius: "14px",
+                  border: form.chat_style === s.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                  background: form.chat_style === s.value ? "#f0fdf4" : "#f9fafb",
+                  cursor: "pointer", fontFamily: "inherit", textAlign: "center",
+                }}>
+                  <div style={{ fontSize: "22px", marginBottom: "4px" }}>{s.emoji}</div>
+                  <p style={{ fontSize: "13px", fontWeight: 500, color: form.chat_style === s.value ? "#15803d" : "#1a3a22" }}>{s.label}</p>
+                  <p style={{ fontSize: "10px", color: "#9ca3af" }}>{s.sub}</p>
                 </button>
               ))}
             </div>
@@ -386,37 +365,27 @@ export default function Profile() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.22 }}
           style={{ display: "flex", flexDirection: "column", gap: "8px" }}
         >
-          <Button
-            onClick={handleSave}
-            disabled={saving || !formValid}
-            style={{
-              width: "100%", background: "#16a34a", color: "white",
-              borderRadius: "14px", padding: "13px", fontSize: "14px",
-              fontWeight: 500, border: "none", display: "flex",
-              alignItems: "center", justifyContent: "center", gap: "7px",
-              opacity: (!formValid || saving) ? 0.6 : 1,
-            }}
-          >
+          <Button onClick={handleSave} disabled={saving || !formValid} style={{
+            width: "100%", background: "#16a34a", color: "white",
+            borderRadius: "14px", padding: "13px", fontSize: "14px",
+            fontWeight: 500, border: "none", display: "flex",
+            alignItems: "center", justifyContent: "center", gap: "7px",
+            opacity: (!formValid || saving) ? 0.6 : 1,
+          }}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save profile
           </Button>
-
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            style={{
-              width: "100%", background: "white", color: "#374151",
-              borderRadius: "14px", padding: "11px", fontSize: "13px",
-              fontWeight: 400, border: "0.5px solid #e5e7eb",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
-            }}
-          >
+          <Button variant="outline" onClick={handleLogout} style={{
+            width: "100%", background: "white", color: "#374151",
+            borderRadius: "14px", padding: "11px", fontSize: "13px",
+            fontWeight: 400, border: "0.5px solid #e5e7eb",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
+          }}>
             <LogOut className="w-4 h-4" /> Log out
           </Button>
-
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button style={{
@@ -432,17 +401,11 @@ export default function Profile() {
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete all your data. This action cannot be undone.
-                </AlertDialogDescription>
+                <AlertDialogDescription>This will permanently delete all your data. This action cannot be undone.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteAccount}
-                  disabled={deleting}
-                  className="bg-destructive hover:bg-destructive/90"
-                >
+                <AlertDialogAction onClick={handleDeleteAccount} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
                   {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Delete account
                 </AlertDialogAction>
