@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
-import { format, subDays, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isFuture } from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, X } from "lucide-react";
 
@@ -19,7 +19,7 @@ function getStatusColor(calories, goal) {
   return "#ef4444";
 }
 
-function getBarColor(calories, goal, isToday) {
+function getBarColor(calories, goal) {
   if (!calories || calories === 0) return "#f3f4f6";
   const pct = (calories / goal) * 100;
   if (pct >= 90 && pct <= 110) return "#16a34a";
@@ -27,20 +27,20 @@ function getBarColor(calories, goal, isToday) {
   return "#ef4444";
 }
 
-
-export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
+export default function ScrollableChart({ calorieGoal = 2000 }) {
   const { user } = useAuth();
   const [logs, setLogs] = useState({});
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [dayEntries, setDayEntries] = useState([]);
+  const [loadingEntries, setLoadingEntries] = useState(false);
   const scrollRef = useRef(null);
 
-  // Genera tutti i giorni da DAYS_BACK fino a FUTURE_DAYS
   const allDays = Array.from({ length: DAYS_BACK + FUTURE_DAYS + 1 }, (_, i) =>
     format(subDays(TODAY, DAYS_BACK - i), "yyyy-MM-dd")
   );
 
-  // Fetch tutti i log degli ultimi 90 giorni
   useEffect(() => {
     if (!user?.id) return;
     const from = format(subDays(TODAY, DAYS_BACK), "yyyy-MM-dd");
@@ -58,15 +58,42 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
       });
   }, [user?.id]);
 
-  // Scrolla al giorno corrente (con i 3 giorni futuri visibili a destra)
   useEffect(() => {
     if (!scrollRef.current) return;
     const todayIndex = allDays.findIndex(d => d === format(TODAY, "yyyy-MM-dd"));
-    const scrollX = (todayIndex - 4) * (BAR_WIDTH + BAR_GAP);
-    scrollRef.current.scrollLeft = scrollX;
+    scrollRef.current.scrollLeft = (todayIndex - 4) * (BAR_WIDTH + BAR_GAP);
   }, []);
 
+  const openDayDetail = async (dateStr) => {
+    if (dateStr >= format(TODAY, "yyyy-MM-dd") && dateStr !== format(TODAY, "yyyy-MM-dd")) return;
+    setSelectedDay(dateStr);
+    setDayEntries([]);
+    setLoadingEntries(true);
+    const { data: logData } = await supabase
+      .from("food_logs")
+      .select("id, total_calories, total_protein, total_carbs, total_fats")
+      .eq("user_id", user.id)
+      .eq("date", dateStr)
+      .single();
+    if (logData?.id) {
+      const { data: entries } = await supabase
+        .from("food_entries")
+        .select("food_name, meal_type, calories")
+        .eq("foodlog_id", logData.id)
+        .order("timestamp", { ascending: true });
+      setDayEntries(entries || []);
+    }
+    setLoadingEntries(false);
+  };
+
   const maxCalories = Math.max(calorieGoal, ...Object.values(logs).filter(Boolean));
+
+  const mealColors = {
+    breakfast: { bg: "#fef3c7", color: "#92400e" },
+    lunch: { bg: "#dbeafe", color: "#1e40af" },
+    dinner: { bg: "#ede9fe", color: "#5b21b6" },
+    snack: { bg: "#dcfce7", color: "#166534" },
+  };
 
   return (
     <div>
@@ -89,14 +116,7 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
       </div>
 
       {/* Scrollable chart */}
-      <div
-        ref={scrollRef}
-        style={{
-          overflowX: "auto", overflowY: "hidden",
-          scrollbarWidth: "none", msOverflowStyle: "none",
-          paddingBottom: "0px",
-        }}
-      >
+      <div ref={scrollRef} style={{ overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none", msOverflowStyle: "none" }}>
         <div style={{
           display: "flex", alignItems: "flex-end", gap: `${BAR_GAP}px`,
           width: `${allDays.length * (BAR_WIDTH + BAR_GAP)}px`,
@@ -107,28 +127,22 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
             const todayStr = format(TODAY, "yyyy-MM-dd");
             const isTodayBar = dateStr === todayStr;
             const isFutureBar = dateStr > todayStr;
-            const barColor = isFutureBar ? "#f3f4f6" : getBarColor(calories, calorieGoal, isTodayBar);
-            const barHeight = isFutureBar || !calories
-              ? 6
-              : Math.max(4, (calories / maxCalories) * 28);
+            const barColor = isFutureBar ? "#f3f4f6" : getBarColor(calories, calorieGoal);
+            const barHeight = isFutureBar || !calories ? 4 : Math.max(4, (calories / maxCalories) * 28);
             const dayLabel = format(new Date(dateStr + "T12:00:00"), "EEE");
             const dayNum = format(new Date(dateStr + "T12:00:00"), "d");
 
             return (
               <div
                 key={dateStr}
-                onClick={() => !isFutureBar && onDaySelect?.(dateStr)}
+                onClick={() => !isFutureBar && openDayDetail(dateStr)}
                 style={{
                   width: `${BAR_WIDTH}px`, flexShrink: 0,
                   display: "flex", flexDirection: "column", alignItems: "center",
-                  cursor: isFutureBar ? "default" : "pointer",
-                  gap: "3px",
+                  cursor: isFutureBar ? "default" : "pointer", gap: "3px",
                 }}
               >
-                <div style={{
-                  width: "100%", height: "32px",
-                  display: "flex", alignItems: "flex-end", justifyContent: "center",
-                }}>
+                <div style={{ width: "100%", height: "32px", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: barHeight }}
@@ -140,16 +154,10 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
                     }}
                   />
                 </div>
-                <span style={{
-                  fontSize: "9px", color: isTodayBar ? "#16a34a" : "#9ca3af",
-                  fontWeight: isTodayBar ? 600 : 400, lineHeight: 1,
-                }}>
+                <span style={{ fontSize: "9px", color: isTodayBar ? "#16a34a" : "#9ca3af", fontWeight: isTodayBar ? 600 : 400, lineHeight: 1 }}>
                   {dayLabel}
                 </span>
-                <span style={{
-                  fontSize: "9px", color: isTodayBar ? "#16a34a" : "#9ca3af",
-                  fontWeight: isTodayBar ? 600 : 400, lineHeight: 1,
-                }}>
+                <span style={{ fontSize: "9px", color: isTodayBar ? "#16a34a" : "#9ca3af", fontWeight: isTodayBar ? 600 : 400, lineHeight: 1 }}>
                   {dayNum}
                 </span>
               </div>
@@ -158,6 +166,86 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
         </div>
       </div>
 
+      {/* Popup dettaglio giorno */}
+      <AnimatePresence>
+        {selectedDay && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+            onClick={() => setSelectedDay(null)}
+          >
+            <motion.div
+              initial={{ y: 300 }}
+              animate={{ y: 0 }}
+              exit={{ y: 300 }}
+              transition={{ type: "spring", damping: 25 }}
+              onClick={e => e.stopPropagation()}
+              style={{ background: "white", borderRadius: "24px 24px 0 0", padding: "20px", width: "100%", maxWidth: "480px", maxHeight: "70vh", overflowY: "auto" }}
+            >
+              {/* Header popup */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <div>
+                  <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22" }}>
+                    {format(new Date(selectedDay + "T12:00:00"), "EEEE, MMM d")}
+                  </p>
+                  <p style={{ fontSize: "11px", color: "#9ca3af" }}>Read only — past day</p>
+                </div>
+                <button onClick={() => setSelectedDay(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <X style={{ width: "14px", height: "14px", color: "#6b7280" }} />
+                </button>
+              </div>
+
+              {/* Calorie summary */}
+              {logs[selectedDay] > 0 && (
+                <div style={{
+                  background: "#f0fdf4", borderRadius: "12px", padding: "10px 14px",
+                  marginBottom: "14px", display: "flex", alignItems: "center", justifyContent: "space-between",
+                }}>
+                  <span style={{ fontSize: "12px", color: "#16a34a", fontWeight: 500 }}>Total calories</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22" }}>{logs[selectedDay]}</span>
+                    <span style={{ fontSize: "11px", color: "#9ca3af" }}>/ {calorieGoal} kcal</span>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: getStatusColor(logs[selectedDay], calorieGoal) || "#e5e7eb" }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Lista pasti */}
+              {loadingEntries ? (
+                <div style={{ textAlign: "center", padding: "24px", color: "#9ca3af", fontSize: "13px" }}>Loading...</div>
+              ) : dayEntries.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {dayEntries.map((entry, i) => {
+                    const style = mealColors[entry.meal_type?.toLowerCase()] || { bg: "#f3f4f6", color: "#6b7280" };
+                    return (
+                      <div key={i} style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "10px 12px", background: "white", borderRadius: "12px",
+                        border: "0.5px solid rgba(0,0,0,0.06)",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: style.bg, color: style.color, fontWeight: 500 }}>
+                            {entry.meal_type || "other"}
+                          </span>
+                          <span style={{ fontSize: "13px", color: "#1a3a22" }}>{entry.food_name}</span>
+                        </div>
+                        <span style={{ fontSize: "12px", fontWeight: 500, color: "#dc2626" }}>{entry.calories} kcal</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ textAlign: "center", padding: "24px", color: "#9ca3af", fontSize: "13px" }}>
+                  No food logged this day
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Calendar modal */}
       <AnimatePresence>
         {showCalendar && (
@@ -165,11 +253,7 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{
-              position: "fixed", inset: 0, zIndex: 9999,
-              background: "rgba(0,0,0,0.5)",
-              display: "flex", alignItems: "flex-end", justifyContent: "center",
-            }}
+            style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
             onClick={() => setShowCalendar(false)}
           >
             <motion.div
@@ -178,20 +262,12 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
               exit={{ y: 200 }}
               transition={{ type: "spring", damping: 25 }}
               onClick={e => e.stopPropagation()}
-              style={{
-                background: "white", borderRadius: "24px 24px 0 0",
-                padding: "20px", width: "100%", maxWidth: "480px",
-              }}
+              style={{ background: "white", borderRadius: "24px 24px 0 0", padding: "20px", width: "100%", maxWidth: "480px" }}
             >
               {/* Calendar header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                <button
-                  onClick={() => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1))}
-                  style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", padding: "4px 8px", color: "#6b7280" }}
-                >‹</button>
-                <span style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22" }}>
-                  {format(calendarMonth, "MMMM yyyy")}
-                </span>
+                <button onClick={() => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1))} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", padding: "4px 8px", color: "#6b7280" }}>‹</button>
+                <span style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22" }}>{format(calendarMonth, "MMMM yyyy")}</span>
                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                   <button
                     onClick={() => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1))}
@@ -216,7 +292,7 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
                 const start = startOfMonth(calendarMonth);
                 const end = endOfMonth(calendarMonth);
                 const days = eachDayOfInterval({ start, end });
-                const startDow = (start.getDay() + 6) % 7; // Monday = 0
+                const startDow = (start.getDay() + 6) % 7;
                 const cells = [...Array(startDow).fill(null), ...days];
                 while (cells.length % 7 !== 0) cells.push(null);
 
@@ -236,8 +312,8 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
                           key={dateStr}
                           onClick={() => {
                             if (!isFutureDay) {
-                              onDaySelect?.(dateStr);
                               setShowCalendar(false);
+                              openDayDetail(dateStr);
                             }
                           }}
                           disabled={isFutureDay}
@@ -253,10 +329,7 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
                           <span style={{ fontSize: "12px", fontWeight: isTodayDay ? 600 : 400, color: isTodayDay ? "#16a34a" : "#1a3a22" }}>
                             {format(day, "d")}
                           </span>
-                          <div style={{
-                            width: "5px", height: "5px", borderRadius: "50%",
-                            background: dotColor || "transparent",
-                          }} />
+                          <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: dotColor || "transparent" }} />
                         </button>
                       );
                     })}
@@ -264,7 +337,7 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
                 );
               })()}
 
-              {/* Legenda calendario */}
+              {/* Legenda */}
               <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginTop: "16px" }}>
                 {[
                   { color: "#16a34a", label: "On track" },

@@ -270,12 +270,7 @@ export default function Summary() {
           </div>
         </div>
 
-        <ScrollableChart
-          calorieGoal={calorieGoal}
-          onDaySelect={(dateStr) => {
-            setSelectedDate(new Date(dateStr + "T12:00:00"));
-          }}
-        />
+        <ScrollableChart calorieGoal={calorieGoal} />
       </div>
      </div>
 
