@@ -155,7 +155,7 @@ export default function Exercise() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             style={{
-              background: "linear-gradient(135deg, #dc2626, #b91c1c)",
+              background: "linear-gradient(135deg, #ef4444, #dc2626)",
               borderRadius: "20px", padding: "18px", color: "white",
               position: "relative", overflow: "hidden",
             }}
