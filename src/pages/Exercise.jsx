@@ -50,6 +50,8 @@ export default function Exercise() {
   });
 
   const weight = profile?.weight || 70;
+  const activeDaysGoal = profile?.active_days_goal || 3;
+  const burnGoal = profile?.burn_goal || 300;
 
   const { data: todayLog } = useQuery({
     queryKey: ["foodlog", TODAY, user?.id],
@@ -83,17 +85,23 @@ export default function Exercise() {
 
   const totalBurnedToday = todayLog?.total_burned_calories || 0;
   const totalMinutesToday = todayExercises.reduce((sum, e) => sum + e.duration_minutes, 0);
-  const activeDaysWeek = new Set(weekExercises.map(e => e.date)).size;
+  const activeDaysThisWeek = new Set(weekExercises.map(e => e.date)).size;
   const kcalPerMin = totalMinutesToday > 0 ? (totalBurnedToday / totalMinutesToday).toFixed(1) : "—";
-
-  const previewCalories = selectedExercise && minutes
-    ? calculateCalories(selectedExercise.met, weight, Number(minutes))
-    : 0;
+  const previewCalories = selectedExercise && minutes ? calculateCalories(selectedExercise.met, weight, Number(minutes)) : 0;
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = format(subDays(new Date(), 6 - i), "yyyy-MM-dd");
     const burned = weekExercises.filter(e => e.date === d).reduce((sum, e) => sum + e.calories_burned, 0);
-    return { date: d, day: format(new Date(d + "T12:00:00"), "EEE"), burned };
+    const hasActivity = burned > 0;
+    const pct = burnGoal > 0 ? (burned / burnGoal) * 100 : 0;
+    let barColor = "#f3f4f6";
+    if (hasActivity) {
+      if (pct >= 90) barColor = "#16a34a";
+      else if (pct >= 50) barColor = "#f59e0b";
+      else barColor = "#ef4444";
+    }
+    const isToday = d === TODAY;
+    return { date: d, day: format(new Date(d + "T12:00:00"), "EEE"), burned, barColor, isToday };
   });
   const maxBurned = Math.max(...weekDays.map(d => d.burned), 1);
 
@@ -166,14 +174,18 @@ export default function Exercise() {
               <div>
                 <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)", marginBottom: "2px" }}>Burned today</p>
                 <p style={{ fontSize: "42px", fontWeight: 500, lineHeight: 1, letterSpacing: "-1px" }}>{totalBurnedToday.toLocaleString()}</p>
-                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.65)", marginTop: "2px" }}>kcal burned</p>
+                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.65)", marginTop: "2px" }}>of {burnGoal} kcal goal</p>
               </div>
               <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Flame className="w-5 h-5 text-white" />
               </div>
             </div>
+            {/* Barra progresso */}
+            <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: "99px", height: "6px", overflow: "hidden", margin: "12px 0 6px", position: "relative" }}>
+              <div style={{ background: "white", height: "100%", borderRadius: "99px", width: `${Math.min((totalBurnedToday / burnGoal) * 100, 100)}%`, transition: "width 0.8s" }} />
+            </div>
             {todayExercises.length > 0 && (
-              <div style={{ marginTop: "12px", display: "flex", gap: "6px", flexWrap: "wrap", position: "relative" }}>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", position: "relative" }}>
                 {todayExercises.map((e, i) => (
                   <span key={i} style={{ fontSize: "10px", background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.9)", padding: "2px 8px", borderRadius: "20px" }}>
                     {EXERCISES.find(ex => ex.name === e.exercise_name)?.emoji || "💪"} {e.exercise_name} · {e.duration_minutes}min
@@ -183,6 +195,36 @@ export default function Exercise() {
             )}
           </motion.div>
 
+          {/* Contatore giorni attivi */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.03 }}
+            style={{
+              background: activeDaysThisWeek >= activeDaysGoal ? "#dcfce7" : "white",
+              borderRadius: "14px", padding: "10px 14px",
+              border: `0.5px solid ${activeDaysThisWeek >= activeDaysGoal ? "#bbf7d0" : "rgba(0,0,0,0.06)"}`,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "20px" }}>{activeDaysThisWeek >= activeDaysGoal ? "🎉" : "🎯"}</span>
+              <div>
+                <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>
+                  {activeDaysThisWeek >= activeDaysGoal ? "Weekly goal reached!" : "Weekly activity goal"}
+                </p>
+                <p style={{ fontSize: "11px", color: "#9ca3af" }}>
+                  {activeDaysThisWeek}/{activeDaysGoal} active days · {burnGoal} kcal target/day
+                </p>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "4px" }}>
+              {Array.from({ length: activeDaysGoal }).map((_, i) => (
+                <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", background: i < activeDaysThisWeek ? "#16a34a" : "#e5e7eb" }} />
+              ))}
+            </div>
+          </motion.div>
+
           {/* Stats grid 2x2 */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -190,7 +232,7 @@ export default function Exercise() {
                 { emoji: "⏱️", value: `${totalMinutesToday}`, label: "Total minutes" },
                 { emoji: "💪", value: `${todayExercises.length}`, label: "Exercises done" },
                 { emoji: "⚡", value: `${kcalPerMin}`, label: "kcal / min avg" },
-                { emoji: "📅", value: `${activeDaysWeek}`, label: "Active days this week" },
+                { emoji: "📅", value: `${activeDaysThisWeek}/${activeDaysGoal}`, label: "Active days this week" },
               ].map((s, i) => (
                 <div key={i} style={{ background: "white", borderRadius: "14px", padding: "12px", border: "0.5px solid rgba(0,0,0,0.06)" }}>
                   <div style={{ fontSize: "20px", marginBottom: "6px" }}>{s.emoji}</div>
@@ -220,24 +262,15 @@ export default function Exercise() {
           </motion.button>
 
           {/* Lista esercizi oggi */}
-          {todayExercises.length > 0 && (
+          {todayExercises.length > 0 ? (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px", padding: "0 2px" }}>
-                🏃 Today's exercises
-              </p>
+              <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px", padding: "0 2px" }}>🏃 Today's exercises</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {todayExercises.map((exercise) => {
                   const ex = EXERCISES.find(e => e.name === exercise.exercise_name);
                   return (
-                    <motion.div
-                      key={exercise.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      style={{
-                        display: "flex", alignItems: "center", gap: "10px",
-                        background: "white", borderRadius: "14px", padding: "10px 12px",
-                        border: "0.5px solid rgba(0,0,0,0.06)",
-                      }}
+                    <motion.div key={exercise.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", background: "white", borderRadius: "14px", padding: "10px 12px", border: "0.5px solid rgba(0,0,0,0.06)" }}
                     >
                       <span style={{ fontSize: "22px", flexShrink: 0 }}>{ex?.emoji || "💪"}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -252,10 +285,7 @@ export default function Exercise() {
                           <Flame style={{ width: "12px", height: "12px", color: "#dc2626" }} />
                           <span style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626" }}>{exercise.calories_burned}</span>
                         </div>
-                        <button
-                          onClick={() => handleDelete(exercise)}
-                          style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#f9fafb", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                        >
+                        <button onClick={() => handleDelete(exercise)} style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#f9fafb", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <Trash2 style={{ width: "12px", height: "12px", color: "#9ca3af" }} />
                         </button>
                       </div>
@@ -264,10 +294,7 @@ export default function Exercise() {
                 })}
               </div>
             </motion.div>
-          )}
-
-          {/* Empty state */}
-          {todayExercises.length === 0 && (
+          ) : (
             <div style={{ textAlign: "center", padding: "24px", background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)" }}>
               <p style={{ fontSize: "32px", marginBottom: "8px" }}>🏃</p>
               <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "4px" }}>No exercises logged yet</p>
@@ -281,13 +308,27 @@ export default function Exercise() {
       {/* Weekly trend fisso in basso */}
       <div style={{ background: "#f0fcf3", padding: "8px 16px 90px", flexShrink: 0 }}>
         <div style={{ background: "white", borderRadius: "20px", padding: "10px 16px", border: "0.5px solid rgba(0,0,0,0.06)", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", maxWidth: "480px", margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
-            <TrendingUp style={{ width: "14px", height: "14px", color: "#dc2626" }} />
-            <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Weekly burned</span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <TrendingUp style={{ width: "14px", height: "14px", color: "#dc2626" }} />
+              <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Weekly burned</span>
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              {[
+                { color: "#16a34a", label: "On track" },
+                { color: "#f59e0b", label: "Close" },
+                { color: "#ef4444", label: "Off track" },
+                { color: "#e5e7eb", label: "Rest" },
+              ].map(({ color, label }) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                  <div style={{ width: "6px", height: "6px", borderRadius: "2px", background: color, flexShrink: 0 }} />
+                  <span style={{ fontSize: "9px", color: "#9ca3af" }}>{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: "60px" }}>
             {weekDays.map((day, i) => {
-              const isToday = day.date === TODAY;
               const barHeight = day.burned > 0 ? Math.max(6, (day.burned / maxBurned) * 40) : 4;
               return (
                 <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px", height: "100%" }}>
@@ -298,12 +339,12 @@ export default function Exercise() {
                       transition={{ duration: 0.4, delay: i * 0.05 }}
                       style={{
                         width: "100%", borderRadius: "4px 4px 0 0",
-                        background: day.burned > 0 ? (isToday ? "#dc2626" : "#fca5a5") : "#f3f4f6",
-                        border: isToday ? "2px solid #b91c1c" : "none",
+                        background: day.barColor,
+                        border: day.isToday ? "2px solid rgba(0,0,0,0.1)" : "none",
                       }}
                     />
                   </div>
-                  <span style={{ fontSize: "9px", color: isToday ? "#dc2626" : "#9ca3af", fontWeight: isToday ? 600 : 400 }}>{day.day}</span>
+                  <span style={{ fontSize: "9px", color: day.isToday ? "#dc2626" : "#9ca3af", fontWeight: day.isToday ? 600 : 400 }}>{day.day}</span>
                   {day.burned > 0 && <span style={{ fontSize: "8px", color: "#9ca3af" }}>{day.burned}</span>}
                 </div>
               );
@@ -316,16 +357,12 @@ export default function Exercise() {
       <AnimatePresence>
         {showAddSheet && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
             onClick={() => setShowAddSheet(false)}
           >
             <motion.div
-              initial={{ y: 400 }}
-              animate={{ y: 0 }}
-              exit={{ y: 400 }}
+              initial={{ y: 400 }} animate={{ y: 0 }} exit={{ y: 400 }}
               transition={{ type: "spring", damping: 25 }}
               onClick={e => e.stopPropagation()}
               style={{ background: "white", borderRadius: "24px 24px 0 0", padding: "20px", width: "100%", maxWidth: "480px", maxHeight: "85vh", overflowY: "auto" }}
@@ -343,17 +380,13 @@ export default function Exercise() {
               <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.3px" }}>Choose exercise</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginBottom: "16px" }}>
                 {EXERCISES.map((ex) => (
-                  <button
-                    key={ex.name}
-                    onClick={() => setSelectedExercise(ex)}
-                    style={{
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-                      padding: "10px 4px", borderRadius: "12px",
-                      border: selectedExercise?.name === ex.name ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
-                      background: selectedExercise?.name === ex.name ? "#fef2f2" : "#f9fafb",
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}
-                  >
+                  <button key={ex.name} onClick={() => setSelectedExercise(ex)} style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
+                    padding: "10px 4px", borderRadius: "12px",
+                    border: selectedExercise?.name === ex.name ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                    background: selectedExercise?.name === ex.name ? "#fef2f2" : "#f9fafb",
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}>
                     <span style={{ fontSize: "20px" }}>{ex.emoji}</span>
                     <span style={{ fontSize: "9px", color: selectedExercise?.name === ex.name ? "#dc2626" : "#6b7280", fontWeight: selectedExercise?.name === ex.name ? 500 : 400, textAlign: "center", lineHeight: 1.2 }}>
                       {ex.name}
@@ -365,28 +398,20 @@ export default function Exercise() {
               <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.3px" }}>Duration</p>
               <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
                 {[15, 30, 45, 60, 90].map(m => (
-                  <button
-                    key={m}
-                    onClick={() => setMinutes(String(m))}
-                    style={{
-                      flex: 1, padding: "8px 4px", borderRadius: "10px",
-                      border: minutes === String(m) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
-                      background: minutes === String(m) ? "#fef2f2" : "#f9fafb",
-                      fontSize: "12px", fontWeight: 500,
-                      color: minutes === String(m) ? "#dc2626" : "#6b7280",
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}
-                  >
-                    {m}m
-                  </button>
+                  <button key={m} onClick={() => setMinutes(String(m))} style={{
+                    flex: 1, padding: "8px 4px", borderRadius: "10px",
+                    border: minutes === String(m) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                    background: minutes === String(m) ? "#fef2f2" : "#f9fafb",
+                    fontSize: "12px", fontWeight: 500,
+                    color: minutes === String(m) ? "#dc2626" : "#6b7280",
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}>{m}m</button>
                 ))}
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
                 <input
-                  type="number"
-                  value={minutes}
-                  onChange={e => setMinutes(e.target.value)}
+                  type="number" value={minutes} onChange={e => setMinutes(e.target.value)}
                   placeholder="Custom minutes..."
                   style={{ flex: 1, background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a3a22", outline: "none", fontFamily: "inherit" }}
                 />

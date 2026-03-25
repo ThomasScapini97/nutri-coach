@@ -72,6 +72,7 @@ export default function Profile() {
   const [form, setForm] = useState({
     age: "", weight: "", height: "", gender: "",
     activity_level: "", goal: "", chat_style: "concise",
+    active_days_goal: 3, burn_goal: 300,
   });
 
   const { data: profile, isLoading } = useQuery({
@@ -93,6 +94,8 @@ export default function Profile() {
         activity_level: profile.activity_level || "",
         goal: profile.goal || "",
         chat_style: profile.chat_style || "concise",
+        active_days_goal: profile.active_days_goal || 3,
+        burn_goal: profile.burn_goal || 300,
       });
     }
   }, [profile]);
@@ -120,6 +123,8 @@ export default function Profile() {
       activity_level: form.activity_level,
       goal: form.goal,
       chat_style: form.chat_style,
+      active_days_goal: Number(form.active_days_goal) || 3,
+      burn_goal: Number(form.burn_goal) || 300,
       calorie_goal: calorieGoal,
       protein_goal: proteinGoal,
       fats_goal: fatsGoal,
@@ -328,6 +333,49 @@ export default function Profile() {
                   <span style={{ fontSize: "10px", textAlign: "center", lineHeight: 1.3, color: form.goal === g.value ? "#15803d" : "#6b7280", fontWeight: form.goal === g.value ? 500 : 400 }}>{g.label}</span>
                 </button>
               ))}
+            </div>
+          </div>
+        </motion.div>
+
+{/* Fitness goals */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.17 }}
+          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "11px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>🏃</div>
+            <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Fitness goals</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1px", background: "#f3f4f6" }}>
+            <div style={{ background: "white", padding: "10px 12px" }}>
+              <label style={fieldLabelStyle}>Active days / week</label>
+              <div style={{ display: "flex", gap: "4px", marginTop: "4px" }}>
+                {[2,3,4,5,6,7].map(d => (
+                  <button
+                    key={d}
+                    onClick={() => setForm({ ...form, active_days_goal: d })}
+                    style={{
+                      flex: 1, padding: "6px 2px", borderRadius: "8px", fontSize: "12px", fontWeight: 500,
+                      border: form.active_days_goal === d ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                      background: form.active_days_goal === d ? "#fef2f2" : "#f9fafb",
+                      color: form.active_days_goal === d ? "#dc2626" : "#6b7280",
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}
+                  >{d}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: "white", padding: "10px 12px" }}>
+              <label style={fieldLabelStyle}>Burn goal (kcal/day)</label>
+              <input
+                type="number"
+                placeholder="300"
+                value={form.burn_goal}
+                onChange={(e) => setForm({ ...form, burn_goal: e.target.value })}
+                style={inputStyle}
+              />
             </div>
           </div>
         </motion.div>

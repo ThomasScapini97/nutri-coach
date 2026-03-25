@@ -68,9 +68,10 @@ export default function Onboarding({ onComplete }) {
     display_name: "",
     age: "", weight: "", height: "", gender: "",
     activity_level: "", goal: "", chat_style: "concise",
+    active_days_goal: 3, burn_goal: 300,
   });
 
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 6;
 
   const goNext = () => { setDir(1); setStep(s => s + 1); };
   const goPrev = () => { setDir(-1); setStep(s => s - 1); };
@@ -85,6 +86,7 @@ export default function Onboarding({ onComplete }) {
     }
     if (step === 2) return !!form.activity_level;
     if (step === 3) return !!form.goal && !!form.chat_style;
+    if (step === 4) return form.active_days_goal > 0 && form.burn_goal > 0;
     return true;
   };
 
@@ -109,6 +111,8 @@ export default function Onboarding({ onComplete }) {
       activity_level: form.activity_level,
       goal: form.goal,
       chat_style: form.chat_style,
+      active_days_goal: form.active_days_goal || 3,
+      burn_goal: form.burn_goal || 300,
       calorie_goal: calorieGoal,
       protein_goal: proteinGoal,
       fats_goal: fatsGoal,
@@ -130,8 +134,7 @@ export default function Onboarding({ onComplete }) {
         <p style={{ fontSize: "14px", color: "#9ca3af" }}>Useremo il tuo nome per personalizzare la tua esperienza</p>
       </div>
       <input
-        type="text"
-        placeholder="Il tuo nome o nickname..."
+        type="text" placeholder="Il tuo nome o nickname..."
         value={form.display_name}
         onChange={(e) => setForm({ ...form, display_name: e.target.value })}
         onKeyDown={(e) => e.key === "Enter" && canNext() && goNext()}
@@ -157,7 +160,8 @@ export default function Onboarding({ onComplete }) {
           <div style={{ display: "flex", gap: "6px" }}>
             {[{ v: "male", l: "👨 M" }, { v: "female", l: "👩 F" }].map(g => (
               <button key={g.v} onClick={() => setForm({ ...form, gender: g.v })} style={{
-                flex: 1, padding: "12px", borderRadius: "12px", border: form.gender === g.v ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
+                flex: 1, padding: "12px", borderRadius: "12px",
+                border: form.gender === g.v ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
                 background: form.gender === g.v ? "#f0fdf4" : "#f9fafb", cursor: "pointer",
                 fontSize: "14px", fontWeight: form.gender === g.v ? 500 : 400,
                 color: form.gender === g.v ? "#15803d" : "#6b7280", fontFamily: "inherit",
@@ -247,7 +251,55 @@ export default function Onboarding({ onComplete }) {
       </div>
     </div>,
 
-    /* Step 4 — Disclaimer */
+    /* Step 4 — Fitness goals */
+    <div key="fitness" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏋️</div>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Obiettivi fitness</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Quanti giorni vuoi allenarti e quante calorie bruciare?</p>
+      </div>
+      <div>
+        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>Giorni attivi a settimana</label>
+        <div style={{ display: "flex", gap: "8px" }}>
+          {[2, 3, 4, 5, 6, 7].map(d => (
+            <button key={d} onClick={() => setForm({ ...form, active_days_goal: d })} style={{
+              flex: 1, padding: "14px 4px", borderRadius: "12px",
+              fontSize: "16px", fontWeight: 600,
+              border: form.active_days_goal === d ? "2px solid #dc2626" : "0.5px solid #e5e7eb",
+              background: form.active_days_goal === d ? "#fef2f2" : "#f9fafb",
+              color: form.active_days_goal === d ? "#dc2626" : "#6b7280",
+              cursor: "pointer", fontFamily: "inherit",
+            }}>{d}</button>
+          ))}
+        </div>
+        <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px", textAlign: "center" }}>
+          {form.active_days_goal} {form.active_days_goal === 1 ? "giorno" : "giorni"} a settimana
+        </p>
+      </div>
+      <div>
+        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>Calorie da bruciare nei giorni attivi</label>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+          {[200, 300, 400, 500].map(k => (
+            <button key={k} onClick={() => setForm({ ...form, burn_goal: k })} style={{
+              flex: 1, padding: "12px 4px", borderRadius: "12px",
+              fontSize: "13px", fontWeight: 500,
+              border: form.burn_goal === k ? "2px solid #dc2626" : "0.5px solid #e5e7eb",
+              background: form.burn_goal === k ? "#fef2f2" : "#f9fafb",
+              color: form.burn_goal === k ? "#dc2626" : "#6b7280",
+              cursor: "pointer", fontFamily: "inherit",
+            }}>{k} kcal</button>
+          ))}
+        </div>
+        <input
+          type="number" placeholder="Kcal personalizzate..."
+          value={form.burn_goal}
+          onChange={e => setForm({ ...form, burn_goal: Number(e.target.value) })}
+          style={inputStyle}
+        />
+      </div>
+    </div>,
+
+    /* Step 5 — Disclaimer */
     <div key="disclaimer" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>📌</div>
@@ -261,11 +313,7 @@ export default function Onboarding({ onComplete }) {
           { emoji: "✏️", title: "Inserisci dati accurati", text: "I calcoli calorici dipendono dai dati che inserisci. Più sono precisi, più sarà accurato il tuo piano nutrizionale." },
           { emoji: "🤖", title: "L'AI può sbagliare", text: "Le stime caloriche dell'AI sono approssimative. Usale come riferimento, non come valori assoluti." },
         ].map((item, i) => (
-          <div key={i} style={{
-            display: "flex", gap: "12px", padding: "12px 14px",
-            background: "#f9fafb", borderRadius: "12px",
-            border: "0.5px solid #e5e7eb",
-          }}>
+          <div key={i} style={{ display: "flex", gap: "12px", padding: "12px 14px", background: "#f9fafb", borderRadius: "12px", border: "0.5px solid #e5e7eb" }}>
             <span style={{ fontSize: "20px", flexShrink: 0 }}>{item.emoji}</span>
             <div>
               <p style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22", marginBottom: "2px" }}>{item.title}</p>
