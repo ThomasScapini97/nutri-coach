@@ -12,6 +12,7 @@ import FoodEntryItem from "../components/summary/FoodEntryItem";
 import WeeklyChart from "../components/summary/WeeklyChart";
 import DaySuccessIndicator from "../components/summary/DaySuccessIndicator";
 import { motion } from "framer-motion";
+import ScrollableChart from "../components/summary/ScrollableChart";
 
 export default function Summary() {
   const { user } = useAuth();
@@ -275,15 +276,21 @@ export default function Summary() {
           </div>
         </motion.div>
 
-        {/* Weekly trend */}
+{/* Weekly trend */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px", padding: "0 2px" }}>
             <TrendingUp className="w-4 h-4" style={{ color: "#16a34a" }} />
-            <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Weekly trend</span>
+            <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Trend</span>
           </div>
 
           <div style={{ background: "white", borderRadius: "16px", padding: "14px", border: "0.5px solid rgba(0,0,0,0.06)" }}>
-            <WeeklyChart data={weeklyChartData} calorieGoal={calorieGoal} />
+            <ScrollableChart
+              calorieGoal={calorieGoal}
+              onDaySelect={(dateStr) => {
+                setSelectedDate(new Date(dateStr + "T12:00:00"));
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
 
             {weekLogs.length > 0 && (
               <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -303,6 +310,11 @@ export default function Summary() {
                       style={{
                         display: "flex", alignItems: "center", gap: "10px",
                         background: "#f9fafb", borderRadius: "12px", padding: "8px 10px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        setSelectedDate(new Date(log.date + "T12:00:00"));
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                     >
                       <span style={{ fontSize: "13px", width: "20px", textAlign: "center" }}>{icon}</span>
@@ -320,7 +332,6 @@ export default function Summary() {
             )}
           </div>
         </motion.div>
-
       </div>
     </div>
   );
