@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, X } from "lucide-react";
 
 const TODAY = new Date();
-const BAR_WIDTH = 44;
-const BAR_GAP = 8;
+const BAR_WIDTH = 36;
+const BAR_GAP = 6;
 const DAYS_BACK = 90;
 const FUTURE_DAYS = 3;
 
@@ -100,7 +100,7 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
         <div style={{
           display: "flex", alignItems: "flex-end", gap: `${BAR_GAP}px`,
           width: `${allDays.length * (BAR_WIDTH + BAR_GAP)}px`,
-          height: "100px", paddingBottom: "24px",
+          height: "60px", paddingBottom: "20px",
         }}>
           {allDays.map((dateStr) => {
             const calories = logs[dateStr] || 0;
@@ -110,7 +110,7 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
             const barColor = isFutureBar ? "#f3f4f6" : getBarColor(calories, calorieGoal, isTodayBar);
             const barHeight = isFutureBar || !calories
               ? 6
-              : Math.max(6, (calories / maxCalories) * 60);
+              : Math.max(4, (calories / maxCalories) * 28);
             const dayLabel = format(new Date(dateStr + "T12:00:00"), "EEE");
             const dayNum = format(new Date(dateStr + "T12:00:00"), "d");
 
@@ -126,7 +126,7 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
                 }}
               >
                 <div style={{
-                  width: "100%", height: "60px",
+                  width: "100%", height: "32px",
                   display: "flex", alignItems: "flex-end", justifyContent: "center",
                 }}>
                   <motion.div
