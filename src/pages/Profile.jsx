@@ -446,7 +446,7 @@ export default function Profile() {
                 <Trash2 className="w-3.5 h-3.5" /> Delete account
               </button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent style={{ zIndex: 99999 }}>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                 <AlertDialogDescription>This will permanently delete all your data. This action cannot be undone.</AlertDialogDescription>
