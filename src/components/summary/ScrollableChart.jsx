@@ -158,21 +158,6 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
         </div>
       </div>
 
-      {/* Legenda */}
-      <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginTop: "4px" }}>
-        {[
-          { color: "#4ade80", label: "On track" },
-          { color: "#f59e0b", label: "Close" },
-          { color: "#ef4444", label: "Off track" },
-          { color: "#f3f4f6", label: "No data" },
-        ].map(({ color, label }) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: color }} />
-            <span style={{ fontSize: "9px", color: "#9ca3af" }}>{label}</span>
-          </div>
-        ))}
-      </div>
-
       {/* Calendar modal */}
       <AnimatePresence>
         {showCalendar && (
