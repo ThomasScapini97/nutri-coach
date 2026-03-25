@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { MessageCircle, BarChart3, User } from "lucide-react";
+import { MessageCircle, BarChart3, User, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { path: "/Chat", label: "Chat", icon: MessageCircle },
   { path: "/Summary", label: "Summary", icon: BarChart3 },
+  { path: "/Exercise", label: "Exercise", icon: Dumbbell },
   { path: "/Profile", label: "Profile", icon: User },
 ];
 
@@ -16,7 +17,7 @@ export default function MobileNav() {
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <Link key={item.path} to={item.path} className={cn("flex flex-col items-center gap-1.5 px-5 py-2 rounded-2xl text-xs font-medium transition-all duration-200", isActive ? "text-primary bg-primary/10" : "text-muted-foreground")}>
+            <Link key={item.path} to={item.path} className={cn("flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-medium transition-all duration-200", isActive ? "text-primary bg-primary/10" : "text-muted-foreground")}>
               <item.icon className={cn("w-5 h-5", isActive && "stroke-[2.5]")} />
               {item.label}
             </Link>

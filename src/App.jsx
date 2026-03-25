@@ -12,6 +12,7 @@ import Summary from './pages/Summary';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import Login from './pages/Login';
+import Exercise from './pages/Exercise';
 
 const AuthenticatedApp = () => {
   const { user, isLoadingAuth } = useAuth();
@@ -51,6 +52,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Navigate to="/Chat" replace />} />
       <Route element={<AppLayout />}>
+        <Route path="/Exercise" element={<Exercise />} />
         <Route path="/Chat" element={<Chat />} />
         <Route path="/Summary" element={<Summary />} />
         <Route path="/Profile" element={<Profile />} />
