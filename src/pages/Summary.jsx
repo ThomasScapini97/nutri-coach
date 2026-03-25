@@ -250,10 +250,26 @@ export default function Summary() {
           border: "0.5px solid rgba(0,0,0,0.06)",
           boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
         }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
-          <TrendingUp style={{ width: "14px", height: "14px", color: "#16a34a" }} />
-          <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Trend</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <TrendingUp style={{ width: "14px", height: "14px", color: "#16a34a" }} />
+            <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Trend</span>
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            {[
+              { color: "#16a34a", label: "On track" },
+              { color: "#f59e0b", label: "Close" },
+              { color: "#ef4444", label: "Off track" },
+              { color: "#e5e7eb", label: "No data" },
+            ].map(({ color, label }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                <div style={{ width: "6px", height: "6px", borderRadius: "2px", background: color, flexShrink: 0 }} />
+                <span style={{ fontSize: "9px", color: "#9ca3af" }}>{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
+
         <ScrollableChart
           calorieGoal={calorieGoal}
           onDaySelect={(dateStr) => {
@@ -262,7 +278,7 @@ export default function Summary() {
         />
       </div>
      </div>
-     
+
     </div>
   );
 }
