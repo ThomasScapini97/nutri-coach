@@ -243,10 +243,10 @@ export default function Summary() {
         padding: "8px 16px 90px",
         flexShrink: 0,
       }}>
-        <div style={{
+              <div style={{
           background: "white",
           borderRadius: "20px",
-          padding: "14px 16px",
+          padding: "10px 16px 10px",
           border: "0.5px solid rgba(0,0,0,0.06)",
           boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
         }}>

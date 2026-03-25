@@ -94,13 +94,13 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
         style={{
           overflowX: "auto", overflowY: "hidden",
           scrollbarWidth: "none", msOverflowStyle: "none",
-          paddingBottom: "4px",
+          paddingBottom: "0px",
         }}
       >
         <div style={{
           display: "flex", alignItems: "flex-end", gap: `${BAR_GAP}px`,
           width: `${allDays.length * (BAR_WIDTH + BAR_GAP)}px`,
-          height: "60px", paddingBottom: "20px",
+          height: "55px", paddingBottom: "16px",
         }}>
           {allDays.map((dateStr) => {
             const calories = logs[dateStr] || 0;
