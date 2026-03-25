@@ -6,6 +6,7 @@ import { format, subDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Plus, X, Clock, Trash2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
+import ScrollableExerciseChart from "../components/summary/ScrollableExerciseChart";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -327,29 +328,7 @@ export default function Exercise() {
               ))}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: "60px" }}>
-            {weekDays.map((day, i) => {
-              const barHeight = day.burned > 0 ? Math.max(6, (day.burned / maxBurned) * 40) : 4;
-              return (
-                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px", height: "100%" }}>
-                  <div style={{ flex: 1, width: "100%", display: "flex", alignItems: "flex-end" }}>
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: barHeight }}
-                      transition={{ duration: 0.4, delay: i * 0.05 }}
-                      style={{
-                        width: "100%", borderRadius: "4px 4px 0 0",
-                        background: day.barColor,
-                        border: day.isToday ? "2px solid rgba(0,0,0,0.1)" : "none",
-                      }}
-                    />
-                  </div>
-                  <span style={{ fontSize: "9px", color: day.isToday ? "#dc2626" : "#9ca3af", fontWeight: day.isToday ? 600 : 400 }}>{day.day}</span>
-                  {day.burned > 0 && <span style={{ fontSize: "8px", color: "#9ca3af" }}>{day.burned}</span>}
-                </div>
-              );
-            })}
-          </div>
+          <ScrollableExerciseChart burnGoal={burnGoal} />
         </div>
       </div>
 
