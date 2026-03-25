@@ -446,7 +446,20 @@ export default function Profile() {
                 <Trash2 className="w-3.5 h-3.5" /> Delete account
               </button>
             </AlertDialogTrigger>
-            <AlertDialogContent style={{ zIndex: 99999 }}>
+            <AlertDialogContent style={{ 
+              zIndex: 99999,
+              background: "white",
+              borderRadius: "16px",
+              padding: "24px",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+              border: "0.5px solid #e5e7eb",
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "90%",
+              maxWidth: "360px",
+            }}>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                 <AlertDialogDescription>This will permanently delete all your data. This action cannot be undone.</AlertDialogDescription>

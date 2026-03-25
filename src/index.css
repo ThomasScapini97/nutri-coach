@@ -96,3 +96,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Fix AlertDialog z-index */
+[data-radix-dialog-overlay] {
+  z-index: 99998 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-radix-dialog-content] {
+  z-index: 99999 !important;
+  background: white !important;
+  border-radius: 16px !important;
+  padding: 24px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+}
