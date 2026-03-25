@@ -22,11 +22,11 @@ function getStatusColor(calories, goal) {
 function getBarColor(calories, goal, isToday) {
   if (!calories || calories === 0) return "#f3f4f6";
   const pct = (calories / goal) * 100;
-  if (isToday) return "#16a34a";
-  if (pct >= 90 && pct <= 110) return "#4ade80";
-  if (pct >= 70) return "#86efac";
-  return "#bbf7d0";
+  if (pct >= 90 && pct <= 110) return "#16a34a";
+  if ((pct >= 80 && pct < 90) || (pct > 110 && pct <= 120)) return "#f59e0b";
+  return "#ef4444";
 }
+
 
 export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
   const { user } = useAuth();
@@ -37,8 +37,8 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
 
   // Genera tutti i giorni da DAYS_BACK fino a FUTURE_DAYS
   const allDays = Array.from({ length: DAYS_BACK + FUTURE_DAYS + 1 }, (_, i) =>
-    format(subDays(TODAY, DAYS_BACK - FUTURE_DAYS - i + FUTURE_DAYS), "yyyy-MM-dd")
-  ).reverse();
+    format(subDays(TODAY, DAYS_BACK - i), "yyyy-MM-dd")
+  );
 
   // Fetch tutti i log degli ultimi 90 giorni
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function ScrollableChart({ calorieGoal = 2000, onDaySelect }) {
   useEffect(() => {
     if (!scrollRef.current) return;
     const todayIndex = allDays.findIndex(d => d === format(TODAY, "yyyy-MM-dd"));
-    const scrollX = (todayIndex - 3) * (BAR_WIDTH + BAR_GAP);
+    const scrollX = (todayIndex - 4) * (BAR_WIDTH + BAR_GAP);
     scrollRef.current.scrollLeft = scrollX;
   }, []);
 
