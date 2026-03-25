@@ -93,45 +93,58 @@ export default function Exercise() {
   });
   const maxBurned = Math.max(...weekDays.map(d => d.burned), 1);
 
-  const handleSave = async () => {
+const handleSave = async () => {
     if (!selectedExercise || !minutes || Number(minutes) <= 0) return;
     setSaving(true);
 
-    const calories = calculateCalories(selectedExercise.met, weight, Number(minutes));
+    try {
+      const calories = calculateCalories(selectedExercise.met, weight, Number(minutes));
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
 
-    let logId = todayLog?.id;
-    if (!logId) {
-      const { data: created } = await supabase.from("food_logs").insert({
-        date: TODAY, user_id: user.id,
-        total_calories: 0, total_carbs: 0, total_protein: 0,
-        total_fats: 0, total_fiber: 0, total_burned_calories: 0,
-      }).select().single();
-      logId = created?.id;
+      let logId = todayLog?.id;
+      if (!logId) {
+        const { data: created, error: createError } = await supabase
+          .from("food_logs")
+          .insert({
+            date: TODAY,
+            user_id: currentUser.id,
+            total_calories: 0, total_carbs: 0, total_protein: 0,
+            total_fats: 0, total_fiber: 0, total_burned_calories: 0,
+          })
+          .select()
+          .single();
+        if (createError) { console.error("Error creating log:", createError); setSaving(false); return; }
+        logId = created?.id;
+      }
+
+      const { error: exError } = await supabase.from("exercise_logs").insert({
+        user_id: currentUser.id,
+        foodlog_id: logId,
+        date: TODAY,
+        exercise_name: selectedExercise.name,
+        duration_minutes: Number(minutes),
+        calories_burned: calories,
+      });
+      if (exError) { console.error("Error inserting exercise:", exError); setSaving(false); return; }
+
+      const newTotal = (todayLog?.total_burned_calories || 0) + calories;
+      await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", logId);
+
+      queryClient.invalidateQueries({ queryKey: ["exercises", TODAY] });
+      queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
+      queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+
+      toast.success(`${selectedExercise.emoji} ${selectedExercise.name} logged! 🔥`, {
+        description: `${calories} kcal burned`,
+      });
+
+      setShowAddSheet(false);
+      setSelectedExercise(null);
+      setMinutes("30");
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast.error("Something went wrong. Please try again.");
     }
-
-    await supabase.from("exercise_logs").insert({
-      user_id: user.id,
-      foodlog_id: logId,
-      date: TODAY,
-      exercise_name: selectedExercise.name,
-      duration_minutes: Number(minutes),
-      calories_burned: calories,
-    });
-
-    const newTotal = totalBurnedToday + calories;
-    await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", logId);
-
-    queryClient.invalidateQueries({ queryKey: ["exercises", TODAY] });
-    queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
-    queryClient.invalidateQueries({ queryKey: ["foodlog"] });
-
-    toast.success(`${selectedExercise.emoji} ${selectedExercise.name} logged! 🔥`, {
-      description: `${calories} kcal burned`,
-    });
-
-    setShowAddSheet(false);
-    setSelectedExercise(null);
-    setMinutes("30");
     setSaving(false);
   };
 
