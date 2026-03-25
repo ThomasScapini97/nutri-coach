@@ -239,11 +239,17 @@ export default function Summary() {
 
       {/* Grafico fisso in basso sopra la nav */}
       <div style={{
-        background: "white",
-        borderTop: "0.5px solid rgba(0,0,0,0.06)",
-        padding: "12px 16px 80px",
+        background: "#f0fcf3",
+        padding: "8px 16px 90px",
         flexShrink: 0,
       }}>
+        <div style={{
+          background: "white",
+          borderRadius: "20px",
+          padding: "14px 16px",
+          border: "0.5px solid rgba(0,0,0,0.06)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+        }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
           <TrendingUp style={{ width: "14px", height: "14px", color: "#16a34a" }} />
           <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Trend</span>
@@ -255,7 +261,8 @@ export default function Summary() {
           }}
         />
       </div>
-
+     </div>
+     
     </div>
   );
 }
