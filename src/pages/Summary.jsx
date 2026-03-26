@@ -207,7 +207,6 @@ export default function Summary() {
                 borderRadius: "16px",
                 display: "flex", alignItems: "flex-start", justifyContent: "flex-end",
                 padding: "8px",
-                backdropFilter: "blur(0px)",
                 pointerEvents: "all",
               }}>
                 <span style={{ fontSize: "11px", color: "#9ca3af", background: "white", padding: "4px 12px", borderRadius: "20px", border: "0.5px solid #e5e7eb" }}>
