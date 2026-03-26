@@ -203,10 +203,11 @@ export default function Summary() {
             {isPast && (
               <div style={{
                 position: "absolute", inset: 0, zIndex: 10,
-                background: "rgba(240,252,243,0.7)",
+                background: "rgba(240,252,243,0.3)",
                 borderRadius: "16px",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                backdropFilter: "blur(1px)",
+                display: "flex", alignItems: "flex-start", justifyContent: "flex-end",
+                padding: "8px",
+                backdropFilter: "blur(0px)",
                 pointerEvents: "all",
               }}>
                 <span style={{ fontSize: "11px", color: "#9ca3af", background: "white", padding: "4px 12px", borderRadius: "20px", border: "0.5px solid #e5e7eb" }}>
