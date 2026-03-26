@@ -5,7 +5,6 @@ import { queryClientInstance } from '@/lib/query-client';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
-
 import AppLayout from './components/layout/AppLayout';
 import Chat from './pages/Chat';
 import Summary from './pages/Summary';
@@ -13,6 +12,7 @@ import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import Login from './pages/Login';
 import Exercise from './pages/Exercise';
+import Diary from './pages/Diary';
 
 const AuthenticatedApp = () => {
   const { user, isLoadingAuth } = useAuth();
@@ -56,6 +56,7 @@ const AuthenticatedApp = () => {
         <Route path="/Chat" element={<Chat />} />
         <Route path="/Summary" element={<Summary />} />
         <Route path="/Profile" element={<Profile />} />
+        <Route path="/Diary" element={<Diary />} />
       </Route>
       <Route path="*" element={<Navigate to="/Chat" replace />} />
     </Routes>

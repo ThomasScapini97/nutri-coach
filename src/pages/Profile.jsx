@@ -191,7 +191,7 @@ export default function Profile() {
 
   return (
     <div className="flex-1 overflow-y-auto pb-24" style={{ background: "#f0fcf3" }}>
-      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "0 16px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "52px 16px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
 
         {/* Header */}
         <motion.div

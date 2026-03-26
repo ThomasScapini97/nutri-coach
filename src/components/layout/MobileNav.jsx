@@ -1,12 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { MessageCircle, BarChart3, User, Dumbbell } from "lucide-react";
+import { MessageCircle, BarChart3, Dumbbell, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { path: "/Chat", label: "Chat", icon: MessageCircle },
   { path: "/Summary", label: "Summary", icon: BarChart3 },
   { path: "/Exercise", label: "Exercise", icon: Dumbbell },
-  { path: "/Profile", label: "Profile", icon: User },
+  { path: "/Diary", label: "Diary", icon: BookOpen },
 ];
 
 export default function MobileNav() {

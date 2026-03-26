@@ -1,0 +1,321 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/AuthContext";
+import { format, subDays, subMonths, subYears } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight, Save, Loader2, TrendingDown } from "lucide-react";
+import { toast } from "sonner";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+
+const TODAY = format(new Date(), "yyyy-MM-dd");
+
+const MOODS = [
+  { value: 1, emoji: "😔", label: "Bad" },
+  { value: 2, emoji: "😐", label: "Meh" },
+  { value: 3, emoji: "🙂", label: "Good" },
+  { value: 4, emoji: "😄", label: "Great" },
+  { value: 5, emoji: "🤩", label: "Amazing" },
+];
+
+const SCALES = [
+  { key: "energy", label: "Energy", emoji: "⚡", color: "#f59e0b" },
+  { key: "sleep_quality", label: "Sleep quality", emoji: "😴", color: "#3b82f6" },
+  { key: "stress", label: "Stress", emoji: "🧠", color: "#ef4444" },
+];
+
+const CHART_RANGES = [
+  { label: "7D", days: 7 },
+  { label: "1M", days: 30 },
+  { label: "3M", days: 90 },
+  { label: "1Y", days: 365 },
+];
+
+const MEASUREMENTS = [
+  { key: "weight", label: "Weight", unit: "kg" },
+  { key: "waist", label: "Waist", unit: "cm" },
+  { key: "hips", label: "Hips", unit: "cm" },
+  { key: "chest", label: "Chest", unit: "cm" },
+  { key: "arm", label: "Arm", unit: "cm" },
+  { key: "thigh", label: "Thigh", unit: "cm" },
+];
+
+const emptyForm = {
+  mood: null, energy: null, sleep_quality: null, stress: null, notes: "",
+  weight: "", waist: "", hips: "", chest: "", arm: "", thigh: "",
+};
+
+export default function Diary() {
+  const { user } = useAuth();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dateStr = format(selectedDate, "yyyy-MM-dd");
+  const isToday = dateStr === TODAY;
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [chartRange, setChartRange] = useState(30);
+  const [chartData, setChartData] = useState([]);
+  const [lastEntry, setLastEntry] = useState(null);
+
+  // Carica entry del giorno selezionato
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("diary_entries").select("*").eq("user_id", user.id).eq("date", dateStr).single()
+      .then(({ data }) => {
+        if (data) {
+          setForm({
+            mood: data.mood || null,
+            energy: data.energy || null,
+            sleep_quality: data.sleep_quality || null,
+            stress: data.stress || null,
+            notes: data.notes || "",
+            weight: data.weight || "",
+            waist: data.waist || "",
+            hips: data.hips || "",
+            chest: data.chest || "",
+            arm: data.arm || "",
+            thigh: data.thigh || "",
+          });
+        } else {
+          setForm(emptyForm);
+        }
+      });
+  }, [dateStr, user?.id]);
+
+  // Carica dati grafico peso
+  useEffect(() => {
+    if (!user?.id) return;
+    const from = format(subDays(new Date(), chartRange), "yyyy-MM-dd");
+    supabase.from("diary_entries").select("date, weight").eq("user_id", user.id)
+      .gte("date", from).lte("date", TODAY).not("weight", "is", null).order("date")
+      .then(({ data }) => {
+        setChartData((data || []).map(d => ({
+          date: format(new Date(d.date + "T12:00:00"), chartRange <= 7 ? "EEE" : chartRange <= 30 ? "MMM d" : "MMM yy"),
+          weight: d.weight,
+        })));
+      });
+  }, [chartRange, user?.id, dateStr]);
+
+  // Ultima entry con misure per confronto
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("diary_entries").select("*").eq("user_id", user.id)
+      .lt("date", dateStr).not("weight", "is", null).order("date", { ascending: false }).limit(1)
+      .then(({ data }) => setLastEntry(data?.[0] || null));
+  }, [dateStr, user?.id]);
+
+  const navigateDay = (dir) => {
+    setSelectedDate(prev => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() + dir);
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const payload = {
+      user_id: user.id, date: dateStr,
+      mood: form.mood, energy: form.energy,
+      sleep_quality: form.sleep_quality, stress: form.stress,
+      notes: form.notes || null,
+      weight: form.weight ? Number(form.weight) : null,
+      waist: form.waist ? Number(form.waist) : null,
+      hips: form.hips ? Number(form.hips) : null,
+      chest: form.chest ? Number(form.chest) : null,
+      arm: form.arm ? Number(form.arm) : null,
+      thigh: form.thigh ? Number(form.thigh) : null,
+    };
+    const { error } = await supabase.from("diary_entries").upsert(payload, { onConflict: "user_id,date" });
+    if (error) { toast.error("Error saving entry"); } else { toast.success("Entry saved! 📔"); }
+    setSaving(false);
+  };
+
+  const getTrend = (key) => {
+    if (!lastEntry || !lastEntry[key] || !form[key]) return null;
+    const diff = Number(form[key]) - Number(lastEntry[key]);
+    if (diff === 0) return null;
+    return { diff: Math.abs(diff).toFixed(1), up: diff > 0 };
+  };
+
+  const inputStyle = {
+    background: "#f9fafb", border: "0.5px solid #e5e7eb",
+    borderRadius: "8px", padding: "6px 10px", fontSize: "14px",
+    color: "#1a3a22", width: "100%", outline: "none", fontFamily: "inherit",
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto pb-24" style={{ background: "#f0fcf3" }}>
+      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+
+        {/* Date navigator */}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "white", borderRadius: "14px", padding: "8px 12px", border: "0.5px solid rgba(0,0,0,0.06)" }}
+        >
+          <button onClick={() => navigateDay(-1)} style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#f0fdf4", border: "0.5px solid #bbf7d0", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <ChevronLeft style={{ width: "14px", height: "14px", color: "#16a34a" }} />
+          </button>
+          <span style={{ fontSize: "14px", fontWeight: 500, color: "#1a3a22" }}>
+            {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
+          </span>
+          <button onClick={() => navigateDay(1)} disabled={isToday} style={{ width: "28px", height: "28px", borderRadius: "8px", background: isToday ? "#f9fafb" : "#f0fdf4", border: `0.5px solid ${isToday ? "#e5e7eb" : "#bbf7d0"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.4 : 1 }}>
+            <ChevronRight style={{ width: "14px", height: "14px", color: "#16a34a" }} />
+          </button>
+        </motion.div>
+
+        {/* Wellness card */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>😊</div>
+            <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>How are you feeling?</span>
+          </div>
+
+          {/* Mood */}
+          <div style={{ display: "flex", gap: "6px", padding: "10px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
+            {MOODS.map(m => (
+              <button key={m.value} onClick={() => setForm(f => ({ ...f, mood: m.value }))} style={{
+                flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px",
+                padding: "8px 2px", borderRadius: "10px",
+                border: form.mood === m.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                background: form.mood === m.value ? "#f0fdf4" : "#f9fafb",
+                cursor: "pointer", fontFamily: "inherit",
+              }}>
+                <span style={{ fontSize: "18px" }}>{m.emoji}</span>
+                <span style={{ fontSize: "8px", color: form.mood === m.value ? "#16a34a" : "#9ca3af" }}>{m.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Energy, Sleep, Stress */}
+          {SCALES.map(scale => (
+            <div key={scale.key} style={{ padding: "8px 14px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+              <span style={{ fontSize: "11px", color: "#6b7280", whiteSpace: "nowrap" }}>{scale.emoji} {scale.label}</span>
+              <div style={{ display: "flex", gap: "5px", flex: 1, justifyContent: "flex-end" }}>
+                {[1, 2, 3, 4, 5].map(v => (
+                  <button key={v} onClick={() => setForm(f => ({ ...f, [scale.key]: v }))} style={{
+                    width: "28px", height: "28px", borderRadius: "50%",
+                    background: form[scale.key] >= v ? scale.color : "#f3f4f6",
+                    border: "none", cursor: "pointer",
+                    fontSize: "11px", fontWeight: 600,
+                    color: form[scale.key] >= v ? "white" : "#9ca3af",
+                    fontFamily: "inherit",
+                  }}>{v}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Notes */}
+          <div style={{ padding: "10px 14px" }}>
+            <textarea
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              placeholder="How was your day? Any notes..."
+              rows={3}
+              style={{ ...inputStyle, resize: "none", fontSize: "13px", lineHeight: 1.5 }}
+            />
+          </div>
+        </motion.div>
+
+        {/* Body measurements */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>📏</div>
+            <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Body measurements</span>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1px", background: "#f3f4f6" }}>
+            {MEASUREMENTS.map(m => {
+              const trend = getTrend(m.key);
+              const isWeight = m.key === "weight";
+              const trendGood = isWeight ? !trend?.up : null;
+              return (
+                <div key={m.key} style={{ background: "white", padding: "8px 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                    <span style={{ fontSize: "9px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px" }}>{m.label}</span>
+                    {trend && (
+                      <span style={{ fontSize: "9px", color: trendGood === null ? (trend.up ? "#ef4444" : "#16a34a") : (trendGood ? "#16a34a" : "#ef4444"), fontWeight: 500 }}>
+                        {trend.up ? "↑" : "↓"} {trend.diff}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <input
+                      type="number"
+                      placeholder="—"
+                      value={form[m.key]}
+                      onChange={e => setForm(f => ({ ...f, [m.key]: e.target.value }))}
+                      style={{ ...inputStyle, padding: "4px 8px", fontSize: "16px", fontWeight: 500 }}
+                    />
+                    <span style={{ fontSize: "11px", color: "#9ca3af", flexShrink: 0 }}>{m.unit}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Weight chart */}
+          <div style={{ padding: "12px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+              <span style={{ fontSize: "11px", color: "#9ca3af" }}>Weight trend</span>
+              <div style={{ display: "flex", gap: "4px" }}>
+                {CHART_RANGES.map(r => (
+                  <button key={r.label} onClick={() => setChartRange(r.days)} style={{
+                    padding: "3px 8px", borderRadius: "20px", fontSize: "10px", fontWeight: 500,
+                    border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                    background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
+                    color: chartRange === r.days ? "#16a34a" : "#9ca3af",
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}>{r.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {chartData.length > 1 ? (
+              <div style={{ height: "100px" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#9ca3af" }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#9ca3af" }} domain={["auto", "auto"]} />
+                    <Tooltip
+                      contentStyle={{ background: "white", border: "0.5px solid rgba(0,0,0,0.08)", borderRadius: "10px", fontSize: "11px" }}
+                      formatter={(v) => [`${v} kg`, "Weight"]}
+                    />
+                    <Line type="monotone" dataKey="weight" stroke="#16a34a" strokeWidth={2} dot={{ fill: "#16a34a", r: 3 }} activeDot={{ r: 5 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", padding: "20px 0", color: "#9ca3af", fontSize: "12px" }}>
+                Log your weight for at least 2 days to see the trend
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Save button */}
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            width: "100%", background: "#16a34a", color: "white",
+            border: "none", borderRadius: "14px", padding: "13px",
+            fontSize: "14px", fontWeight: 500, cursor: "pointer",
+            fontFamily: "inherit", display: "flex", alignItems: "center",
+            justifyContent: "center", gap: "8px",
+          }}
+        >
+          {saving ? <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} /> : <Save style={{ width: "16px", height: "16px" }} />}
+          {saving ? "Saving..." : "Save today's entry"}
+        </motion.button>
+
+      </div>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
