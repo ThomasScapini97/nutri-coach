@@ -12,7 +12,7 @@ export default function AppLayout() {
     <div className="flex min-h-screen bg-background" style={{ overflowX: "hidden", maxWidth: "100vw" }}>
       <Sidebar />
       <main className="flex-1 flex flex-col min-h-screen" style={{ minWidth: 0, overflow: "hidden" }}>
-        <div style={{ position: "fixed", top: "12px", left: "12px", zIndex: 100 }}>
+        <div style={{ position: "fixed", top: "14px", left: "16px", zIndex: 100 }}>
           <button
             onClick={() => navigate("/Profile")}
             style={{

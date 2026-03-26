@@ -294,11 +294,10 @@ export default function Chat() {
   return (
     <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)", borderRadius: "20px", backgroundColor: "#f0fcf3" }}>
       <DailyNotificationPopup evaluation={dailyEvaluation} onClose={() => setDailyEvaluation(null)} />
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 bg-white shadow-sm">
-        <div style={{ width: "40px" }} />
-        <div>
-          <h2 className="font-bold text-foreground text-lg">NutriCoach</h2>
-          <p className="text-xs text-muted-foreground">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderBottom: "0.5px solid #e5e7eb", background: "white", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
+        <div style={{ textAlign: "center" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>NutriCoach</h2>
+          <p style={{ fontSize: "11px", color: "#9ca3af" }}>
             {todayLog ? `${todayLog.total_calories || 0} kcal logged today` : "Start tracking your meals"}
           </p>
         </div>
