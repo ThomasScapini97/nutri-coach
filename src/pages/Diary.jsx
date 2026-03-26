@@ -129,19 +129,37 @@ export default function Diary() {
       <div style={{ maxWidth: "480px", margin: "0 auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
 
         {/* Date navigator */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "white", borderRadius: "14px", padding: "8px 12px", border: "0.5px solid rgba(0,0,0,0.06)" }}
-        >
-          <button onClick={() => navigateDay(-1)} style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#f0fdf4", border: "0.5px solid #bbf7d0", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "white", borderBottom: "0.5px solid #e5e7eb",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          padding: "14px 24px", position: "relative",
+          marginLeft: "-16px", marginRight: "-16px", marginTop: "-16px",
+        }}>
+          <button onClick={() => navigateDay(-1)} style={{
+            position: "absolute", left: "60px",
+            width: "28px", height: "28px", borderRadius: "8px",
+            background: "#f0fdf4", border: "0.5px solid #bbf7d0",
+            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+          }}>
             <ChevronLeft style={{ width: "14px", height: "14px", color: "#16a34a" }} />
           </button>
-          <span style={{ fontSize: "14px", fontWeight: 500, color: "#1a3a22" }}>
-            {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
-          </span>
-          <button onClick={() => navigateDay(1)} disabled={isToday} style={{ width: "28px", height: "28px", borderRadius: "8px", background: isToday ? "#f9fafb" : "#f0fdf4", border: `0.5px solid ${isToday ? "#e5e7eb" : "#bbf7d0"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.4 : 1 }}>
+          <div style={{ textAlign: "center" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
+              {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
+            </h2>
+          </div>
+          <button onClick={() => navigateDay(1)} disabled={isToday} style={{
+            position: "absolute", right: "16px",
+            width: "28px", height: "28px", borderRadius: "8px",
+            background: isToday ? "#f9fafb" : "#f0fdf4",
+            border: `0.5px solid ${isToday ? "#e5e7eb" : "#bbf7d0"}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.4 : 1,
+          }}>
             <ChevronRight style={{ width: "14px", height: "14px", color: "#16a34a" }} />
           </button>
-        </motion.div>
+        </div>
 
         {/* Weight card */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
