@@ -5,8 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { recalculateTotals } from "@/lib/nutritionUtils";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Calendar, Flame, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, TrendingUp } from "lucide-react";
 import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
 import FoodEntryItem from "../components/summary/FoodEntryItem";
 import DaySuccessIndicator from "../components/summary/DaySuccessIndicator";
@@ -107,7 +106,7 @@ export default function Summary() {
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#f0fcf3", overflow: "hidden" }}>
 
       <div style={{ flex: 1, overflowY: "auto", paddingBottom: "8px" }}>
-        <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+        <div className="max-w-lg mx-auto px-4 space-y-4">
 
           {/* Date navigator */}
           <div style={{
@@ -115,15 +114,14 @@ export default function Summary() {
             background: "white", borderBottom: "0.5px solid #e5e7eb",
             boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
             padding: "14px 24px", position: "relative",
-            marginLeft: "-16px", marginRight: "-16px", marginTop: "-20px",
+            marginLeft: "-16px", marginRight: "-16px",
           }}>
             <button onClick={() => navigateDay(-1)} style={{
               position: "absolute", left: "60px",
-              width: "28px", height: "28px", borderRadius: "8px",
-              background: "#f0fdf4", border: "0.5px solid #bbf7d0",
+              background: "none", border: "none",
               display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
             }}>
-              <ChevronLeft style={{ width: "14px", height: "14px", color: "#16a34a" }} />
+              <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
             </button>
             <div style={{ textAlign: "center" }}>
               <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
@@ -137,13 +135,11 @@ export default function Summary() {
             </div>
             <button onClick={() => navigateDay(1)} disabled={isToday} style={{
               position: "absolute", right: "16px",
-              width: "28px", height: "28px", borderRadius: "8px",
-              background: isToday ? "#f9fafb" : "#f0fdf4",
-              border: `0.5px solid ${isToday ? "#e5e7eb" : "#bbf7d0"}`,
+              background: "none", border: "none",
               display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.4 : 1,
+              cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1,
             }}>
-              <ChevronRight style={{ width: "14px", height: "14px", color: "#16a34a" }} />
+              <ChevronRight style={{ width: "20px", height: "20px", color: "#6b7280" }} />
             </button>
           </div>
 
@@ -222,7 +218,7 @@ export default function Summary() {
                 pointerEvents: "all",
               }}>
                 <span style={{ fontSize: "11px", color: "#9ca3af", background: "white", padding: "4px 12px", borderRadius: "20px", border: "0.5px solid #e5e7eb" }}>
-                  🔒 Past day — read only
+                  🔒 read only
                 </span>
               </div>
             )}
