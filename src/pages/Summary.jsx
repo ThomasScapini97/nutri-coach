@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { recalculateTotals } from "@/lib/nutritionUtils";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar, Flame, TrendingUp } from "lucide-react";
 import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
@@ -66,7 +66,6 @@ export default function Summary() {
   };
 
   const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
-  const isPast = !isToday;
   const caloriesConsumed = dayLog?.total_calories || 0;
   const burnedCalories = dayLog?.total_burned_calories || 0;
   const netCalories = Math.max(caloriesConsumed - burnedCalories, 0);
@@ -74,7 +73,7 @@ export default function Summary() {
   const caloriePercentage = calorieGoal > 0 ? Math.min((netCalories / calorieGoal) * 100, 100) : 0;
 
   const handleAddEntry = async (group) => {
-    if (!dayLog || isPast) return;
+    if (!dayLog) return;
     await supabase.from("food_entries").insert({
       foodlog_id: dayLog.id,
       food_name: group.food_name,
@@ -94,7 +93,7 @@ export default function Summary() {
   };
 
   const handleRemoveEntry = async (group) => {
-    if (!dayLog || isPast) return;
+    if (!dayLog) return;
     const idToDelete = group.ids[group.ids.length - 1];
     await supabase.from("food_entries").delete().eq("id", idToDelete);
     await recalculateTotals(dayLog.id);
@@ -106,6 +105,7 @@ export default function Summary() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#f0fcf3", overflow: "hidden" }}>
 
+      {/* Parte scorrevole — date nav + calorie + macro + what you ate */}
       <div style={{ flex: 1, overflowY: "auto", paddingBottom: "8px" }}>
         <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
 
@@ -117,7 +117,6 @@ export default function Summary() {
               display: "flex", alignItems: "center", justifyContent: "space-between",
               background: "white", borderRadius: "16px", padding: "10px 14px",
               border: "0.5px solid rgba(0,0,0,0.06)",
-              marginLeft: "44px",
             }}
           >
             <Button variant="ghost" size="icon" onClick={() => navigateDay(-1)} style={{ borderRadius: "10px", width: "32px", height: "32px" }}>
@@ -141,12 +140,9 @@ export default function Summary() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
             style={{
-              background: isPast
-                ? "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)"
-                : "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+              background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
               borderRadius: "20px", padding: "18px", color: "white",
               position: "relative", overflow: "hidden",
-              transition: "background 0.3s",
             }}
           >
             <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
@@ -154,7 +150,7 @@ export default function Summary() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px", position: "relative" }}>
               <div>
                 <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)", marginBottom: "2px" }}>
-                  {isPast ? format(selectedDate, "MMM d, yyyy") : burnedCalories > 0 ? "Net calories" : "Calories today"}
+                  {burnedCalories > 0 ? "Net calories" : "Calories today"}
                 </p>
                 <p style={{ fontSize: "42px", fontWeight: 500, lineHeight: 1, letterSpacing: "-1px" }}>
                   {netCalories.toLocaleString()}
@@ -172,7 +168,7 @@ export default function Summary() {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.85)" }}>
-                {isPast ? "🔒 Past day — read only" : caloriesRemaining > 0 ? `${caloriesRemaining} kcal remaining` : "Goal reached! 🎉"}
+                {caloriesRemaining > 0 ? `${caloriesRemaining} kcal remaining` : "Goal reached! 🎉"}
               </p>
               {burnedCalories > 0 && (
                 <div style={{ display: "flex", gap: "6px" }}>
@@ -184,12 +180,7 @@ export default function Summary() {
           </motion.div>
 
           {/* Macro grid 2x2 */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            style={{ opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto" }}
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px", padding: "0 2px" }}>
               <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>🏅 Nutrition</span>
             </div>
@@ -202,26 +193,7 @@ export default function Summary() {
           </motion.div>
 
           {/* What you ate */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            style={{ position: "relative" }}
-          >
-            {isPast && (
-              <div style={{
-                position: "absolute", inset: 0, zIndex: 10,
-                background: "rgba(240,252,243,0.6)",
-                borderRadius: "16px",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                backdropFilter: "blur(1px)",
-                pointerEvents: "all",
-              }}>
-                <span style={{ fontSize: "11px", color: "#9ca3af", background: "white", padding: "4px 12px", borderRadius: "20px", border: "0.5px solid #e5e7eb" }}>
-                  🔒 Past day — read only
-                </span>
-              </div>
-            )}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px", padding: "0 2px" }}>
               <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>🍽 What you ate</span>
               {dayEntries?.length > 0 && (
@@ -265,31 +237,42 @@ export default function Summary() {
         </div>
       </div>
 
-      {/* Grafico fisso in basso */}
-      <div style={{ background: "#f0fcf3", padding: "8px 16px 90px", flexShrink: 0 }}>
-        <div style={{ background: "white", borderRadius: "20px", padding: "10px 16px 10px", border: "0.5px solid rgba(0,0,0,0.06)", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <TrendingUp style={{ width: "14px", height: "14px", color: "#16a34a" }} />
-              <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Trend</span>
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              {[
-                { color: "#16a34a", label: "On track" },
-                { color: "#f59e0b", label: "Close" },
-                { color: "#ef4444", label: "Off track" },
-                { color: "#e5e7eb", label: "No data" },
-              ].map(({ color, label }) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                  <div style={{ width: "6px", height: "6px", borderRadius: "2px", background: color, flexShrink: 0 }} />
-                  <span style={{ fontSize: "9px", color: "#9ca3af" }}>{label}</span>
-                </div>
-              ))}
-            </div>
+      {/* Grafico fisso in basso sopra la nav */}
+      <div style={{
+        background: "#f0fcf3",
+        padding: "8px 16px 90px",
+        flexShrink: 0,
+      }}>
+              <div style={{
+          background: "white",
+          borderRadius: "20px",
+          padding: "10px 16px 10px",
+          border: "0.5px solid rgba(0,0,0,0.06)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+        }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <TrendingUp style={{ width: "14px", height: "14px", color: "#16a34a" }} />
+            <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Trend</span>
           </div>
-          <ScrollableChart calorieGoal={calorieGoal} />
+          <div style={{ display: "flex", gap: "8px" }}>
+            {[
+              { color: "#16a34a", label: "On track" },
+              { color: "#f59e0b", label: "Close" },
+              { color: "#ef4444", label: "Off track" },
+              { color: "#e5e7eb", label: "No data" },
+            ].map(({ color, label }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                <div style={{ width: "6px", height: "6px", borderRadius: "2px", background: color, flexShrink: 0 }} />
+                <span style={{ fontSize: "9px", color: "#9ca3af" }}>{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
+
+        <ScrollableChart calorieGoal={calorieGoal} />
       </div>
+     </div>
 
     </div>
   );

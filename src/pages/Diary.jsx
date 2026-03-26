@@ -5,7 +5,7 @@ import { format, subDays } from "date-fns";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Save, Loader2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -40,7 +40,6 @@ export default function Diary() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === TODAY;
-  const isPast = !isToday;
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [chartRange, setChartRange] = useState(30);
@@ -95,14 +94,12 @@ export default function Diary() {
   };
 
   const adjustWeight = (delta) => {
-    if (isPast) return;
     const current = parseFloat(form.weight) || 0;
     const newVal = Math.max(0, Math.round((current + delta) * 10) / 10);
     setForm(f => ({ ...f, weight: String(newVal) }));
   };
 
   const handleSave = async () => {
-    if (isPast) return;
     setSaving(true);
     const payload = {
       user_id: user.id, date: dateStr,
@@ -133,11 +130,7 @@ export default function Diary() {
 
         {/* Date navigator */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: "white", borderRadius: "14px", padding: "8px 12px",
-            border: "0.5px solid rgba(0,0,0,0.06)", marginLeft: "44px",
-          }}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "white", borderRadius: "14px", padding: "8px 12px", border: "0.5px solid rgba(0,0,0,0.06)" }}
         >
           <button onClick={() => navigateDay(-1)} style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#f0fdf4", border: "0.5px solid #bbf7d0", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
             <ChevronLeft style={{ width: "14px", height: "14px", color: "#16a34a" }} />
@@ -152,18 +145,17 @@ export default function Diary() {
 
         {/* Weight card */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
-          style={{
-            background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden",
-            opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto",
-          }}
+          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
             <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>⚖️</div>
             <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Weight Progress</span>
-            {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>🔒 Read only</span>}
+            {lastWeight && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "2px" }}>Goal: {lastWeight} kg</span>}
           </div>
 
+          {/* Peso + grafico affiancati */}
           <div style={{ display: "flex", alignItems: "center", padding: "14px" }}>
+            {/* Sinistra: peso con +/- */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", flexShrink: 0, marginRight: "16px", minWidth: "100px" }}>
               {weightDiff !== null && (
                 <span style={{
@@ -192,6 +184,7 @@ export default function Diary() {
                   <Plus style={{ width: "14px", height: "14px", color: "#6b7280" }} />
                 </button>
               </div>
+              {/* Range selector */}
               <div style={{ display: "flex", gap: "3px" }}>
                 {CHART_RANGES.map(r => (
                   <button key={r.label} onClick={() => setChartRange(r.days)} style={{
@@ -205,8 +198,10 @@ export default function Diary() {
               </div>
             </div>
 
+            {/* Divisore */}
             <div style={{ width: "1px", background: "#f3f4f6", alignSelf: "stretch", marginRight: "16px", flexShrink: 0 }} />
 
+            {/* Destra: grafico */}
             <div style={{ flex: 1, height: "100px" }}>
               {chartData.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -231,17 +226,14 @@ export default function Diary() {
 
         {/* Wellness card */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          style={{
-            background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden",
-            opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto",
-          }}
+          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
             <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>😊</div>
             <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>How are you feeling?</span>
-            {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>🔒 Read only</span>}
           </div>
 
+          {/* Mood */}
           <div style={{ display: "flex", gap: "6px", padding: "10px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
             {MOODS.map(m => (
               <button key={m.value} onClick={() => setForm(f => ({ ...f, mood: m.value }))} style={{
@@ -257,6 +249,7 @@ export default function Diary() {
             ))}
           </div>
 
+          {/* Energy, Sleep, Stress */}
           {SCALES.map(scale => (
             <div key={scale.key} style={{ padding: "8px 14px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
               <span style={{ fontSize: "11px", color: "#6b7280", whiteSpace: "nowrap" }}>{scale.emoji} {scale.label}</span>
@@ -275,6 +268,7 @@ export default function Diary() {
             </div>
           ))}
 
+          {/* Notes */}
           <div style={{ padding: "10px 14px" }}>
             <textarea
               value={form.notes}
@@ -286,26 +280,24 @@ export default function Diary() {
           </div>
         </motion.div>
 
-        {/* Save button — nascosto nel passato */}
-        {!isPast && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              width: "100%", background: "#16a34a", color: "white",
-              border: "none", borderRadius: "14px", padding: "13px",
-              fontSize: "14px", fontWeight: 500, cursor: "pointer",
-              fontFamily: "inherit", display: "flex", alignItems: "center",
-              justifyContent: "center", gap: "8px",
-            }}
-          >
-            {saving ? <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} /> : <Save style={{ width: "16px", height: "16px" }} />}
-            {saving ? "Saving..." : "Save today's entry"}
-          </motion.button>
-        )}
+        {/* Save button */}
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            width: "100%", background: "#16a34a", color: "white",
+            border: "none", borderRadius: "14px", padding: "13px",
+            fontSize: "14px", fontWeight: 500, cursor: "pointer",
+            fontFamily: "inherit", display: "flex", alignItems: "center",
+            justifyContent: "center", gap: "8px",
+          }}
+        >
+          {saving ? <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} /> : <Save style={{ width: "16px", height: "16px" }} />}
+          {saving ? "Saving..." : "Save today's entry"}
+        </motion.button>
 
       </div>
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
