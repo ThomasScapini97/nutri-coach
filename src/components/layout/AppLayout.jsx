@@ -6,16 +6,13 @@ import { useAuth } from "@/lib/AuthContext";
 export default function AppLayout() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const initials = user?.email?.charAt(0).toUpperCase() || "U";
+  const avatarUrl = user?.user_metadata?.avatar_url || null;
 
   return (
     <div className="flex min-h-screen bg-background" style={{ overflowX: "hidden", maxWidth: "100vw" }}>
       <Sidebar />
       <main className="flex-1 flex flex-col min-h-screen" style={{ minWidth: 0, overflow: "hidden" }}>
-        {/* Avatar profilo in alto a sinistra */}
-        <div style={{
-          position: "fixed", top: "12px", left: "12px", zIndex: 100,
-        }}>
+        <div style={{ position: "fixed", top: "12px", left: "12px", zIndex: 100 }}>
           <button
             onClick={() => navigate("/Profile")}
             style={{
@@ -24,13 +21,17 @@ export default function AppLayout() {
               border: "2px solid white",
               boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer",
+              cursor: "pointer", overflow: "hidden", padding: 0,
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            )}
           </button>
         </div>
         <Outlet />
