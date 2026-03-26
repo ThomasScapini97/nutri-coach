@@ -198,6 +198,9 @@ export default function Diary() {
               </div>
             </div>
 
+            {/* Divisore */}
+            <div style={{ width: "1px", background: "#f3f4f6", alignSelf: "stretch", marginRight: "16px", flexShrink: 0 }} />
+
             {/* Destra: grafico */}
             <div style={{ flex: 1, height: "100px" }}>
               {chartData.length > 1 ? (
