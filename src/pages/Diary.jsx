@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
-import { format, subDays, subMonths, subYears } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Save, Loader2, TrendingDown } from "lucide-react";
+import { format, subDays } from "date-fns";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Save, Loader2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -30,18 +30,9 @@ const CHART_RANGES = [
   { label: "1Y", days: 365 },
 ];
 
-const MEASUREMENTS = [
-  { key: "weight", label: "Weight", unit: "kg" },
-  { key: "waist", label: "Waist", unit: "cm" },
-  { key: "hips", label: "Hips", unit: "cm" },
-  { key: "chest", label: "Chest", unit: "cm" },
-  { key: "arm", label: "Arm", unit: "cm" },
-  { key: "thigh", label: "Thigh", unit: "cm" },
-];
-
 const emptyForm = {
   mood: null, energy: null, sleep_quality: null, stress: null, notes: "",
-  weight: "", waist: "", hips: "", chest: "", arm: "", thigh: "",
+  weight: "",
 };
 
 export default function Diary() {
@@ -53,9 +44,8 @@ export default function Diary() {
   const [saving, setSaving] = useState(false);
   const [chartRange, setChartRange] = useState(30);
   const [chartData, setChartData] = useState([]);
-  const [lastEntry, setLastEntry] = useState(null);
+  const [lastWeight, setLastWeight] = useState(null);
 
-  // Carica entry del giorno selezionato
   useEffect(() => {
     if (!user?.id) return;
     supabase.from("diary_entries").select("*").eq("user_id", user.id).eq("date", dateStr).single()
@@ -68,11 +58,6 @@ export default function Diary() {
             stress: data.stress || null,
             notes: data.notes || "",
             weight: data.weight || "",
-            waist: data.waist || "",
-            hips: data.hips || "",
-            chest: data.chest || "",
-            arm: data.arm || "",
-            thigh: data.thigh || "",
           });
         } else {
           setForm(emptyForm);
@@ -80,7 +65,6 @@ export default function Diary() {
       });
   }, [dateStr, user?.id]);
 
-  // Carica dati grafico peso
   useEffect(() => {
     if (!user?.id) return;
     const from = format(subDays(new Date(), chartRange), "yyyy-MM-dd");
@@ -88,18 +72,17 @@ export default function Diary() {
       .gte("date", from).lte("date", TODAY).not("weight", "is", null).order("date")
       .then(({ data }) => {
         setChartData((data || []).map(d => ({
-          date: format(new Date(d.date + "T12:00:00"), chartRange <= 7 ? "EEE" : chartRange <= 30 ? "MMM d" : "MMM yy"),
-          weight: d.weight,
+          date: format(new Date(d.date + "T12:00:00"), chartRange <= 7 ? "EEE" : chartRange <= 30 ? "d MMM" : "MMM yy"),
+          weight: Number(d.weight),
         })));
       });
   }, [chartRange, user?.id, dateStr]);
 
-  // Ultima entry con misure per confronto
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from("diary_entries").select("*").eq("user_id", user.id)
+    supabase.from("diary_entries").select("weight").eq("user_id", user.id)
       .lt("date", dateStr).not("weight", "is", null).order("date", { ascending: false }).limit(1)
-      .then(({ data }) => setLastEntry(data?.[0] || null));
+      .then(({ data }) => setLastWeight(data?.[0]?.weight || null));
   }, [dateStr, user?.id]);
 
   const navigateDay = (dir) => {
@@ -110,6 +93,12 @@ export default function Diary() {
     });
   };
 
+  const adjustWeight = (delta) => {
+    const current = parseFloat(form.weight) || 0;
+    const newVal = Math.max(0, Math.round((current + delta) * 10) / 10);
+    setForm(f => ({ ...f, weight: String(newVal) }));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const payload = {
@@ -118,23 +107,16 @@ export default function Diary() {
       sleep_quality: form.sleep_quality, stress: form.stress,
       notes: form.notes || null,
       weight: form.weight ? Number(form.weight) : null,
-      waist: form.waist ? Number(form.waist) : null,
-      hips: form.hips ? Number(form.hips) : null,
-      chest: form.chest ? Number(form.chest) : null,
-      arm: form.arm ? Number(form.arm) : null,
-      thigh: form.thigh ? Number(form.thigh) : null,
+      waist: null, hips: null, chest: null, arm: null, thigh: null,
     };
     const { error } = await supabase.from("diary_entries").upsert(payload, { onConflict: "user_id,date" });
     if (error) { toast.error("Error saving entry"); } else { toast.success("Entry saved! 📔"); }
     setSaving(false);
   };
 
-  const getTrend = (key) => {
-    if (!lastEntry || !lastEntry[key] || !form[key]) return null;
-    const diff = Number(form[key]) - Number(lastEntry[key]);
-    if (diff === 0) return null;
-    return { diff: Math.abs(diff).toFixed(1), up: diff > 0 };
-  };
+  const weightDiff = form.weight && lastWeight
+    ? (Number(form.weight) - Number(lastWeight)).toFixed(1)
+    : null;
 
   const inputStyle = {
     background: "#f9fafb", border: "0.5px solid #e5e7eb",
@@ -159,6 +141,84 @@ export default function Diary() {
           <button onClick={() => navigateDay(1)} disabled={isToday} style={{ width: "28px", height: "28px", borderRadius: "8px", background: isToday ? "#f9fafb" : "#f0fdf4", border: `0.5px solid ${isToday ? "#e5e7eb" : "#bbf7d0"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.4 : 1 }}>
             <ChevronRight style={{ width: "14px", height: "14px", color: "#16a34a" }} />
           </button>
+        </motion.div>
+
+        {/* Weight card */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
+          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>⚖️</div>
+            <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Weight Progress</span>
+            {lastWeight && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "2px" }}>Goal: {lastWeight} kg</span>}
+          </div>
+
+          {/* Peso + grafico affiancati */}
+          <div style={{ display: "flex", alignItems: "center", padding: "14px" }}>
+            {/* Sinistra: peso con +/- */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", flexShrink: 0, marginRight: "16px", minWidth: "100px" }}>
+              {weightDiff !== null && (
+                <span style={{
+                  fontSize: "11px", fontWeight: 500, padding: "2px 8px", borderRadius: "20px",
+                  background: Number(weightDiff) < 0 ? "#dcfce7" : Number(weightDiff) > 0 ? "#fee2e2" : "#f3f4f6",
+                  color: Number(weightDiff) < 0 ? "#16a34a" : Number(weightDiff) > 0 ? "#dc2626" : "#9ca3af",
+                }}>
+                  {Number(weightDiff) > 0 ? "+" : ""}{weightDiff} kg
+                </span>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button onClick={() => adjustWeight(-0.1)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Minus style={{ width: "14px", height: "14px", color: "#6b7280" }} />
+                </button>
+                <div style={{ textAlign: "center" }}>
+                  <input
+                    type="number"
+                    value={form.weight}
+                    onChange={e => setForm(f => ({ ...f, weight: e.target.value }))}
+                    placeholder="—"
+                    style={{ background: "none", border: "none", outline: "none", fontSize: "28px", fontWeight: 600, color: "#1a3a22", width: "70px", textAlign: "center", fontFamily: "inherit" }}
+                  />
+                  <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "-4px" }}>kg</div>
+                </div>
+                <button onClick={() => adjustWeight(0.1)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Plus style={{ width: "14px", height: "14px", color: "#6b7280" }} />
+                </button>
+              </div>
+              {/* Range selector */}
+              <div style={{ display: "flex", gap: "3px" }}>
+                {CHART_RANGES.map(r => (
+                  <button key={r.label} onClick={() => setChartRange(r.days)} style={{
+                    padding: "2px 6px", borderRadius: "20px", fontSize: "9px", fontWeight: 500,
+                    border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                    background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
+                    color: chartRange === r.days ? "#16a34a" : "#9ca3af",
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}>{r.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Destra: grafico */}
+            <div style={{ flex: 1, height: "100px" }}>
+              {chartData.length > 1 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 4, right: 4, left: -32, bottom: 0 }}>
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: "#9ca3af" }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: "#9ca3af" }} domain={["auto", "auto"]} />
+                    <Tooltip
+                      contentStyle={{ background: "white", border: "0.5px solid rgba(0,0,0,0.08)", borderRadius: "10px", fontSize: "11px" }}
+                      formatter={(v) => [`${v} kg`, ""]}
+                    />
+                    <Line type="monotone" dataKey="weight" stroke="#16a34a" strokeWidth={2} dot={{ fill: "#16a34a", r: 2 }} activeDot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: "11px", textAlign: "center", lineHeight: 1.4 }}>
+                  Log weight for<br />2+ days to see trend
+                </div>
+              )}
+            </div>
+          </div>
         </motion.div>
 
         {/* Wellness card */}
@@ -214,84 +274,6 @@ export default function Diary() {
               rows={3}
               style={{ ...inputStyle, resize: "none", fontSize: "13px", lineHeight: 1.5 }}
             />
-          </div>
-        </motion.div>
-
-        {/* Body measurements */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>📏</div>
-            <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Body measurements</span>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1px", background: "#f3f4f6" }}>
-            {MEASUREMENTS.map(m => {
-              const trend = getTrend(m.key);
-              const isWeight = m.key === "weight";
-              const trendGood = isWeight ? !trend?.up : null;
-              return (
-                <div key={m.key} style={{ background: "white", padding: "8px 12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                    <span style={{ fontSize: "9px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px" }}>{m.label}</span>
-                    {trend && (
-                      <span style={{ fontSize: "9px", color: trendGood === null ? (trend.up ? "#ef4444" : "#16a34a") : (trendGood ? "#16a34a" : "#ef4444"), fontWeight: 500 }}>
-                        {trend.up ? "↑" : "↓"} {trend.diff}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                    <input
-                      type="number"
-                      placeholder="—"
-                      value={form[m.key]}
-                      onChange={e => setForm(f => ({ ...f, [m.key]: e.target.value }))}
-                      style={{ ...inputStyle, padding: "4px 8px", fontSize: "16px", fontWeight: 500 }}
-                    />
-                    <span style={{ fontSize: "11px", color: "#9ca3af", flexShrink: 0 }}>{m.unit}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Weight chart */}
-          <div style={{ padding: "12px 14px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-              <span style={{ fontSize: "11px", color: "#9ca3af" }}>Weight trend</span>
-              <div style={{ display: "flex", gap: "4px" }}>
-                {CHART_RANGES.map(r => (
-                  <button key={r.label} onClick={() => setChartRange(r.days)} style={{
-                    padding: "3px 8px", borderRadius: "20px", fontSize: "10px", fontWeight: 500,
-                    border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                    background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
-                    color: chartRange === r.days ? "#16a34a" : "#9ca3af",
-                    cursor: "pointer", fontFamily: "inherit",
-                  }}>{r.label}</button>
-                ))}
-              </div>
-            </div>
-
-            {chartData.length > 1 ? (
-              <div style={{ height: "100px" }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#9ca3af" }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#9ca3af" }} domain={["auto", "auto"]} />
-                    <Tooltip
-                      contentStyle={{ background: "white", border: "0.5px solid rgba(0,0,0,0.08)", borderRadius: "10px", fontSize: "11px" }}
-                      formatter={(v) => [`${v} kg`, "Weight"]}
-                    />
-                    <Line type="monotone" dataKey="weight" stroke="#16a34a" strokeWidth={2} dot={{ fill: "#16a34a", r: 3 }} activeDot={{ r: 5 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div style={{ textAlign: "center", padding: "20px 0", color: "#9ca3af", fontSize: "12px" }}>
-                Log your weight for at least 2 days to see the trend
-              </div>
-            )}
           </div>
         </motion.div>
 
