@@ -26,7 +26,7 @@ const SCALES = [
 const CHART_RANGES = [
   { label: "7D", days: 7 },
   { label: "1M", days: 30 },
-  { label: "3M", days: 90 },
+  { label: "6M", days: 180 },
   { label: "1Y", days: 365 },
 ];
 
@@ -47,7 +47,6 @@ export default function Diary() {
   const [chartData, setChartData] = useState([]);
   const [lastWeight, setLastWeight] = useState(null);
 
-  // Carica entry del giorno selezionato
   useEffect(() => {
     if (!user?.id) return;
     supabase.from("diary_entries").select("*").eq("user_id", user.id).eq("date", dateStr).single()
@@ -67,7 +66,6 @@ export default function Diary() {
       });
   }, [dateStr, user?.id]);
 
-  // Carica dati grafico peso
   useEffect(() => {
     if (!user?.id) return;
     const from = format(subDays(new Date(), chartRange), "yyyy-MM-dd");
@@ -81,7 +79,6 @@ export default function Diary() {
       });
   }, [chartRange, user?.id, dateStr]);
 
-  // Ultima entry con peso — usata anche per pre-compilare il form
   useEffect(() => {
     if (!user?.id) return;
     supabase.from("diary_entries").select("weight").eq("user_id", user.id)
@@ -89,7 +86,6 @@ export default function Diary() {
       .then(({ data }) => {
         const w = data?.[0]?.weight || null;
         setLastWeight(w);
-        // Pre-compila il peso solo se il form è ancora vuoto
         setForm(prev => prev.weight === "" && w ? { ...prev, weight: String(w) } : prev);
       });
   }, [dateStr, user?.id]);
@@ -138,7 +134,7 @@ export default function Diary() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#f0fcf3", overflow: "hidden" }}>
 
-      {/* Date navigator — full width */}
+      {/* Date navigator */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "center",
         background: "white", borderBottom: "0.5px solid #e5e7eb",
@@ -181,6 +177,7 @@ export default function Diary() {
               opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto",
             }}
           >
+            {/* Header */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
               <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>⚖️</div>
               <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Weight Progress</span>
@@ -188,7 +185,7 @@ export default function Diary() {
             </div>
 
             {/* Peso con +/- centrato */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "14px 14px 8px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "14px 14px 12px" }}>
               <button onClick={() => adjustWeight(-0.1)} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Minus style={{ width: "16px", height: "16px", color: "#6b7280" }} />
               </button>
@@ -217,23 +214,13 @@ export default function Diary() {
               </button>
             </div>
 
-            {/* Range selector */}
-            <div style={{ display: "flex", gap: "6px", justifyContent: "center", padding: "0 14px 10px" }}>
-              {CHART_RANGES.map(r => (
-                <button key={r.label} onClick={() => setChartRange(r.days)} style={{
-                  padding: "3px 10px", borderRadius: "20px", fontSize: "10px", fontWeight: 500,
-                  border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                  background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
-                  color: chartRange === r.days ? "#16a34a" : "#9ca3af",
-                  cursor: "pointer", fontFamily: "inherit",
-                }}>{r.label}</button>
-              ))}
-            </div>
+            {/* Divisore */}
+            <div style={{ height: "0.5px", background: "#f3f4f6", margin: "0 14px" }} />
 
-            {/* Grafico sotto */}
-            <div style={{ padding: "0 14px 14px", borderTop: "0.5px solid #f3f4f6" }}>
+            {/* Grafico */}
+            <div style={{ padding: "10px 14px 8px" }}>
               {chartData.length > 1 ? (
-                <div style={{ height: "120px", marginTop: "10px" }}>
+                <div style={{ height: "120px" }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#9ca3af" }} />
@@ -251,6 +238,19 @@ export default function Diary() {
                   Log weight for 2+ days to see trend
                 </div>
               )}
+            </div>
+
+            {/* Range selector — sotto il grafico */}
+            <div style={{ display: "flex", gap: "6px", justifyContent: "center", padding: "0 14px 14px" }}>
+              {CHART_RANGES.map(r => (
+                <button key={r.label} onClick={() => setChartRange(r.days)} style={{
+                  padding: "3px 10px", borderRadius: "20px", fontSize: "10px", fontWeight: 500,
+                  border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                  background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
+                  color: chartRange === r.days ? "#16a34a" : "#9ca3af",
+                  cursor: "pointer", fontFamily: "inherit",
+                }}>{r.label}</button>
+              ))}
             </div>
           </motion.div>
 
