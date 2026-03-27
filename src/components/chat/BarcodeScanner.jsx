@@ -12,66 +12,60 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [grams, setGrams] = useState("100");
   const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const scannerRef = useRef(null);
+  const readerRef = useRef(null);
 
   useEffect(() => {
     return () => stopCamera();
   }, []);
 
   const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
+    if (readerRef.current) {
+      readerRef.current.reset();
+      readerRef.current = null;
     }
-    scannerRef.current = null;
   };
 
   const startCamera = async () => {
     setMode("camera");
     setCameraError(null);
+    setError(null);
     setScanning(false);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-      setScanning(true);
-      startBarcodeDetection();
-    } catch {
-      setCameraError("Camera not available. Please use the search instead.");
-    }
-  };
 
-  const startBarcodeDetection = async () => {
-    if (!("BarcodeDetector" in window)) {
-      setCameraError("Barcode scanning not supported on this browser. Please use the search.");
-      return;
-    }
     try {
-      const detector = new window.BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] });
-      scannerRef.current = detector;
-      const scan = async () => {
-        if (!videoRef.current || !scannerRef.current) return;
-        try {
-          const barcodes = await detector.detect(videoRef.current);
-          if (barcodes.length > 0) {
-            const code = barcodes[0].rawValue;
+      const { BrowserMultiFormatReader } = await import("@zxing/library");
+      const reader = new BrowserMultiFormatReader();
+      readerRef.current = reader;
+
+      const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+      if (!devices || devices.length === 0) {
+        setCameraError("No camera found. Please use the search instead.");
+        return;
+      }
+
+      // Preferisce la fotocamera posteriore
+      const backCamera = devices.find(d =>
+        d.label.toLowerCase().includes("back") ||
+        d.label.toLowerCase().includes("rear") ||
+        d.label.toLowerCase().includes("environment")
+      ) || devices[devices.length - 1];
+
+      setScanning(true);
+
+      await reader.decodeFromVideoDevice(
+        backCamera.deviceId,
+        videoRef.current,
+        async (result, err) => {
+          if (result) {
+            const code = result.getText();
             stopCamera();
             setScanning(false);
             await fetchByBarcode(code);
-          } else {
-            requestAnimationFrame(scan);
           }
-        } catch {
-          requestAnimationFrame(scan);
+          // err è normale quando non trova barcode, ignoriamo
         }
-      };
-      requestAnimationFrame(scan);
-    } catch {
-      setCameraError("Could not start barcode detection.");
+      );
+    } catch (e) {
+      setCameraError("Camera not available. Please use the search instead.");
     }
   };
 
@@ -84,13 +78,13 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
       if (data.status === 1 && data.product) {
         const product = parseProduct(data.product);
         if (product) {
-          // ✅ FIX: mostra il popup grammi invece di chiamare onProductFound direttamente
           handleSelectProduct(product);
         } else {
           setError("Product found but nutritional data is incomplete.");
+          setMode("search");
         }
       } else {
-        setError("Product not found in database. Try searching by name.");
+        setError("Product not found. Try searching by name.");
         setMode("search");
       }
     } catch {
@@ -105,14 +99,17 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
     const n = p.nutriments || {};
     const name = p.product_name || p.product_name_en || null;
     if (!name) return null;
-    const per100 = {
-      calories: Math.round(n["energy-kcal_100g"] || n["energy-kcal"] || (n["energy_100g"] || 0) / 4.184 || 0),
-      carbs: Math.round((n["carbohydrates_100g"] || 0) * 10) / 10,
-      protein: Math.round((n["proteins_100g"] || 0) * 10) / 10,
-      fats: Math.round((n["fat_100g"] || 0) * 10) / 10,
-      fiber: Math.round((n["fiber_100g"] || 0) * 10) / 10,
+    return {
+      name,
+      per100: {
+        calories: Math.round(n["energy-kcal_100g"] || n["energy-kcal"] || (n["energy_100g"] || 0) / 4.184 || 0),
+        carbs: Math.round((n["carbohydrates_100g"] || 0) * 10) / 10,
+        protein: Math.round((n["proteins_100g"] || 0) * 10) / 10,
+        fats: Math.round((n["fat_100g"] || 0) * 10) / 10,
+        fiber: Math.round((n["fiber_100g"] || 0) * 10) / 10,
+      },
+      serving: p.serving_size || "100g",
     };
-    return { name, per100, serving: p.serving_size || "100g" };
   };
 
   const searchByName = async () => {
@@ -170,7 +167,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
             <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22" }}>Add food</p>
             <p style={{ fontSize: "11px", color: "#9ca3af" }}>Scan barcode or search by name</p>
           </div>
-          <button onClick={onClose} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button onClick={() => { stopCamera(); onClose(); }} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <X style={{ width: "16px", height: "16px", color: "#6b7280" }} />
           </button>
         </div>
@@ -186,7 +183,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
                 </div>
                 <div>
                   <p style={{ fontSize: "14px", fontWeight: 500, color: "#1a3a22", marginBottom: "2px" }}>Scan barcode</p>
-                  <p style={{ fontSize: "12px", color: "#9ca3af" }}>Point camera at product barcode</p>
+                  <p style={{ fontSize: "12px", color: "#9ca3af" }}>Works on all browsers including Safari</p>
                 </div>
               </button>
               <button onClick={() => setMode("search")} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", borderRadius: "16px", border: "0.5px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}>
@@ -208,7 +205,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "24px 0" }}>
                   <AlertCircle style={{ width: "32px", height: "32px", color: "#ef4444" }} />
                   <p style={{ fontSize: "13px", color: "#6b7280", textAlign: "center" }}>{cameraError}</p>
-                  <button onClick={() => setMode("search")} style={{ fontSize: "13px", color: "#16a34a", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}>
+                  <button onClick={() => { setMode("search"); setCameraError(null); }} style={{ fontSize: "13px", color: "#16a34a", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}>
                     Switch to search →
                   </button>
                 </div>
@@ -290,7 +287,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
         </div>
       </div>
 
-      {/* Popup grammi — appare sia dopo barcode che dopo ricerca */}
+      {/* Popup grammi */}
       {selectedProduct && (
         <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
           <div style={{ background: "white", borderRadius: "20px", padding: "20px", width: "100%", maxWidth: "320px" }}>
