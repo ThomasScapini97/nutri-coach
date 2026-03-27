@@ -25,34 +25,28 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
     }
   };
 
-  const startCamera = async () => {
+const startCamera = async () => {
     setMode("camera");
     setCameraError(null);
     setError(null);
     setScanning(false);
 
     try {
+      // Prima chiedi esplicitamente i permessi fotocamera
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } }
+      });
+      // Ferma subito lo stream — lo gestirà zxing
+      stream.getTracks().forEach(t => t.stop());
+
       const { BrowserMultiFormatReader } = await import("@zxing/library");
       const reader = new BrowserMultiFormatReader();
       readerRef.current = reader;
 
-      const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-      if (!devices || devices.length === 0) {
-        setCameraError("No camera found. Please use the search instead.");
-        return;
-      }
-
-      // Preferisce la fotocamera posteriore
-      const backCamera = devices.find(d =>
-        d.label.toLowerCase().includes("back") ||
-        d.label.toLowerCase().includes("rear") ||
-        d.label.toLowerCase().includes("environment")
-      ) || devices[devices.length - 1];
-
       setScanning(true);
 
-      await reader.decodeFromVideoDevice(
-        backCamera.deviceId,
+      await reader.decodeFromConstraints(
+        { video: { facingMode: { ideal: "environment" } } },
         videoRef.current,
         async (result, err) => {
           if (result) {
@@ -61,11 +55,15 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
             setScanning(false);
             await fetchByBarcode(code);
           }
-          // err è normale quando non trova barcode, ignoriamo
         }
       );
     } catch (e) {
-      setCameraError("Camera not available. Please use the search instead.");
+      console.error("Camera error:", e);
+      if (e.name === "NotAllowedError") {
+        setCameraError("Camera permission denied. Please allow camera access in your browser settings.");
+      } else {
+        setCameraError("Camera not available. Please use the search instead.");
+      }
     }
   };
 
