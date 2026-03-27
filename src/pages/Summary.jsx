@@ -105,43 +105,42 @@ export default function Summary() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#f0fcf3", overflow: "hidden" }}>
 
-      <div style={{ flex: 1, overflowY: "auto", paddingBottom: "8px" }}>
-        <div className="max-w-lg mx-auto px-4 space-y-4">
+      {/* Date navigator — fuori dal container, full width come Chat */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "white", borderBottom: "0.5px solid #e5e7eb",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        padding: "14px 24px", position: "relative", flexShrink: 0,
+      }}>
+        <button onClick={() => navigateDay(-1)} style={{
+          position: "absolute", left: "60px",
+          background: "none", border: "none",
+          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+        }}>
+          <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+        </button>
+        <div style={{ textAlign: "center" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
+            {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
+          </h2>
+          {dayLog && (
+            <p style={{ fontSize: "11px", color: "#9ca3af" }}>
+              {netCalories} kcal logged
+            </p>
+          )}
+        </div>
+        <button onClick={() => navigateDay(1)} disabled={isToday} style={{
+          position: "absolute", right: "16px",
+          background: "none", border: "none",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1,
+        }}>
+          <ChevronRight style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+        </button>
+      </div>
 
-          {/* Date navigator */}
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: "white", borderBottom: "0.5px solid #e5e7eb",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-            padding: "14px 24px", position: "relative",
-            marginLeft: "-16px", marginRight: "-16px",
-          }}>
-            <button onClick={() => navigateDay(-1)} style={{
-              position: "absolute", left: "60px",
-              background: "none", border: "none",
-              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-            }}>
-              <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
-            </button>
-            <div style={{ textAlign: "center" }}>
-              <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
-                {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
-              </h2>
-              {dayLog && (
-                <p style={{ fontSize: "11px", color: "#9ca3af" }}>
-                  {netCalories} kcal logged
-                </p>
-              )}
-            </div>
-            <button onClick={() => navigateDay(1)} disabled={isToday} style={{
-              position: "absolute", right: "16px",
-              background: "none", border: "none",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1,
-            }}>
-              <ChevronRight style={{ width: "20px", height: "20px", color: "#6b7280" }} />
-            </button>
-          </div>
+      <div style={{ flex: 1, overflowY: "auto", paddingBottom: "8px" }}>
+        <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
 
           {/* Hero calorie card */}
           <motion.div
