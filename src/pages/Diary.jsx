@@ -198,15 +198,17 @@ export default function Diary() {
                 <Minus style={{ width: "16px", height: "16px", color: "#6b7280" }} />
               </button>
               <div style={{ textAlign: "center" }}>
-                {weightDiff !== null && (
-                  <span style={{
-                    fontSize: "11px", fontWeight: 500, padding: "2px 8px", borderRadius: "20px",
-                    background: Number(weightDiff) < 0 ? "#dcfce7" : Number(weightDiff) > 0 ? "#fee2e2" : "#f3f4f6",
-                    color: Number(weightDiff) < 0 ? "#16a34a" : Number(weightDiff) > 0 ? "#dc2626" : "#9ca3af",
-                    display: "inline-block", marginBottom: "4px",
-                  }}>
-                    {Number(weightDiff) > 0 ? "+" : ""}{weightDiff} kg
-                  </span>
+                       {weightDiff !== null && (
+                  <div style={{ marginBottom: "4px", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                    <span style={{
+                      fontSize: "11px", fontWeight: 500, padding: "2px 8px", borderRadius: "20px",
+                      background: Number(weightDiff) < 0 ? "#dcfce7" : Number(weightDiff) > 0 ? "#fee2e2" : "#f3f4f6",
+                      color: Number(weightDiff) < 0 ? "#16a34a" : Number(weightDiff) > 0 ? "#dc2626" : "#9ca3af",
+                    }}>
+                      {Number(weightDiff) > 0 ? "+" : ""}{weightDiff} kg
+                    </span>
+                    <span style={{ fontSize: "9px", color: "#9ca3af" }}>vs yesterday</span>
+                  </div>
                 )}
                 <input
                   type="number"
