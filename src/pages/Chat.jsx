@@ -174,7 +174,7 @@ export default function Chat() {
   useEffect(() => {
     const checkEndOfDay = () => {
       const hour = new Date().getHours();
-      if (hour === 21 && todayLog && !dailyEvaluation) {
+      if (hour === 22 && todayLog && !dailyEvaluation) {
         const evaluation = evaluateDailyNutrition(todayLog, calorieGoal);
         if (evaluation) setDailyEvaluation(evaluation);
       }

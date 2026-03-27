@@ -9,6 +9,11 @@ export default function DailyNotificationPopup({ evaluation, onClose }) {
 
   useEffect(() => { if (evaluation) setIsVisible(true); }, [evaluation]);
 
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(onClose, 300);
+  };
+
   const handleClick = () => {
     setIsVisible(false);
     setTimeout(() => { navigate("/Summary"); onClose(); }, 300);
@@ -20,31 +25,76 @@ export default function DailyNotificationPopup({ evaluation, onClose }) {
     <AnimatePresence>
       {isVisible && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={() => { setIsVisible(false); setTimeout(onClose, 300); }} />
-          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-md">
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-              <div className="relative bg-gradient-to-br from-primary to-primary/90 px-6 py-8 text-white">
-                <button onClick={() => { setIsVisible(false); setTimeout(onClose, 300); }} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
-                  <X className="w-4 h-4" />
-                </button>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-white" />
+          {/* Overlay cliccabile per chiudere */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 9998 }}
+            onClick={handleClose}
+          />
+
+          {/* Popup compatto dal basso */}
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            style={{
+              position: "fixed", bottom: 100, left: "16px", right: "16px",
+              zIndex: 9999, maxWidth: "480px", margin: "0 auto",
+            }}
+          >
+            <div style={{ background: "white", borderRadius: "20px", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", overflow: "hidden" }}>
+
+              {/* Header compatto */}
+              <div style={{
+                background: "linear-gradient(135deg, #16a34a, #15803d)",
+                padding: "14px 16px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Sparkles style={{ width: "18px", height: "18px", color: "white" }} />
                   </div>
-                  <h3 className="text-xl font-bold">{evaluation.title}</h3>
+                  <div>
+                    <p style={{ fontSize: "14px", fontWeight: 600, color: "white", lineHeight: 1.2 }}>{evaluation.title}</p>
+                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)" }}>Daily summary</p>
+                  </div>
                 </div>
+                <button
+                  onClick={handleClose}
+                  style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(255,255,255,0.2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  <X style={{ width: "14px", height: "14px", color: "white" }} />
+                </button>
               </div>
-              <div className="px-6 py-6">
-                <p className="text-foreground text-base leading-relaxed mb-6">{evaluation.message}</p>
-                <div className="bg-muted/50 rounded-2xl p-4 mb-6">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Calories consumed</span>
-                    <span className="text-lg font-bold">{Math.round(evaluation.calories)} / {evaluation.calorieGoal} kcal</span>
-                  </div>
+
+              {/* Body compatto */}
+              <div style={{ padding: "14px 16px" }}>
+                <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px", lineHeight: 1.5 }}>
+                  {evaluation.message}
+                </p>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0fdf4", borderRadius: "12px", padding: "10px 14px", marginBottom: "12px" }}>
+                  <span style={{ fontSize: "12px", color: "#9ca3af" }}>Calories</span>
+                  <span style={{ fontSize: "15px", fontWeight: 600, color: "#1a3a22" }}>
+                    {Math.round(evaluation.calories)} / {evaluation.calorieGoal} kcal
+                  </span>
                 </div>
-                <button onClick={handleClick} className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 rounded-2xl transition-all shadow-md">
-                  View Full Summary
-                </button>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    onClick={handleClose}
+                    style={{ flex: 1, background: "#f3f4f6", color: "#6b7280", border: "none", borderRadius: "12px", padding: "10px", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    Dismiss
+                  </button>
+                  <button
+                    onClick={handleClick}
+                    style={{ flex: 2, background: "#16a34a", color: "white", border: "none", borderRadius: "12px", padding: "10px", fontSize: "13px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    View Summary →
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
