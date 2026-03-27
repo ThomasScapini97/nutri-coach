@@ -5,7 +5,7 @@ import { format, subDays } from "date-fns";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Save, Loader2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -46,13 +46,18 @@ export default function Diary() {
   const [chartRange, setChartRange] = useState(30);
   const [chartData, setChartData] = useState([]);
   const [lastWeight, setLastWeight] = useState(null);
+  const [weightGoal, setWeightGoal] = useState(null);
 
-  // Carica tutto in un unico effect per evitare race condition
   useEffect(() => {
     if (!user?.id) return;
 
     const loadData = async () => {
-      // 1. Prima carica l'ultima entry con peso (giorni precedenti)
+      // Carica profilo per weight_goal
+      const { data: profileData } = await supabase
+        .from("user_profiles").select("weight_goal").eq("user_id", user.id).single();
+      setWeightGoal(profileData?.weight_goal || null);
+
+      // Carica ultima entry con peso
       const { data: lastData } = await supabase
         .from("diary_entries").select("weight").eq("user_id", user.id)
         .lt("date", dateStr).not("weight", "is", null)
@@ -60,7 +65,7 @@ export default function Diary() {
       const prevWeight = lastData?.[0]?.weight || null;
       setLastWeight(prevWeight);
 
-      // 2. Poi carica l'entry del giorno selezionato
+      // Carica entry del giorno
       const { data } = await supabase
         .from("diary_entries").select("*").eq("user_id", user.id).eq("date", dateStr).single();
 
@@ -74,7 +79,6 @@ export default function Diary() {
           weight: data.weight ? String(data.weight) : (prevWeight ? String(prevWeight) : ""),
         });
       } else {
-        // Nessuna entry oggi — usa il peso del giorno prima come default
         setForm({ ...emptyForm, weight: prevWeight ? String(prevWeight) : "" });
       }
     };
@@ -82,7 +86,6 @@ export default function Diary() {
     loadData();
   }, [dateStr, user?.id]);
 
-  // Carica dati grafico peso
   useEffect(() => {
     if (!user?.id) return;
     const from = format(subDays(new Date(), chartRange), "yyyy-MM-dd");
@@ -131,6 +134,12 @@ export default function Diary() {
     ? (Number(form.weight) - Number(lastWeight)).toFixed(1)
     : null;
 
+  const toGoal = form.weight && weightGoal
+    ? (Number(form.weight) - Number(weightGoal)).toFixed(1)
+    : null;
+
+  const goalReached = toGoal !== null && Number(toGoal) <= 0;
+
   const inputStyle = {
     background: "#f9fafb", border: "0.5px solid #e5e7eb",
     borderRadius: "8px", padding: "6px 10px", fontSize: "14px",
@@ -147,11 +156,7 @@ export default function Diary() {
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
         padding: "14px 24px", position: "relative", flexShrink: 0,
       }}>
-        <button onClick={() => navigateDay(-1)} style={{
-          position: "absolute", left: "60px",
-          background: "none", border: "none",
-          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-        }}>
+        <button onClick={() => navigateDay(-1)} style={{ position: "absolute", left: "60px", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
         </button>
         <div style={{ textAlign: "center" }}>
@@ -162,12 +167,7 @@ export default function Diary() {
             {isToday ? "Log your wellness" : "Past entry"}
           </p>
         </div>
-        <button onClick={() => navigateDay(1)} disabled={isToday} style={{
-          position: "absolute", right: "16px",
-          background: "none", border: "none",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1,
-        }}>
+        <button onClick={() => navigateDay(1)} disabled={isToday} style={{ position: "absolute", right: "16px", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1 }}>
           <ChevronRight style={{ width: "20px", height: "20px", color: "#6b7280" }} />
         </button>
       </div>
@@ -178,19 +178,22 @@ export default function Diary() {
 
           {/* Weight card */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
-            style={{
-              background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden",
-              opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto",
-            }}
+            style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden", opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto" }}
           >
+            {/* Header */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
               <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>⚖️</div>
               <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Weight Progress</span>
-              {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>🔒 Read only</span>}
+              {weightGoal && (
+                <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>
+                  Goal: {weightGoal} kg
+                </span>
+              )}
+              {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: weightGoal ? "8px" : "auto" }}>🔒 Read only</span>}
             </div>
 
-            {/* Peso con +/- centrato */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "14px 14px 12px" }}>
+            {/* Peso con +/- */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "14px 14px 8px" }}>
               <button onClick={() => adjustWeight(-0.1)} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Minus style={{ width: "16px", height: "16px", color: "#6b7280" }} />
               </button>
@@ -219,6 +222,26 @@ export default function Diary() {
               </button>
             </div>
 
+            {/* Banner distanza dal goal */}
+            {toGoal !== null && (
+              <div style={{
+                margin: "0 14px 10px",
+                background: goalReached ? "#dcfce7" : "#f0fdf4",
+                borderRadius: "10px", padding: "8px 12px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                border: `0.5px solid ${goalReached ? "#bbf7d0" : "#e5e7eb"}`,
+              }}>
+                <span style={{ fontSize: "11px", color: goalReached ? "#16a34a" : "#6b7280" }}>
+                  {goalReached ? "🎉 Goal reached!" : `🎯 Goal: ${weightGoal} kg`}
+                </span>
+                {!goalReached && (
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: "#16a34a" }}>
+                    {Math.abs(Number(toGoal))} kg to go
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Divisore */}
             <div style={{ height: "0.5px", background: "#f3f4f6", margin: "0 14px" }} />
 
@@ -234,6 +257,9 @@ export default function Diary() {
                         contentStyle={{ background: "white", border: "0.5px solid rgba(0,0,0,0.08)", borderRadius: "10px", fontSize: "11px" }}
                         formatter={(v) => [`${v} kg`, ""]}
                       />
+                      {weightGoal && (
+                        <ReferenceLine y={Number(weightGoal)} stroke="#16a34a" strokeDasharray="4 4" strokeOpacity={0.5} label={{ value: `Goal ${weightGoal}kg`, position: "insideTopRight", fontSize: 8, fill: "#16a34a" }} />
+                      )}
                       <Line type="monotone" dataKey="weight" stroke="#16a34a" strokeWidth={2} dot={{ fill: "#16a34a", r: 2 }} activeDot={{ r: 4 }} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -245,7 +271,7 @@ export default function Diary() {
               )}
             </div>
 
-            {/* Range selector sotto il grafico */}
+            {/* Range selector */}
             <div style={{ display: "flex", gap: "6px", justifyContent: "center", padding: "0 14px 14px" }}>
               {CHART_RANGES.map(r => (
                 <button key={r.label} onClick={() => setChartRange(r.days)} style={{
@@ -261,10 +287,7 @@ export default function Diary() {
 
           {/* Wellness card */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-            style={{
-              background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden",
-              opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto",
-            }}
+            style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden", opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto" }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
               <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>😊</div>
@@ -272,7 +295,6 @@ export default function Diary() {
               {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>🔒 Read only</span>}
             </div>
 
-            {/* Mood */}
             <div style={{ display: "flex", gap: "6px", padding: "10px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
               {MOODS.map(m => (
                 <button key={m.value} onClick={() => setForm(f => ({ ...f, mood: m.value }))} style={{
@@ -288,7 +310,6 @@ export default function Diary() {
               ))}
             </div>
 
-            {/* Energy, Sleep, Stress */}
             {SCALES.map(scale => (
               <div key={scale.key} style={{ padding: "8px 14px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
                 <span style={{ fontSize: "11px", color: "#6b7280", whiteSpace: "nowrap" }}>{scale.emoji} {scale.label}</span>
@@ -297,17 +318,14 @@ export default function Diary() {
                     <button key={v} onClick={() => setForm(f => ({ ...f, [scale.key]: v }))} style={{
                       width: "28px", height: "28px", borderRadius: "50%",
                       background: form[scale.key] >= v ? scale.color : "#f3f4f6",
-                      border: "none", cursor: "pointer",
-                      fontSize: "11px", fontWeight: 600,
-                      color: form[scale.key] >= v ? "white" : "#9ca3af",
-                      fontFamily: "inherit",
+                      border: "none", cursor: "pointer", fontSize: "11px", fontWeight: 600,
+                      color: form[scale.key] >= v ? "white" : "#9ca3af", fontFamily: "inherit",
                     }}>{v}</button>
                   ))}
                 </div>
               </div>
             ))}
 
-            {/* Notes */}
             <div style={{ padding: "10px 14px" }}>
               <textarea
                 value={form.notes}
@@ -319,7 +337,7 @@ export default function Diary() {
             </div>
           </motion.div>
 
-          {/* Save button — solo oggi */}
+          {/* Save button */}
           {!isPast && (
             <motion.button
               initial={{ opacity: 0, y: 10 }}
