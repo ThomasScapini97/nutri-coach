@@ -216,6 +216,16 @@ export default function Chat() {
         }),
       });
 
+            if (response.status === 429) {
+        const errorData = await response.json();
+        toast.error("Daily limit reached! 🌅", {
+          description: errorData.message || "Come back tomorrow for more messages.",
+          duration: 5000,
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const data = await response.json();
       const rawText = data.content?.[0]?.text || '{"message": "Sorry, I could not process your request.", "foods": [], "burned_calories": 0}';
 

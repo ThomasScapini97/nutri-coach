@@ -1,25 +1,67 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const DAILY_LIMIT = 50;
+
 export default async function handler(req, res) {
-  // Solo POST
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Prendi il token Supabase dall'header per verificare che l'utente sia autenticato
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
+  const token = authHeader.replace("Bearer ", "");
+
   try {
+    // Verifica il token Supabase e ottieni l'utente
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // Controlla e aggiorna il rate limit
+    const { data: rateData } = await supabase
+      .from("rate_limits")
+      .select("message_count")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .single();
+
+    const currentCount = rateData?.message_count || 0;
+
+    if (currentCount >= DAILY_LIMIT) {
+      return res.status(429).json({
+        error: "daily_limit_reached",
+        message: `You've reached your daily limit of ${DAILY_LIMIT} messages. Come back tomorrow! 🌅`,
+        count: currentCount,
+        limit: DAILY_LIMIT,
+      });
+    }
+
+    // Incrementa il contatore
+    await supabase
+      .from("rate_limits")
+      .upsert({
+        user_id: user.id,
+        date: today,
+        message_count: currentCount + 1,
+      }, { onConflict: "user_id,date" });
+
+    // Chiama Anthropic
     const { model, max_tokens, system, messages } = req.body;
 
-    // Validazione base
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: "Invalid request" });
     }
-
-    // Rate limiting base — max 50 messaggi al giorno per utente
-    // (opzionale, puoi rimuoverlo)
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -41,6 +83,10 @@ export default async function handler(req, res) {
     if (!response.ok) {
       return res.status(response.status).json({ error: data });
     }
+
+    // Restituisci anche info sul rate limit nell'header
+    res.setHeader("X-RateLimit-Limit", DAILY_LIMIT);
+    res.setHeader("X-RateLimit-Remaining", DAILY_LIMIT - (currentCount + 1));
 
     return res.status(200).json(data);
 
