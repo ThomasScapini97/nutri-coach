@@ -173,20 +173,16 @@ export default function Chat() {
 
   useEffect(() => {
     const checkEndOfDay = () => {
-      if (!dailyEvaluation) {
-        setDailyEvaluation({
-          status: 'green',
-          title: "Great job today! 🎉",
-          message: "You stayed within your calorie target.",
-          calories: 1500,
-          calorieGoal: 2000,
-        });
+      const hour = new Date().getHours();
+      if (hour === 22 && todayLog && !dailyEvaluation) {
+        const evaluation = evaluateDailyNutrition(todayLog, calorieGoal);
+        if (evaluation) setDailyEvaluation(evaluation);
       }
     };
     const interval = setInterval(checkEndOfDay, 60000);
     checkEndOfDay();
     return () => clearInterval(interval);
-  }, [dailyEvaluation]);
+  }, [todayLog, calorieGoal, dailyEvaluation]);
 
   const lastLogTime = chatMessages?.length ? chatMessages[chatMessages.length - 1].timestamp : null;
   useMealReminderCheck(lastLogTime);
