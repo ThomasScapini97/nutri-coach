@@ -1,20 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Camera, Search, Loader2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function BarcodeScanner({ onProductFound, onClose }) {
-  const [mode, setMode] = useState(null); // null | "camera" | "search"
+  const [mode, setMode] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState([]);
   const [error, setError] = useState(null);
   const [cameraError, setCameraError] = useState(null);
   const [scanning, setScanning] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [grams, setGrams] = useState("100");
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const scannerRef = useRef(null);
 
-  // Cleanup camera on unmount
   useEffect(() => {
     return () => stopCamera();
   }, []);
@@ -24,9 +24,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
-    if (scannerRef.current) {
-      scannerRef.current = null;
-    }
+    scannerRef.current = null;
   };
 
   const startCamera = async () => {
@@ -34,9 +32,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
     setCameraError(null);
     setScanning(false);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -88,16 +84,18 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
       if (data.status === 1 && data.product) {
         const product = parseProduct(data.product);
         if (product) {
-          onProductFound(product);
-          onClose();
+          // ✅ FIX: mostra il popup grammi invece di chiamare onProductFound direttamente
+          handleSelectProduct(product);
         } else {
           setError("Product found but nutritional data is incomplete.");
         }
       } else {
         setError("Product not found in database. Try searching by name.");
+        setMode("search");
       }
     } catch {
       setError("Connection error. Please try again.");
+      setMode("search");
     } finally {
       setSearching(false);
     }
@@ -130,9 +128,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
       const parsed = (data.products || [])
         .map(p => ({ ...parseProduct(p), brand: p.brands || "" }))
         .filter(p => p && p.name && p.per100.calories > 0);
-      if (parsed.length === 0) {
-        setError("No products found. Try a different search term.");
-      }
+      if (parsed.length === 0) setError("No products found. Try a different search term.");
       setResults(parsed);
     } catch {
       setError("Connection error. Please try again.");
@@ -140,9 +136,6 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
       setSearching(false);
     }
   };
-
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [grams, setGrams] = useState("100");
 
   const handleSelectProduct = (product) => {
     setSelectedProduct(product);
@@ -168,48 +161,26 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
   };
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 9999,
-      background: "rgba(0,0,0,0.5)",
-      display: "flex", alignItems: "flex-end", justifyContent: "center",
-    }}>
-      <div style={{
-        background: "white", borderRadius: "24px 24px 0 0",
-        width: "100%", maxWidth: "480px",
-        maxHeight: "85vh", overflow: "hidden",
-        display: "flex", flexDirection: "column",
-      }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+      <div style={{ background: "white", borderRadius: "24px 24px 0 0", width: "100%", maxWidth: "480px", maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+
         {/* Header */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "16px 16px 12px",
-          borderBottom: "0.5px solid #f3f4f6",
-        }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
           <div>
             <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22" }}>Add food</p>
             <p style={{ fontSize: "11px", color: "#9ca3af" }}>Scan barcode or search by name</p>
           </div>
-          <button
-            onClick={onClose}
-            style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
+          <button onClick={onClose} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <X style={{ width: "16px", height: "16px", color: "#6b7280" }} />
           </button>
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+
           {/* Mode selector */}
           {!mode && (
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <button
-                onClick={startCamera}
-                style={{
-                  display: "flex", alignItems: "center", gap: "14px",
-                  padding: "16px", borderRadius: "16px",
-                  border: "0.5px solid #e5e7eb", background: "#f9fafb",
-                  cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-                }}
-              >
+              <button onClick={startCamera} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", borderRadius: "16px", border: "0.5px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}>
                 <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Camera style={{ width: "20px", height: "20px", color: "#16a34a" }} />
                 </div>
@@ -218,16 +189,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
                   <p style={{ fontSize: "12px", color: "#9ca3af" }}>Point camera at product barcode</p>
                 </div>
               </button>
-
-              <button
-                onClick={() => setMode("search")}
-                style={{
-                  display: "flex", alignItems: "center", gap: "14px",
-                  padding: "16px", borderRadius: "16px",
-                  border: "0.5px solid #e5e7eb", background: "#f9fafb",
-                  cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-                }}
-              >
+              <button onClick={() => setMode("search")} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", borderRadius: "16px", border: "0.5px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}>
                 <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Search style={{ width: "20px", height: "20px", color: "#3b82f6" }} />
                 </div>
@@ -256,19 +218,21 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
                   <p style={{ fontSize: "13px", color: "#9ca3af" }}>Looking up product...</p>
                 </div>
               ) : (
-                <div style={{ position: "relative", borderRadius: "16px", overflow: "hidden", background: "#000", aspectRatio: "4/3" }}>
-                  <video ref={videoRef} style={{ width: "100%", height: "100%", objectFit: "cover" }} playsInline muted />
-                  {scanning && (
-                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div style={{ width: "60%", height: "25%", border: "2px solid #16a34a", borderRadius: "8px", boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)" }} />
-                    </div>
-                  )}
-                  <p style={{ position: "absolute", bottom: "12px", left: 0, right: 0, textAlign: "center", fontSize: "12px", color: "white", opacity: 0.8 }}>
-                    Point at a barcode
-                  </p>
+                <div>
+                  <div style={{ position: "relative", borderRadius: "16px", overflow: "hidden", background: "#000", aspectRatio: "4/3" }}>
+                    <video ref={videoRef} style={{ width: "100%", height: "100%", objectFit: "cover" }} playsInline muted />
+                    {scanning && (
+                      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ width: "60%", height: "25%", border: "2px solid #16a34a", borderRadius: "8px", boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)" }} />
+                      </div>
+                    )}
+                    <p style={{ position: "absolute", bottom: "12px", left: 0, right: 0, textAlign: "center", fontSize: "12px", color: "white", opacity: 0.8 }}>
+                      Point at a barcode
+                    </p>
+                  </div>
+                  {error && <p style={{ fontSize: "12px", color: "#ef4444", marginTop: "10px", textAlign: "center" }}>{error}</p>}
                 </div>
               )}
-              {error && <p style={{ fontSize: "12px", color: "#ef4444", marginTop: "10px", textAlign: "center" }}>{error}</p>}
               <button onClick={() => { stopCamera(); setMode(null); setError(null); }} style={{ marginTop: "12px", fontSize: "12px", color: "#9ca3af", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", width: "100%", textAlign: "center" }}>
                 ← Back
               </button>
@@ -280,29 +244,14 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
             <div>
               <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
                 <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && searchByName()}
+                  type="text" value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && searchByName()}
                   placeholder="e.g. Nutella, Greek yogurt..."
                   autoFocus
-                  style={{
-                    flex: 1, background: "#f9fafb", border: "0.5px solid #e5e7eb",
-                    borderRadius: "10px", padding: "10px 14px", fontSize: "14px",
-                    color: "#1a3a22", outline: "none", fontFamily: "inherit",
-                  }}
+                  style={{ flex: 1, background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a3a22", outline: "none", fontFamily: "inherit" }}
                 />
-                <button
-                  onClick={searchByName}
-                  disabled={searching || !searchQuery.trim()}
-                  style={{
-                    background: "#16a34a", color: "white", border: "none",
-                    borderRadius: "10px", padding: "10px 16px", fontSize: "13px",
-                    fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-                    opacity: searching || !searchQuery.trim() ? 0.6 : 1,
-                    display: "flex", alignItems: "center", gap: "6px",
-                  }}
-                >
+                <button onClick={searchByName} disabled={searching || !searchQuery.trim()} style={{ background: "#16a34a", color: "white", border: "none", borderRadius: "10px", padding: "10px 16px", fontSize: "13px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit", opacity: searching || !searchQuery.trim() ? 0.6 : 1, display: "flex", alignItems: "center", gap: "6px" }}>
                   {searching ? <Loader2 style={{ width: "14px", height: "14px", animation: "spin 1s linear infinite" }} /> : <Search style={{ width: "14px", height: "14px" }} />}
                   Search
                 </button>
@@ -317,24 +266,10 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
 
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {results.map((product, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSelectProduct(product)}
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "12px 14px", borderRadius: "12px",
-                      border: "0.5px solid #e5e7eb", background: "white",
-                      cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-                      width: "100%",
-                    }}
-                  >
+                  <button key={i} onClick={() => handleSelectProduct(product)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: "12px", border: "0.5px solid #e5e7eb", background: "white", cursor: "pointer", fontFamily: "inherit", textAlign: "left", width: "100%" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {product.name}
-                      </p>
-                      {product.brand && (
-                        <p style={{ fontSize: "11px", color: "#9ca3af" }}>{product.brand}</p>
-                      )}
+                      <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{product.name}</p>
+                      {product.brand && <p style={{ fontSize: "11px", color: "#9ca3af" }}>{product.brand}</p>}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, marginLeft: "10px" }}>
                       <div style={{ textAlign: "right" }}>
@@ -354,56 +289,34 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
           )}
         </div>
       </div>
-      {/* Quantity selector popup */}
+
+      {/* Popup grammi — appare sia dopo barcode che dopo ricerca */}
       {selectedProduct && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 99999,
-          background: "rgba(0,0,0,0.5)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          padding: "24px",
-        }}>
-          <div style={{
-            background: "white", borderRadius: "20px",
-            padding: "20px", width: "100%", maxWidth: "320px",
-          }}>
-            <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22", marginBottom: "4px" }}>
-              {selectedProduct.name}
-            </p>
-            <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "16px" }}>
-              {selectedProduct.per100.calories} kcal per 100g
-            </p>
+        <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div style={{ background: "white", borderRadius: "20px", padding: "20px", width: "100%", maxWidth: "320px" }}>
+            <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22", marginBottom: "4px" }}>{selectedProduct.name}</p>
+            <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "16px" }}>{selectedProduct.per100.calories} kcal per 100g</p>
 
             <label style={{ fontSize: "11px", color: "#9ca3af", letterSpacing: "0.3px", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
               How many grams?
             </label>
             <input
-              type="number"
-              value={grams}
-              onChange={(e) => setGrams(e.target.value)}
+              type="number" value={grams}
+              onChange={e => setGrams(e.target.value)}
               autoFocus
-              style={{
-                width: "100%", background: "#f9fafb",
-                border: "0.5px solid #e5e7eb", borderRadius: "10px",
-                padding: "10px 14px", fontSize: "20px", fontWeight: 500,
-                color: "#1a3a22", outline: "none", fontFamily: "inherit",
-                textAlign: "center", marginBottom: "12px",
-              }}
+              style={{ width: "100%", background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "10px", padding: "10px 14px", fontSize: "20px", fontWeight: 500, color: "#1a3a22", outline: "none", fontFamily: "inherit", textAlign: "center", marginBottom: "12px" }}
             />
 
-            {/* Macro preview aggiornato in tempo reale */}
             {parseFloat(grams) > 0 && (() => {
               const ratio = parseFloat(grams) / 100;
               return (
-                <div style={{
-                  display: "grid", gridTemplateColumns: "repeat(4,1fr)",
-                  gap: "6px", marginBottom: "16px",
-                }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "6px", marginBottom: "16px" }}>
                   {[
                     { label: "Kcal", value: Math.round(selectedProduct.per100.calories * ratio), color: "#dc2626" },
                     { label: "Carbs", value: Math.round(selectedProduct.per100.carbs * ratio * 10) / 10 + "g", color: "#f59e0b" },
                     { label: "Prot", value: Math.round(selectedProduct.per100.protein * ratio * 10) / 10 + "g", color: "#ef4444" },
                     { label: "Fats", value: Math.round(selectedProduct.per100.fats * ratio * 10) / 10 + "g", color: "#3b82f6" },
-                  ].map((m) => (
+                  ].map(m => (
                     <div key={m.label} style={{ background: "#f9fafb", borderRadius: "10px", padding: "8px 4px", textAlign: "center" }}>
                       <p style={{ fontSize: "13px", fontWeight: 500, color: m.color }}>{m.value}</p>
                       <p style={{ fontSize: "10px", color: "#9ca3af" }}>{m.label}</p>
@@ -414,33 +327,17 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
             })()}
 
             <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => setSelectedProduct(null)}
-                style={{
-                  flex: 1, background: "#f9fafb", color: "#6b7280",
-                  border: "0.5px solid #e5e7eb", borderRadius: "12px",
-                  padding: "11px", fontSize: "13px", cursor: "pointer", fontFamily: "inherit",
-                }}
-              >
+              <button onClick={() => setSelectedProduct(null)} style={{ flex: 1, background: "#f9fafb", color: "#6b7280", border: "0.5px solid #e5e7eb", borderRadius: "12px", padding: "11px", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}>
                 Cancel
               </button>
-              <button
-                onClick={handleConfirm}
-                disabled={!parseFloat(grams) || parseFloat(grams) <= 0}
-                style={{
-                  flex: 2, background: "#16a34a", color: "white",
-                  border: "none", borderRadius: "12px",
-                  padding: "11px", fontSize: "13px", fontWeight: 500,
-                  cursor: "pointer", fontFamily: "inherit",
-                  opacity: !parseFloat(grams) || parseFloat(grams) <= 0 ? 0.5 : 1,
-                }}
-              >
+              <button onClick={handleConfirm} disabled={!parseFloat(grams) || parseFloat(grams) <= 0} style={{ flex: 2, background: "#16a34a", color: "white", border: "none", borderRadius: "12px", padding: "11px", fontSize: "13px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit", opacity: !parseFloat(grams) || parseFloat(grams) <= 0 ? 0.5 : 1 }}>
                 Log {parseFloat(grams) > 0 ? Math.round(selectedProduct.per100.calories * parseFloat(grams) / 100) : 0} kcal
               </button>
             </div>
           </div>
         </div>
       )}
+
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
