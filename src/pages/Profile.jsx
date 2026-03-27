@@ -44,24 +44,14 @@ function calculateCalorieGoal(profile) {
 }
 
 const inputStyle = {
-  background: "#f9fafb",
-  border: "0.5px solid #e5e7eb",
-  borderRadius: "8px",
-  padding: "7px 10px",
-  fontSize: "14px",
-  color: "#1a3a22",
-  width: "100%",
-  outline: "none",
-  fontFamily: "inherit",
+  background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "8px",
+  padding: "7px 10px", fontSize: "14px", color: "#1a3a22",
+  width: "100%", outline: "none", fontFamily: "inherit",
 };
 
 const fieldLabelStyle = {
-  fontSize: "10px",
-  color: "#9ca3af",
-  letterSpacing: "0.3px",
-  textTransform: "uppercase",
-  marginBottom: "5px",
-  display: "block",
+  fontSize: "10px", color: "#9ca3af", letterSpacing: "0.3px",
+  textTransform: "uppercase", marginBottom: "5px", display: "block",
 };
 
 export default function Profile() {
@@ -72,7 +62,7 @@ export default function Profile() {
   const [form, setForm] = useState({
     age: "", weight: "", height: "", gender: "",
     activity_level: "", goal: "", chat_style: "concise",
-    active_days_goal: 3, burn_goal: 300,
+    active_days_goal: 3, burn_goal: 300, weight_goal: "",
   });
 
   const { data: profile, isLoading } = useQuery({
@@ -96,6 +86,7 @@ export default function Profile() {
         chat_style: profile.chat_style || "concise",
         active_days_goal: profile.active_days_goal || 3,
         burn_goal: profile.burn_goal || 300,
+        weight_goal: profile.weight_goal || "",
       });
     }
   }, [profile]);
@@ -103,10 +94,7 @@ export default function Profile() {
   const handleSave = async () => {
     setSaving(true);
     const calorieGoal = calculateCalorieGoal({
-      ...form,
-      weight: Number(form.weight),
-      height: Number(form.height),
-      age: Number(form.age),
+      ...form, weight: Number(form.weight), height: Number(form.height), age: Number(form.age),
     }) || 2000;
     const proteinGoal = form.goal === "gain_muscle"
       ? Math.round(Number(form.weight) * 2)
@@ -116,27 +104,20 @@ export default function Profile() {
 
     await supabase.from("user_profiles").upsert({
       user_id: user.id,
-      age: Number(form.age),
-      weight: Number(form.weight),
-      height: Number(form.height),
-      gender: form.gender,
-      activity_level: form.activity_level,
-      goal: form.goal,
+      age: Number(form.age), weight: Number(form.weight),
+      height: Number(form.height), gender: form.gender,
+      activity_level: form.activity_level, goal: form.goal,
       chat_style: form.chat_style,
       active_days_goal: Number(form.active_days_goal) || 3,
       burn_goal: Number(form.burn_goal) || 300,
-      calorie_goal: calorieGoal,
-      protein_goal: proteinGoal,
-      fats_goal: fatsGoal,
-      carbs_goal: carbsGoal,
+      weight_goal: form.weight_goal ? Number(form.weight_goal) : null,
+      calorie_goal: calorieGoal, protein_goal: proteinGoal,
+      fats_goal: fatsGoal, carbs_goal: carbsGoal,
     }, { onConflict: "user_id" });
 
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     setSaving(false);
-    toast.success("Profile saved! 🎉", {
-      description: `Daily goal: ${calorieGoal} kcal`,
-      duration: 3000,
-    });
+    toast.success("Profile saved! 🎉", { description: `Daily goal: ${calorieGoal} kcal`, duration: 3000 });
   };
 
   const handleLogout = async () => { await supabase.auth.signOut(); };
@@ -165,21 +146,11 @@ export default function Profile() {
   const formValid = ageValid && weightValid && heightValid && form.gender;
 
   const previewGoal = calculateCalorieGoal({
-    ...form,
-    weight: Number(form.weight),
-    height: Number(form.height),
-    age: Number(form.age),
+    ...form, weight: Number(form.weight), height: Number(form.height), age: Number(form.age),
   });
-
-  const previewProtein = previewGoal
-    ? form.goal === "gain_muscle"
-      ? Math.round(Number(form.weight) * 2)
-      : Math.round(Number(form.weight) * 1.5)
-    : null;
+  const previewProtein = previewGoal ? form.goal === "gain_muscle" ? Math.round(Number(form.weight) * 2) : Math.round(Number(form.weight) * 1.5) : null;
   const previewFats = previewGoal ? Math.round((previewGoal * 0.25) / 9) : null;
-  const previewCarbs = previewGoal
-    ? Math.round((previewGoal - (previewProtein || 0) * 4 - (previewFats || 0) * 9) / 4)
-    : null;
+  const previewCarbs = previewGoal ? Math.round((previewGoal - (previewProtein || 0) * 4 - (previewFats || 0) * 9) / 4) : null;
 
   if (isLoading) return (
     <div className="flex-1 flex items-center justify-center" style={{ background: "#f0fcf3" }}>
@@ -191,75 +162,40 @@ export default function Profile() {
 
   return (
     <div className="flex-1 overflow-y-auto pb-24" style={{ background: "#f0fcf3" }}>
-      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "52px 16px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "0 16px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
           style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "20px 0 8px", gap: "6px" }}
         >
-          <div style={{
-            width: "68px", height: "68px", borderRadius: "50%",
-            background: "linear-gradient(135deg, #16a34a, #15803d)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "28px",
-            boxShadow: "0 0 0 3px #f0fcf3, 0 0 0 5px #bbf7d0",
-          }}>✨</div>
-          <p style={{ fontSize: "17px", fontWeight: 500, color: "#1a3a22", marginTop: "2px" }}>
-            {userName}
-          </p>
+          <div style={{ width: "68px", height: "68px", borderRadius: "50%", background: "linear-gradient(135deg, #16a34a, #15803d)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", boxShadow: "0 0 0 3px #f0fcf3, 0 0 0 5px #bbf7d0" }}>✨</div>
+          <p style={{ fontSize: "17px", fontWeight: 500, color: "#1a3a22", marginTop: "2px" }}>{userName}</p>
           <p style={{ fontSize: "11px", color: "#9ca3af" }}>{user?.email}</p>
         </motion.div>
 
         {/* Goal card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          style={{
-            background: "linear-gradient(135deg, #16a34a, #15803d)",
-            borderRadius: "16px", padding: "14px 16px",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            color: "white",
-          }}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          style={{ background: "linear-gradient(135deg, #16a34a, #15803d)", borderRadius: "16px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", color: "white" }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
-            <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.7)", letterSpacing: "0.3px" }}>
-              DAILY CALORIE GOAL
-            </span>
-            <span style={{ fontSize: "30px", fontWeight: 500, lineHeight: 1.1, letterSpacing: "-1px" }}>
-              {previewGoal ? previewGoal.toLocaleString() : "—"}
-            </span>
+            <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.7)", letterSpacing: "0.3px" }}>DAILY CALORIE GOAL</span>
+            <span style={{ fontSize: "30px", fontWeight: 500, lineHeight: 1.1, letterSpacing: "-1px" }}>{previewGoal ? previewGoal.toLocaleString() : "—"}</span>
             <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)" }}>calories per day</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
-            <div style={{
-              width: "40px", height: "40px", borderRadius: "12px",
-              background: "rgba(255,255,255,0.18)",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px",
-            }}>🎯</div>
+            <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>🎯</div>
             {previewGoal && (
               <div style={{ display: "flex", gap: "4px" }}>
-                <span style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "20px", background: "rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.9)", whiteSpace: "nowrap" }}>
-                  {previewCarbs}g carbs
-                </span>
-                <span style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "20px", background: "rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.9)", whiteSpace: "nowrap" }}>
-                  {previewProtein}g prot
-                </span>
-                <span style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "20px", background: "rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.9)", whiteSpace: "nowrap" }}>
-                  {previewFats}g fats
-                </span>
+                <span style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "20px", background: "rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.9)", whiteSpace: "nowrap" }}>{previewCarbs}g carbs</span>
+                <span style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "20px", background: "rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.9)", whiteSpace: "nowrap" }}>{previewProtein}g prot</span>
+                <span style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "20px", background: "rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.9)", whiteSpace: "nowrap" }}>{previewFats}g fats</span>
               </div>
             )}
           </div>
         </motion.div>
 
         {/* Personal info */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "11px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
@@ -269,11 +205,11 @@ export default function Profile() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1px", background: "#f3f4f6" }}>
             <div style={{ background: "white", padding: "10px 12px" }}>
               <label style={fieldLabelStyle}>Age</label>
-              <input type="number" placeholder="25" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} style={inputStyle} />
+              <input type="number" placeholder="25" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} style={inputStyle} />
             </div>
             <div style={{ background: "white", padding: "10px 12px" }}>
               <label style={fieldLabelStyle}>Gender</label>
-              <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
+              <Select value={form.gender} onValueChange={v => setForm({ ...form, gender: v })}>
                 <SelectTrigger style={{ ...inputStyle, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
@@ -285,20 +221,21 @@ export default function Profile() {
             </div>
             <div style={{ background: "white", padding: "10px 12px" }}>
               <label style={fieldLabelStyle}>Weight (kg)</label>
-              <input type="number" placeholder="70" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} style={inputStyle} />
+              <input type="number" placeholder="70" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} style={inputStyle} />
             </div>
             <div style={{ background: "white", padding: "10px 12px" }}>
               <label style={fieldLabelStyle}>Height (cm)</label>
-              <input type="number" placeholder="175" value={form.height} onChange={(e) => setForm({ ...form, height: e.target.value })} style={inputStyle} />
+              <input type="number" placeholder="175" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} style={inputStyle} />
+            </div>
+            <div style={{ background: "white", padding: "10px 12px", gridColumn: "span 2" }}>
+              <label style={fieldLabelStyle}>Weight goal (kg)</label>
+              <input type="number" placeholder="65" value={form.weight_goal} onChange={e => setForm({ ...form, weight_goal: e.target.value })} style={inputStyle} />
             </div>
           </div>
         </motion.div>
 
         {/* Activity & Goal */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "11px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
@@ -307,21 +244,19 @@ export default function Profile() {
           </div>
           <div style={{ padding: "10px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
             <label style={fieldLabelStyle}>Activity level</label>
-            <Select value={form.activity_level} onValueChange={(v) => setForm({ ...form, activity_level: v })}>
+            <Select value={form.activity_level} onValueChange={v => setForm({ ...form, activity_level: v })}>
               <SelectTrigger style={{ ...inputStyle, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                 <SelectValue placeholder="Select activity level" />
               </SelectTrigger>
               <SelectContent position="popper" side="bottom" sideOffset={4} style={{ background: "white", border: "0.5px solid #e5e7eb", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 9999, overflow: "hidden" }}>
-                {ACTIVITY_LEVELS.map((l) => (
-                  <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
-                ))}
+                {ACTIVITY_LEVELS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div style={{ padding: "10px 12px 12px" }}>
             <label style={fieldLabelStyle}>Wellness goal</label>
             <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
-              {GOALS.map((g) => (
+              {GOALS.map(g => (
                 <button key={g.value} onClick={() => setForm({ ...form, goal: g.value })} style={{
                   flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "5px",
                   padding: "10px 4px 8px", borderRadius: "12px",
@@ -330,18 +265,15 @@ export default function Profile() {
                   cursor: "pointer", fontFamily: "inherit",
                 }}>
                   <span style={{ fontSize: "20px" }}>{g.emoji}</span>
-                  <span style={{ fontSize: "10px", textAlign: "center", lineHeight: 1.3, color: form.goal === g.value ? "#15803d" : "#6b7280", fontWeight: form.goal === g.value ? 500 : 400 }}>{g.label}</span>
+                  <span style={{ fontSize: "10px", textAlign: "center", color: form.goal === g.value ? "#15803d" : "#6b7280", fontWeight: form.goal === g.value ? 500 : 400 }}>{g.label}</span>
                 </button>
               ))}
             </div>
           </div>
         </motion.div>
 
-{/* Fitness goals */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.17 }}
+        {/* Fitness goals */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }}
           style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "11px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
@@ -353,38 +285,25 @@ export default function Profile() {
               <label style={fieldLabelStyle}>Active days / week</label>
               <div style={{ display: "flex", gap: "4px", marginTop: "4px" }}>
                 {[2,3,4,5,6,7].map(d => (
-                  <button
-                    key={d}
-                    onClick={() => setForm({ ...form, active_days_goal: d })}
-                    style={{
-                      flex: 1, padding: "6px 2px", borderRadius: "8px", fontSize: "12px", fontWeight: 500,
-                      border: form.active_days_goal === d ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
-                      background: form.active_days_goal === d ? "#fef2f2" : "#f9fafb",
-                      color: form.active_days_goal === d ? "#dc2626" : "#6b7280",
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}
-                  >{d}</button>
+                  <button key={d} onClick={() => setForm({ ...form, active_days_goal: d })} style={{
+                    flex: 1, padding: "6px 2px", borderRadius: "8px", fontSize: "12px", fontWeight: 500,
+                    border: form.active_days_goal === d ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                    background: form.active_days_goal === d ? "#fef2f2" : "#f9fafb",
+                    color: form.active_days_goal === d ? "#dc2626" : "#6b7280",
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}>{d}</button>
                 ))}
               </div>
             </div>
             <div style={{ background: "white", padding: "10px 12px" }}>
               <label style={fieldLabelStyle}>Burn goal (kcal/day)</label>
-              <input
-                type="number"
-                placeholder="300"
-                value={form.burn_goal}
-                onChange={(e) => setForm({ ...form, burn_goal: e.target.value })}
-                style={inputStyle}
-              />
+              <input type="number" placeholder="300" value={form.burn_goal} onChange={e => setForm({ ...form, burn_goal: e.target.value })} style={inputStyle} />
             </div>
           </div>
         </motion.div>
 
-        {/* Stile chat */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18 }}
+        {/* Chat style */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
           style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "11px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
@@ -393,7 +312,7 @@ export default function Profile() {
           </div>
           <div style={{ padding: "10px 12px 12px" }}>
             <div style={{ display: "flex", gap: "8px" }}>
-              {CHAT_STYLES.map((s) => (
+              {CHAT_STYLES.map(s => (
                 <button key={s.value} onClick={() => setForm({ ...form, chat_style: s.value })} style={{
                   flex: 1, padding: "12px 8px", borderRadius: "14px",
                   border: form.chat_style === s.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
@@ -410,26 +329,21 @@ export default function Profile() {
         </motion.div>
 
         {/* Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.22 }}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
           style={{ display: "flex", flexDirection: "column", gap: "8px" }}
         >
           <Button onClick={handleSave} disabled={saving || !formValid} style={{
-            width: "100%", background: "#16a34a", color: "white",
-            borderRadius: "14px", padding: "13px", fontSize: "14px",
-            fontWeight: 500, border: "none", display: "flex",
-            alignItems: "center", justifyContent: "center", gap: "7px",
+            width: "100%", background: "#16a34a", color: "white", borderRadius: "14px",
+            padding: "13px", fontSize: "14px", fontWeight: 500, border: "none",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
             opacity: (!formValid || saving) ? 0.6 : 1,
           }}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save profile
           </Button>
           <Button variant="outline" onClick={handleLogout} style={{
-            width: "100%", background: "white", color: "#374151",
-            borderRadius: "14px", padding: "11px", fontSize: "13px",
-            fontWeight: 400, border: "0.5px solid #e5e7eb",
+            width: "100%", background: "white", color: "#374151", borderRadius: "14px",
+            padding: "11px", fontSize: "13px", fontWeight: 400, border: "0.5px solid #e5e7eb",
             display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
           }}>
             <LogOut className="w-4 h-4" /> Log out
@@ -437,29 +351,15 @@ export default function Profile() {
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button style={{
-                width: "100%", background: "transparent", color: "#dc2626",
-                border: "none", borderRadius: "14px", padding: "9px",
-                fontSize: "12px", fontWeight: 400, cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                fontFamily: "inherit", opacity: 0.8,
+                width: "100%", background: "transparent", color: "#dc2626", border: "none",
+                borderRadius: "14px", padding: "9px", fontSize: "12px", fontWeight: 400,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                gap: "6px", fontFamily: "inherit", opacity: 0.8,
               }}>
                 <Trash2 className="w-3.5 h-3.5" /> Delete account
               </button>
             </AlertDialogTrigger>
-            <AlertDialogContent style={{ 
-              zIndex: 99999,
-              background: "white",
-              borderRadius: "16px",
-              padding: "24px",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-              border: "0.5px solid #e5e7eb",
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "90%",
-              maxWidth: "360px",
-            }}>
+            <AlertDialogContent style={{ zIndex: 99999, background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", border: "0.5px solid #e5e7eb", position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "90%", maxWidth: "360px" }}>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                 <AlertDialogDescription>This will permanently delete all your data. This action cannot be undone.</AlertDialogDescription>

@@ -41,15 +41,9 @@ function calculateCalorieGoal(profile) {
 }
 
 const inputStyle = {
-  background: "#f9fafb",
-  border: "0.5px solid #e5e7eb",
-  borderRadius: "12px",
-  padding: "12px 16px",
-  fontSize: "16px",
-  color: "#1a3a22",
-  width: "100%",
-  outline: "none",
-  fontFamily: "inherit",
+  background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "12px",
+  padding: "12px 16px", fontSize: "16px", color: "#1a3a22",
+  width: "100%", outline: "none", fontFamily: "inherit",
 };
 
 const slideVariants = {
@@ -68,7 +62,7 @@ export default function Onboarding({ onComplete }) {
     display_name: "",
     age: "", weight: "", height: "", gender: "",
     activity_level: "", goal: "", chat_style: "concise",
-    active_days_goal: 3, burn_goal: 300,
+    active_days_goal: 3, burn_goal: 300, weight_goal: "",
   });
 
   const TOTAL_STEPS = 6;
@@ -104,19 +98,15 @@ export default function Onboarding({ onComplete }) {
     const { error } = await supabase.from('user_profiles').upsert({
       user_id: user.id,
       display_name: form.display_name.trim(),
-      age: Number(form.age),
-      weight: Number(form.weight),
-      height: Number(form.height),
-      gender: form.gender,
-      activity_level: form.activity_level,
-      goal: form.goal,
+      age: Number(form.age), weight: Number(form.weight),
+      height: Number(form.height), gender: form.gender,
+      activity_level: form.activity_level, goal: form.goal,
       chat_style: form.chat_style,
       active_days_goal: form.active_days_goal || 3,
       burn_goal: form.burn_goal || 300,
-      calorie_goal: calorieGoal,
-      protein_goal: proteinGoal,
-      fats_goal: fatsGoal,
-      carbs_goal: carbsGoal,
+      weight_goal: form.weight_goal ? Number(form.weight_goal) : null,
+      calorie_goal: calorieGoal, protein_goal: proteinGoal,
+      fats_goal: fatsGoal, carbs_goal: carbsGoal,
     }, { onConflict: 'user_id' });
 
     if (error) { toast.error("Errore nel salvataggio"); setSaving(false); return; }
@@ -136,8 +126,8 @@ export default function Onboarding({ onComplete }) {
       <input
         type="text" placeholder="Il tuo nome o nickname..."
         value={form.display_name}
-        onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-        onKeyDown={(e) => e.key === "Enter" && canNext() && goNext()}
+        onChange={e => setForm({ ...form, display_name: e.target.value })}
+        onKeyDown={e => e.key === "Enter" && canNext() && goNext()}
         autoFocus
         style={{ ...inputStyle, fontSize: "20px", textAlign: "center", padding: "16px" }}
       />
@@ -153,7 +143,7 @@ export default function Onboarding({ onComplete }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
         <div>
           <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Età</label>
-          <input type="number" placeholder="25" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} style={inputStyle} />
+          <input type="number" placeholder="25" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} style={inputStyle} />
         </div>
         <div>
           <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Sesso biologico</label>
@@ -162,20 +152,24 @@ export default function Onboarding({ onComplete }) {
               <button key={g.v} onClick={() => setForm({ ...form, gender: g.v })} style={{
                 flex: 1, padding: "12px", borderRadius: "12px",
                 border: form.gender === g.v ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
-                background: form.gender === g.v ? "#f0fdf4" : "#f9fafb", cursor: "pointer",
-                fontSize: "14px", fontWeight: form.gender === g.v ? 500 : 400,
+                background: form.gender === g.v ? "#f0fdf4" : "#f9fafb",
+                cursor: "pointer", fontSize: "14px", fontWeight: form.gender === g.v ? 500 : 400,
                 color: form.gender === g.v ? "#15803d" : "#6b7280", fontFamily: "inherit",
               }}>{g.l}</button>
             ))}
           </div>
         </div>
         <div>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Peso (kg)</label>
-          <input type="number" placeholder="70" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} style={inputStyle} />
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Peso attuale (kg)</label>
+          <input type="number" placeholder="70" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} style={inputStyle} />
         </div>
         <div>
           <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Altezza (cm)</label>
-          <input type="number" placeholder="175" value={form.height} onChange={(e) => setForm({ ...form, height: e.target.value })} style={inputStyle} />
+          <input type="number" placeholder="175" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} style={inputStyle} />
+        </div>
+        <div style={{ gridColumn: "span 2" }}>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Peso obiettivo (kg) — opzionale</label>
+          <input type="number" placeholder="65" value={form.weight_goal} onChange={e => setForm({ ...form, weight_goal: e.target.value })} style={inputStyle} />
         </div>
       </div>
     </div>,
@@ -190,8 +184,7 @@ export default function Onboarding({ onComplete }) {
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {ACTIVITY_LEVELS.map(l => (
           <button key={l.value} onClick={() => setForm({ ...form, activity_level: l.value })} style={{
-            display: "flex", alignItems: "center", gap: "12px",
-            padding: "12px 16px", borderRadius: "14px",
+            display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "14px",
             border: form.activity_level === l.value ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
             background: form.activity_level === l.value ? "#f0fdf4" : "#f9fafb",
             cursor: "pointer", fontFamily: "inherit", textAlign: "left",
@@ -217,8 +210,7 @@ export default function Onboarding({ onComplete }) {
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {GOALS.map(g => (
           <button key={g.value} onClick={() => setForm({ ...form, goal: g.value })} style={{
-            display: "flex", alignItems: "center", gap: "12px",
-            padding: "12px 16px", borderRadius: "14px",
+            display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "14px",
             border: form.goal === g.value ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
             background: form.goal === g.value ? "#f0fdf4" : "#f9fafb",
             cursor: "pointer", fontFamily: "inherit", textAlign: "left",
@@ -263,8 +255,7 @@ export default function Onboarding({ onComplete }) {
         <div style={{ display: "flex", gap: "8px" }}>
           {[2, 3, 4, 5, 6, 7].map(d => (
             <button key={d} onClick={() => setForm({ ...form, active_days_goal: d })} style={{
-              flex: 1, padding: "14px 4px", borderRadius: "12px",
-              fontSize: "16px", fontWeight: 600,
+              flex: 1, padding: "14px 4px", borderRadius: "12px", fontSize: "16px", fontWeight: 600,
               border: form.active_days_goal === d ? "2px solid #dc2626" : "0.5px solid #e5e7eb",
               background: form.active_days_goal === d ? "#fef2f2" : "#f9fafb",
               color: form.active_days_goal === d ? "#dc2626" : "#6b7280",
@@ -281,8 +272,7 @@ export default function Onboarding({ onComplete }) {
         <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
           {[200, 300, 400, 500].map(k => (
             <button key={k} onClick={() => setForm({ ...form, burn_goal: k })} style={{
-              flex: 1, padding: "12px 4px", borderRadius: "12px",
-              fontSize: "13px", fontWeight: 500,
+              flex: 1, padding: "12px 4px", borderRadius: "12px", fontSize: "13px", fontWeight: 500,
               border: form.burn_goal === k ? "2px solid #dc2626" : "0.5px solid #e5e7eb",
               background: form.burn_goal === k ? "#fef2f2" : "#f9fafb",
               color: form.burn_goal === k ? "#dc2626" : "#6b7280",
@@ -329,50 +319,28 @@ export default function Onboarding({ onComplete }) {
     <div style={{ minHeight: "100dvh", background: "#f0fcf3", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
       <div style={{ width: "100%", maxWidth: "420px" }}>
 
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "24px" }}>
           <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: "linear-gradient(135deg, #16a34a, #15803d)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px", fontSize: "24px" }}>🍎</div>
           <p style={{ fontSize: "13px", color: "#9ca3af" }}>NutriCoach AI</p>
         </div>
 
-        {/* Progress dots */}
         <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "24px" }}>
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <div key={i} style={{
-              height: "4px", borderRadius: "99px",
-              background: i <= step ? "#16a34a" : "#d1fae5",
-              transition: "all 0.3s",
-              width: i === step ? "24px" : "8px",
-            }} />
+            <div key={i} style={{ height: "4px", borderRadius: "99px", background: i <= step ? "#16a34a" : "#d1fae5", transition: "all 0.3s", width: i === step ? "24px" : "8px" }} />
           ))}
         </div>
 
-        {/* Card */}
         <div style={{ background: "white", borderRadius: "24px", padding: "28px 24px", border: "0.5px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 24px rgba(0,0,0,0.06)", overflow: "hidden", position: "relative", minHeight: "420px" }}>
           <AnimatePresence mode="wait" custom={dir}>
-            <motion.div
-              key={step}
-              custom={dir}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.28, ease: "easeInOut" }}
-            >
+            <motion.div key={step} custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.28, ease: "easeInOut" }}>
               {steps[step]}
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Buttons */}
         <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
           {step > 0 && (
-            <button onClick={goPrev} style={{
-              width: "48px", height: "52px", borderRadius: "14px",
-              background: "white", border: "0.5px solid #e5e7eb",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", flexShrink: 0,
-            }}>
+            <button onClick={goPrev} style={{ width: "48px", height: "52px", borderRadius: "14px", background: "white", border: "0.5px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
               <ArrowLeft style={{ width: "18px", height: "18px", color: "#6b7280" }} />
             </button>
           )}
@@ -382,18 +350,15 @@ export default function Onboarding({ onComplete }) {
               background: canNext() ? "#16a34a" : "#d1fae5",
               color: "white", border: "none", fontSize: "15px", fontWeight: 500,
               cursor: canNext() ? "pointer" : "default", fontFamily: "inherit",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-              transition: "background 0.2s",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "background 0.2s",
             }}>
               Continua <ArrowRight style={{ width: "18px", height: "18px" }} />
             </button>
           ) : (
             <button onClick={handleSave} disabled={saving} style={{
-              flex: 1, height: "52px", borderRadius: "14px",
-              background: "#16a34a", color: "white", border: "none",
-              fontSize: "15px", fontWeight: 500, cursor: "pointer",
-              fontFamily: "inherit", display: "flex", alignItems: "center",
-              justifyContent: "center", gap: "8px",
+              flex: 1, height: "52px", borderRadius: "14px", background: "#16a34a", color: "white",
+              border: "none", fontSize: "15px", fontWeight: 500, cursor: "pointer",
+              fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
             }}>
               {saving ? <Loader2 style={{ width: "18px", height: "18px", animation: "spin 1s linear infinite" }} /> : null}
               {saving ? "Salvataggio..." : "Inizia ora 🚀"}
