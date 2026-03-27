@@ -47,25 +47,42 @@ export default function Diary() {
   const [chartData, setChartData] = useState([]);
   const [lastWeight, setLastWeight] = useState(null);
 
+  // Carica tutto in un unico effect per evitare race condition
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from("diary_entries").select("*").eq("user_id", user.id).eq("date", dateStr).single()
-      .then(({ data }) => {
-        if (data) {
-          setForm({
-            mood: data.mood || null,
-            energy: data.energy || null,
-            sleep_quality: data.sleep_quality || null,
-            stress: data.stress || null,
-            notes: data.notes || "",
-            weight: data.weight ? String(data.weight) : "",
-          });
-        } else {
-          setForm(emptyForm);
-        }
-      });
+
+    const loadData = async () => {
+      // 1. Prima carica l'ultima entry con peso (giorni precedenti)
+      const { data: lastData } = await supabase
+        .from("diary_entries").select("weight").eq("user_id", user.id)
+        .lt("date", dateStr).not("weight", "is", null)
+        .order("date", { ascending: false }).limit(1);
+      const prevWeight = lastData?.[0]?.weight || null;
+      setLastWeight(prevWeight);
+
+      // 2. Poi carica l'entry del giorno selezionato
+      const { data } = await supabase
+        .from("diary_entries").select("*").eq("user_id", user.id).eq("date", dateStr).single();
+
+      if (data) {
+        setForm({
+          mood: data.mood || null,
+          energy: data.energy || null,
+          sleep_quality: data.sleep_quality || null,
+          stress: data.stress || null,
+          notes: data.notes || "",
+          weight: data.weight ? String(data.weight) : (prevWeight ? String(prevWeight) : ""),
+        });
+      } else {
+        // Nessuna entry oggi — usa il peso del giorno prima come default
+        setForm({ ...emptyForm, weight: prevWeight ? String(prevWeight) : "" });
+      }
+    };
+
+    loadData();
   }, [dateStr, user?.id]);
 
+  // Carica dati grafico peso
   useEffect(() => {
     if (!user?.id) return;
     const from = format(subDays(new Date(), chartRange), "yyyy-MM-dd");
@@ -78,17 +95,6 @@ export default function Diary() {
         })));
       });
   }, [chartRange, user?.id, dateStr]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    supabase.from("diary_entries").select("weight").eq("user_id", user.id)
-      .lt("date", dateStr).not("weight", "is", null).order("date", { ascending: false }).limit(1)
-      .then(({ data }) => {
-        const w = data?.[0]?.weight || null;
-        setLastWeight(w);
-        setForm(prev => prev.weight === "" && w ? { ...prev, weight: String(w) } : prev);
-      });
-  }, [dateStr, user?.id]);
 
   const navigateDay = (dir) => {
     setSelectedDate(prev => {
@@ -177,7 +183,6 @@ export default function Diary() {
               opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto",
             }}
           >
-            {/* Header */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
               <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>⚖️</div>
               <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Weight Progress</span>
@@ -240,7 +245,7 @@ export default function Diary() {
               )}
             </div>
 
-            {/* Range selector — sotto il grafico */}
+            {/* Range selector sotto il grafico */}
             <div style={{ display: "flex", gap: "6px", justifyContent: "center", padding: "0 14px 14px" }}>
               {CHART_RANGES.map(r => (
                 <button key={r.label} onClick={() => setChartRange(r.days)} style={{
