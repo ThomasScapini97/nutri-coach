@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Plus, X, Clock, Trash2, TrendingUp } from "lucide-react";
+import { Flame, Plus, X, Clock, Trash2, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import ScrollableExerciseChart from "../components/summary/ScrollableExerciseChart";
 
@@ -36,6 +36,10 @@ function calculateCalories(met, weightKg, minutes) {
 export default function Exercise() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dateStr = format(selectedDate, "yyyy-MM-dd");
+  const isToday = dateStr === TODAY;
+  const isPast = !isToday;
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [minutes, setMinutes] = useState("30");
@@ -54,19 +58,19 @@ export default function Exercise() {
   const activeDaysGoal = profile?.active_days_goal || 3;
   const burnGoal = profile?.burn_goal || 300;
 
-  const { data: todayLog } = useQuery({
-    queryKey: ["foodlog", TODAY, user?.id],
+  const { data: dayLog } = useQuery({
+    queryKey: ["foodlog", dateStr, user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("food_logs").select("*").eq("date", TODAY).eq("user_id", user.id);
+      const { data } = await supabase.from("food_logs").select("*").eq("date", dateStr).eq("user_id", user.id);
       return data?.[0] || null;
     },
     enabled: !!user?.id,
   });
 
-  const { data: todayExercises } = useQuery({
-    queryKey: ["exercises", TODAY, user?.id],
+  const { data: dayExercises } = useQuery({
+    queryKey: ["exercises", dateStr, user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("exercise_logs").select("*").eq("user_id", user.id).eq("date", TODAY).order("created_at", { ascending: false });
+      const { data } = await supabase.from("exercise_logs").select("*").eq("user_id", user.id).eq("date", dateStr).order("created_at", { ascending: false });
       return data || [];
     },
     enabled: !!user?.id,
@@ -84,35 +88,27 @@ export default function Exercise() {
     initialData: [],
   });
 
-  const totalBurnedToday = todayLog?.total_burned_calories || 0;
-  const totalMinutesToday = todayExercises.reduce((sum, e) => sum + e.duration_minutes, 0);
+  const totalBurnedToday = dayLog?.total_burned_calories || 0;
+  const totalMinutesToday = dayExercises.reduce((sum, e) => sum + e.duration_minutes, 0);
   const activeDaysThisWeek = new Set(weekExercises.map(e => e.date)).size;
   const kcalPerMin = totalMinutesToday > 0 ? (totalBurnedToday / totalMinutesToday).toFixed(1) : "—";
   const previewCalories = selectedExercise && minutes ? calculateCalories(selectedExercise.met, weight, Number(minutes)) : 0;
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = format(subDays(new Date(), 6 - i), "yyyy-MM-dd");
-    const burned = weekExercises.filter(e => e.date === d).reduce((sum, e) => sum + e.calories_burned, 0);
-    const hasActivity = burned > 0;
-    const pct = burnGoal > 0 ? (burned / burnGoal) * 100 : 0;
-    let barColor = "#f3f4f6";
-    if (hasActivity) {
-      if (pct >= 90) barColor = "#16a34a";
-      else if (pct >= 50) barColor = "#f59e0b";
-      else barColor = "#ef4444";
-    }
-    const isToday = d === TODAY;
-    return { date: d, day: format(new Date(d + "T12:00:00"), "EEE"), burned, barColor, isToday };
-  });
-  const maxBurned = Math.max(...weekDays.map(d => d.burned), 1);
+  const navigateDay = (dir) => {
+    setSelectedDate(prev => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() + dir);
+      return next;
+    });
+  };
 
   const handleSave = async () => {
-    if (!selectedExercise || !minutes || Number(minutes) <= 0) return;
+    if (!selectedExercise || !minutes || Number(minutes) <= 0 || isPast) return;
     setSaving(true);
     try {
       const calories = calculateCalories(selectedExercise.met, weight, Number(minutes));
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      let logId = todayLog?.id;
+      let logId = dayLog?.id;
       if (!logId) {
         const { data: created } = await supabase.from("food_logs").insert({
           date: TODAY, user_id: currentUser.id,
@@ -127,9 +123,9 @@ export default function Exercise() {
         duration_minutes: Number(minutes),
         calories_burned: calories,
       });
-      const newTotal = (todayLog?.total_burned_calories || 0) + calories;
+      const newTotal = (dayLog?.total_burned_calories || 0) + calories;
       await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", logId);
-      queryClient.invalidateQueries({ queryKey: ["exercises", TODAY] });
+      queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
       queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       toast.success(`${selectedExercise.emoji} ${selectedExercise.name} logged! 🔥`, { description: `${calories} kcal burned` });
@@ -143,10 +139,11 @@ export default function Exercise() {
   };
 
   const handleDelete = async (exercise) => {
+    if (isPast) return;
     await supabase.from("exercise_logs").delete().eq("id", exercise.id);
     const newTotal = Math.max(0, totalBurnedToday - exercise.calories_burned);
-    if (todayLog?.id) await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", todayLog.id);
-    queryClient.invalidateQueries({ queryKey: ["exercises", TODAY] });
+    if (dayLog?.id) await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", dayLog.id);
+    queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
     queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
     queryClient.invalidateQueries({ queryKey: ["foodlog"] });
     toast.success("Exercise removed");
@@ -154,6 +151,38 @@ export default function Exercise() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#f0fcf3", overflow: "hidden" }}>
+
+      {/* Barra navigazione giorni — full width */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "white", borderBottom: "0.5px solid #e5e7eb",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        padding: "14px 24px", position: "relative", flexShrink: 0,
+      }}>
+        <button onClick={() => navigateDay(-1)} style={{
+          position: "absolute", left: "60px",
+          background: "none", border: "none",
+          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+        }}>
+          <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+        </button>
+        <div style={{ textAlign: "center" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
+            {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
+          </h2>
+          <p style={{ fontSize: "11px", color: "#9ca3af" }}>
+            {isToday ? `${totalBurnedToday} kcal burned today` : isPast ? "Past day — read only" : ""}
+          </p>
+        </div>
+        <button onClick={() => navigateDay(1)} disabled={isToday} style={{
+          position: "absolute", right: "16px",
+          background: "none", border: "none",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1,
+        }}>
+          <ChevronRight style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+        </button>
+      </div>
 
       {/* Parte scorrevole */}
       <div style={{ flex: 1, overflowY: "auto", paddingBottom: "8px" }}>
@@ -181,13 +210,12 @@ export default function Exercise() {
                 <Flame className="w-5 h-5 text-white" />
               </div>
             </div>
-            {/* Barra progresso */}
             <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: "99px", height: "6px", overflow: "hidden", margin: "12px 0 6px", position: "relative" }}>
               <div style={{ background: "white", height: "100%", borderRadius: "99px", width: `${Math.min((totalBurnedToday / burnGoal) * 100, 100)}%`, transition: "width 0.8s" }} />
             </div>
-            {todayExercises.length > 0 && (
+            {dayExercises.length > 0 && (
               <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", position: "relative" }}>
-                {todayExercises.map((e, i) => (
+                {dayExercises.map((e, i) => (
                   <span key={i} style={{ fontSize: "10px", background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.9)", padding: "2px 8px", borderRadius: "20px" }}>
                     {EXERCISES.find(ex => ex.name === e.exercise_name)?.emoji || "💪"} {e.exercise_name} · {e.duration_minutes}min
                   </span>
@@ -231,7 +259,7 @@ export default function Exercise() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               {[
                 { emoji: "⏱️", value: `${totalMinutesToday}`, label: "Total minutes" },
-                { emoji: "💪", value: `${todayExercises.length}`, label: "Exercises done" },
+                { emoji: "💪", value: `${dayExercises.length}`, label: "Exercises done" },
                 { emoji: "⚡", value: `${kcalPerMin}`, label: "kcal / min avg" },
                 { emoji: "📅", value: `${activeDaysThisWeek}/${activeDaysGoal}`, label: "Active days this week" },
               ].map((s, i) => (
@@ -244,30 +272,36 @@ export default function Exercise() {
             </div>
           </motion.div>
 
-          {/* Bottone aggiungi */}
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            onClick={() => setShowAddSheet(true)}
-            style={{
-              width: "100%", background: "#dc2626", color: "white",
-              border: "none", borderRadius: "14px", padding: "13px",
-              fontSize: "14px", fontWeight: 500, cursor: "pointer",
-              fontFamily: "inherit", display: "flex", alignItems: "center",
-              justifyContent: "center", gap: "8px",
-            }}
-          >
-            <Plus style={{ width: "18px", height: "18px" }} />
-            Log exercise
-          </motion.button>
+          {/* Bottone aggiungi — nascosto nel passato */}
+          {!isPast && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              onClick={() => setShowAddSheet(true)}
+              style={{
+                width: "100%", background: "#dc2626", color: "white",
+                border: "none", borderRadius: "14px", padding: "13px",
+                fontSize: "14px", fontWeight: 500, cursor: "pointer",
+                fontFamily: "inherit", display: "flex", alignItems: "center",
+                justifyContent: "center", gap: "8px",
+              }}
+            >
+              <Plus style={{ width: "18px", height: "18px" }} />
+              Log exercise
+            </motion.button>
+          )}
 
-          {/* Lista esercizi oggi */}
-          {todayExercises.length > 0 ? (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px", padding: "0 2px" }}>🏃 Today's exercises</p>
+          {/* Lista esercizi */}
+          {dayExercises.length > 0 ? (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+              style={{ opacity: isPast ? 0.7 : 1 }}
+            >
+              <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px", padding: "0 2px" }}>
+                🏃 {isToday ? "Today's exercises" : "Exercises logged"}
+              </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {todayExercises.map((exercise) => {
+                {dayExercises.map((exercise) => {
                   const ex = EXERCISES.find(e => e.name === exercise.exercise_name);
                   return (
                     <motion.div key={exercise.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
@@ -286,9 +320,11 @@ export default function Exercise() {
                           <Flame style={{ width: "12px", height: "12px", color: "#dc2626" }} />
                           <span style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626" }}>{exercise.calories_burned}</span>
                         </div>
-                        <button onClick={() => handleDelete(exercise)} style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#f9fafb", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Trash2 style={{ width: "12px", height: "12px", color: "#9ca3af" }} />
-                        </button>
+                        {!isPast && (
+                          <button onClick={() => handleDelete(exercise)} style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#f9fafb", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Trash2 style={{ width: "12px", height: "12px", color: "#9ca3af" }} />
+                          </button>
+                        )}
                       </div>
                     </motion.div>
                   );
@@ -298,8 +334,12 @@ export default function Exercise() {
           ) : (
             <div style={{ textAlign: "center", padding: "24px", background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)" }}>
               <p style={{ fontSize: "32px", marginBottom: "8px" }}>🏃</p>
-              <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "4px" }}>No exercises logged yet</p>
-              <p style={{ fontSize: "12px", color: "#9ca3af" }}>Tap "Log exercise" to get started!</p>
+              <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "4px" }}>
+                {isPast ? "No exercises logged this day" : "No exercises logged yet"}
+              </p>
+              <p style={{ fontSize: "12px", color: "#9ca3af" }}>
+                {isPast ? "" : "Tap \"Log exercise\" to get started!"}
+              </p>
             </div>
           )}
 
