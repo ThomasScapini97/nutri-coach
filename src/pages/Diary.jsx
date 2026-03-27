@@ -5,7 +5,7 @@ import { format, subDays } from "date-fns";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Save, Loader2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -40,6 +40,7 @@ export default function Diary() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === TODAY;
+  const isPast = !isToday;
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [chartRange, setChartRange] = useState(30);
@@ -94,12 +95,14 @@ export default function Diary() {
   };
 
   const adjustWeight = (delta) => {
+    if (isPast) return;
     const current = parseFloat(form.weight) || 0;
     const newVal = Math.max(0, Math.round((current + delta) * 10) / 10);
     setForm(f => ({ ...f, weight: String(newVal) }));
   };
 
   const handleSave = async () => {
+    if (isPast) return;
     setSaving(true);
     const payload = {
       user_id: user.id, date: dateStr,
@@ -125,195 +128,202 @@ export default function Diary() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto pb-24" style={{ background: "#f0fcf3" }}>
-      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#f0fcf3", overflow: "hidden" }}>
 
-        {/* Date navigator */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          background: "white", borderBottom: "0.5px solid #e5e7eb",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          padding: "14px 24px", position: "relative",
-          marginLeft: "-16px", marginRight: "-16px", marginTop: "-16px",
+      {/* Date navigator — full width come Chat */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "white", borderBottom: "0.5px solid #e5e7eb",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        padding: "14px 24px", position: "relative", flexShrink: 0,
+      }}>
+        <button onClick={() => navigateDay(-1)} style={{
+          position: "absolute", left: "60px",
+          background: "none", border: "none",
+          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
         }}>
-          <button onClick={() => navigateDay(-1)} style={{
-              position: "absolute", left: "60px",
-              background: "none", border: "none",
-              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-            }}>
-              <ChevronLeft style={{ width: "18px", height: "18px", color: "#6b7280" }} />
-            </button>
-          <div style={{ textAlign: "center" }}>
-            <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
-              {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
-            </h2>
-          </div>
-          <button onClick={() => navigateDay(1)} disabled={isToday} style={{
-              position: "absolute", right: "16px",
-              background: "none", border: "none",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1,
-            }}>
-              <ChevronRight style={{ width: "18px", height: "18px", color: "#6b7280" }} />
-            </button>
+          <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+        </button>
+        <div style={{ textAlign: "center" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
+            {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
+          </h2>
+          <p style={{ fontSize: "11px", color: "#9ca3af" }}>
+            {isToday ? "Log your wellness" : "Past entry"}
+          </p>
         </div>
+        <button onClick={() => navigateDay(1)} disabled={isToday} style={{
+          position: "absolute", right: "16px",
+          background: "none", border: "none",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1,
+        }}>
+          <ChevronRight style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+        </button>
+      </div>
 
-        {/* Weight card */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
-          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>⚖️</div>
-            <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Weight Progress</span>
-            {lastWeight && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "2px" }}>Goal: {lastWeight} kg</span>}
-          </div>
+      {/* Contenuto scorrevole */}
+      <div style={{ flex: 1, overflowY: "auto", paddingBottom: "90px" }}>
+        <div style={{ maxWidth: "480px", margin: "0 auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
 
-          {/* Peso + grafico affiancati */}
-          <div style={{ display: "flex", alignItems: "center", padding: "14px" }}>
-            {/* Sinistra: peso con +/- */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", flexShrink: 0, marginRight: "16px", minWidth: "100px" }}>
-              {weightDiff !== null && (
-                <span style={{
-                  fontSize: "11px", fontWeight: 500, padding: "2px 8px", borderRadius: "20px",
-                  background: Number(weightDiff) < 0 ? "#dcfce7" : Number(weightDiff) > 0 ? "#fee2e2" : "#f3f4f6",
-                  color: Number(weightDiff) < 0 ? "#16a34a" : Number(weightDiff) > 0 ? "#dc2626" : "#9ca3af",
-                }}>
-                  {Number(weightDiff) > 0 ? "+" : ""}{weightDiff} kg
-                </span>
-              )}
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <button onClick={() => adjustWeight(-0.1)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Minus style={{ width: "14px", height: "14px", color: "#6b7280" }} />
-                </button>
-                <div style={{ textAlign: "center" }}>
-                  <input
-                    type="number"
-                    value={form.weight}
-                    onChange={e => setForm(f => ({ ...f, weight: e.target.value }))}
-                    placeholder="—"
-                    style={{ background: "none", border: "none", outline: "none", fontSize: "28px", fontWeight: 600, color: "#1a3a22", width: "70px", textAlign: "center", fontFamily: "inherit" }}
-                  />
-                  <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "-4px" }}>kg</div>
-                </div>
-                <button onClick={() => adjustWeight(0.1)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Plus style={{ width: "14px", height: "14px", color: "#6b7280" }} />
-                </button>
-              </div>
-              {/* Range selector */}
-              <div style={{ display: "flex", gap: "3px" }}>
-                {CHART_RANGES.map(r => (
-                  <button key={r.label} onClick={() => setChartRange(r.days)} style={{
-                    padding: "2px 6px", borderRadius: "20px", fontSize: "9px", fontWeight: 500,
-                    border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                    background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
-                    color: chartRange === r.days ? "#16a34a" : "#9ca3af",
-                    cursor: "pointer", fontFamily: "inherit",
-                  }}>{r.label}</button>
-                ))}
-              </div>
+          {/* Weight card */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
+            style={{
+              background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden",
+              opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
+              <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>⚖️</div>
+              <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Weight Progress</span>
+              {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>🔒 Read only</span>}
             </div>
 
-            {/* Divisore */}
-            <div style={{ width: "1px", background: "#f3f4f6", alignSelf: "stretch", marginRight: "16px", flexShrink: 0 }} />
-
-            {/* Destra: grafico */}
-            <div style={{ flex: 1, height: "100px" }}>
-              {chartData.length > 1 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 4, right: 4, left: -32, bottom: 0 }}>
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: "#9ca3af" }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: "#9ca3af" }} domain={["auto", "auto"]} />
-                    <Tooltip
-                      contentStyle={{ background: "white", border: "0.5px solid rgba(0,0,0,0.08)", borderRadius: "10px", fontSize: "11px" }}
-                      formatter={(v) => [`${v} kg`, ""]}
+            <div style={{ display: "flex", alignItems: "center", padding: "14px" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", flexShrink: 0, marginRight: "16px", minWidth: "100px" }}>
+                {weightDiff !== null && (
+                  <span style={{
+                    fontSize: "11px", fontWeight: 500, padding: "2px 8px", borderRadius: "20px",
+                    background: Number(weightDiff) < 0 ? "#dcfce7" : Number(weightDiff) > 0 ? "#fee2e2" : "#f3f4f6",
+                    color: Number(weightDiff) < 0 ? "#16a34a" : Number(weightDiff) > 0 ? "#dc2626" : "#9ca3af",
+                  }}>
+                    {Number(weightDiff) > 0 ? "+" : ""}{weightDiff} kg
+                  </span>
+                )}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <button onClick={() => adjustWeight(-0.1)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Minus style={{ width: "14px", height: "14px", color: "#6b7280" }} />
+                  </button>
+                  <div style={{ textAlign: "center" }}>
+                    <input
+                      type="number"
+                      value={form.weight}
+                      onChange={e => setForm(f => ({ ...f, weight: e.target.value }))}
+                      placeholder="—"
+                      style={{ background: "none", border: "none", outline: "none", fontSize: "28px", fontWeight: 600, color: "#1a3a22", width: "70px", textAlign: "center", fontFamily: "inherit" }}
                     />
-                    <Line type="monotone" dataKey="weight" stroke="#16a34a" strokeWidth={2} dot={{ fill: "#16a34a", r: 2 }} activeDot={{ r: 4 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: "11px", textAlign: "center", lineHeight: 1.4 }}>
-                  Log weight for<br />2+ days to see trend
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "-4px" }}>kg</div>
+                  </div>
+                  <button onClick={() => adjustWeight(0.1)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Plus style={{ width: "14px", height: "14px", color: "#6b7280" }} />
+                  </button>
                 </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
+                <div style={{ display: "flex", gap: "3px" }}>
+                  {CHART_RANGES.map(r => (
+                    <button key={r.label} onClick={() => setChartRange(r.days)} style={{
+                      padding: "2px 6px", borderRadius: "20px", fontSize: "9px", fontWeight: 500,
+                      border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                      background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
+                      color: chartRange === r.days ? "#16a34a" : "#9ca3af",
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>{r.label}</button>
+                  ))}
+                </div>
+              </div>
 
-        {/* Wellness card */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>😊</div>
-            <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>How are you feeling?</span>
-          </div>
+              <div style={{ width: "1px", background: "#f3f4f6", alignSelf: "stretch", marginRight: "16px", flexShrink: 0 }} />
 
-          {/* Mood */}
-          <div style={{ display: "flex", gap: "6px", padding: "10px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
-            {MOODS.map(m => (
-              <button key={m.value} onClick={() => setForm(f => ({ ...f, mood: m.value }))} style={{
-                flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px",
-                padding: "8px 2px", borderRadius: "10px",
-                border: form.mood === m.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                background: form.mood === m.value ? "#f0fdf4" : "#f9fafb",
-                cursor: "pointer", fontFamily: "inherit",
-              }}>
-                <span style={{ fontSize: "18px" }}>{m.emoji}</span>
-                <span style={{ fontSize: "8px", color: form.mood === m.value ? "#16a34a" : "#9ca3af" }}>{m.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Energy, Sleep, Stress */}
-          {SCALES.map(scale => (
-            <div key={scale.key} style={{ padding: "8px 14px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
-              <span style={{ fontSize: "11px", color: "#6b7280", whiteSpace: "nowrap" }}>{scale.emoji} {scale.label}</span>
-              <div style={{ display: "flex", gap: "5px", flex: 1, justifyContent: "flex-end" }}>
-                {[1, 2, 3, 4, 5].map(v => (
-                  <button key={v} onClick={() => setForm(f => ({ ...f, [scale.key]: v }))} style={{
-                    width: "28px", height: "28px", borderRadius: "50%",
-                    background: form[scale.key] >= v ? scale.color : "#f3f4f6",
-                    border: "none", cursor: "pointer",
-                    fontSize: "11px", fontWeight: 600,
-                    color: form[scale.key] >= v ? "white" : "#9ca3af",
-                    fontFamily: "inherit",
-                  }}>{v}</button>
-                ))}
+              <div style={{ flex: 1, height: "100px" }}>
+                {chartData.length > 1 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 4, right: 4, left: -32, bottom: 0 }}>
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: "#9ca3af" }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: "#9ca3af" }} domain={["auto", "auto"]} />
+                      <Tooltip
+                        contentStyle={{ background: "white", border: "0.5px solid rgba(0,0,0,0.08)", borderRadius: "10px", fontSize: "11px" }}
+                        formatter={(v) => [`${v} kg`, ""]}
+                      />
+                      <Line type="monotone" dataKey="weight" stroke="#16a34a" strokeWidth={2} dot={{ fill: "#16a34a", r: 2 }} activeDot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: "11px", textAlign: "center", lineHeight: 1.4 }}>
+                    Log weight for<br />2+ days to see trend
+                  </div>
+                )}
               </div>
             </div>
-          ))}
+          </motion.div>
 
-          {/* Notes */}
-          <div style={{ padding: "10px 14px" }}>
-            <textarea
-              value={form.notes}
-              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-              placeholder="How was your day? Any notes..."
-              rows={3}
-              style={{ ...inputStyle, resize: "none", fontSize: "13px", lineHeight: 1.5 }}
-            />
-          </div>
-        </motion.div>
+          {/* Wellness card */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+            style={{
+              background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden",
+              opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
+              <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>😊</div>
+              <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>How are you feeling?</span>
+              {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>🔒 Read only</span>}
+            </div>
 
-        {/* Save button */}
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          onClick={handleSave}
-          disabled={saving}
-          style={{
-            width: "100%", background: "#16a34a", color: "white",
-            border: "none", borderRadius: "14px", padding: "13px",
-            fontSize: "14px", fontWeight: 500, cursor: "pointer",
-            fontFamily: "inherit", display: "flex", alignItems: "center",
-            justifyContent: "center", gap: "8px",
-          }}
-        >
-          {saving ? <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} /> : <Save style={{ width: "16px", height: "16px" }} />}
-          {saving ? "Saving..." : "Save today's entry"}
-        </motion.button>
+            <div style={{ display: "flex", gap: "6px", padding: "10px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
+              {MOODS.map(m => (
+                <button key={m.value} onClick={() => setForm(f => ({ ...f, mood: m.value }))} style={{
+                  flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px",
+                  padding: "8px 2px", borderRadius: "10px",
+                  border: form.mood === m.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                  background: form.mood === m.value ? "#f0fdf4" : "#f9fafb",
+                  cursor: "pointer", fontFamily: "inherit",
+                }}>
+                  <span style={{ fontSize: "18px" }}>{m.emoji}</span>
+                  <span style={{ fontSize: "8px", color: form.mood === m.value ? "#16a34a" : "#9ca3af" }}>{m.label}</span>
+                </button>
+              ))}
+            </div>
 
+            {SCALES.map(scale => (
+              <div key={scale.key} style={{ padding: "8px 14px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                <span style={{ fontSize: "11px", color: "#6b7280", whiteSpace: "nowrap" }}>{scale.emoji} {scale.label}</span>
+                <div style={{ display: "flex", gap: "5px", flex: 1, justifyContent: "flex-end" }}>
+                  {[1, 2, 3, 4, 5].map(v => (
+                    <button key={v} onClick={() => setForm(f => ({ ...f, [scale.key]: v }))} style={{
+                      width: "28px", height: "28px", borderRadius: "50%",
+                      background: form[scale.key] >= v ? scale.color : "#f3f4f6",
+                      border: "none", cursor: "pointer",
+                      fontSize: "11px", fontWeight: 600,
+                      color: form[scale.key] >= v ? "white" : "#9ca3af",
+                      fontFamily: "inherit",
+                    }}>{v}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div style={{ padding: "10px 14px" }}>
+              <textarea
+                value={form.notes}
+                onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                placeholder="How was your day? Any notes..."
+                rows={3}
+                style={{ ...inputStyle, resize: "none", fontSize: "13px", lineHeight: 1.5 }}
+              />
+            </div>
+          </motion.div>
+
+          {/* Save button */}
+          {!isPast && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                width: "100%", background: "#16a34a", color: "white",
+                border: "none", borderRadius: "14px", padding: "13px",
+                fontSize: "14px", fontWeight: 500, cursor: "pointer",
+                fontFamily: "inherit", display: "flex", alignItems: "center",
+                justifyContent: "center", gap: "8px",
+              }}
+            >
+              {saving ? <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} /> : <Save style={{ width: "16px", height: "16px" }} />}
+              {saving ? "Saving..." : "Save today's entry"}
+            </motion.button>
+          )}
+
+        </div>
       </div>
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
