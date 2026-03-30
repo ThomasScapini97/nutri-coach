@@ -8,7 +8,6 @@ import { format } from "date-fns";
 import { ChevronLeft, ChevronRight, Flame, TrendingUp } from "lucide-react";
 import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
 import FoodEntryItem from "../components/summary/FoodEntryItem";
-import DaySuccessIndicator from "../components/summary/DaySuccessIndicator";
 import ScrollableChart from "../components/summary/ScrollableChart";
 import { motion } from "framer-motion";
 
@@ -79,6 +78,7 @@ export default function Summary() {
       food_name: group.food_name,
       food_key: group.food_key || group.food_name.toLowerCase().trim().replace(/\s+/g, "_"),
       meal_type: group.meal_type,
+      grams: group.grams ? Math.round(group.grams / group.quantity) : null,
       calories: Math.round(group.calories / group.quantity),
       carbs: Math.round((group.carbs / group.quantity) * 10) / 10,
       protein: Math.round((group.protein / group.quantity) * 10) / 10,
@@ -102,39 +102,76 @@ export default function Summary() {
     toast.success(`Removed ${group.food_name} ➖`);
   };
 
+  // Modifica grammi con ricalcolo proporzionale
+  const handleUpdateGrams = async (entry, newGrams) => {
+    if (!dayLog || !entry.grams || entry.grams === newGrams) return;
+
+    const ratio = newGrams / entry.grams;
+    const newCalories = Math.round((entry.calories || 0) * ratio);
+    const newProtein = Math.round((entry.protein || 0) * ratio * 10) / 10;
+    const newCarbs = Math.round((entry.carbs || 0) * ratio * 10) / 10;
+    const newFats = Math.round((entry.fats || 0) * ratio * 10) / 10;
+    const newFiber = Math.round((entry.fiber || 0) * ratio * 10) / 10;
+
+    // Aggiorna tutti gli entry_ids del gruppo
+    const idsToUpdate = entry.ids || [entry.id];
+    const perEntryCalories = Math.round(newCalories / idsToUpdate.length);
+    const perEntryGrams = Math.round(newGrams / idsToUpdate.length);
+
+    await Promise.all(idsToUpdate.map(id =>
+      supabase.from("food_entries").update({
+        grams: perEntryGrams,
+        calories: perEntryCalories,
+        protein: Math.round(newProtein / idsToUpdate.length * 10) / 10,
+        carbs: Math.round(newCarbs / idsToUpdate.length * 10) / 10,
+        fats: Math.round(newFats / idsToUpdate.length * 10) / 10,
+        fiber: Math.round(newFiber / idsToUpdate.length * 10) / 10,
+      }).eq("id", id)
+    ));
+
+    await recalculateTotals(dayLog.id);
+
+    // Messaggio di sistema in chat
+    await supabase.from("messages").insert({
+      foodlog_id: dayLog.id,
+      role: "system",
+      content: `✏️ **${entry.food_name}** aggiornato: ${Math.round(entry.grams)}g → ${newGrams}g (${newCalories} kcal)`,
+      timestamp: new Date().toISOString(),
+    });
+
+    queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
+    queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+    queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
+
+    toast.success(`${entry.food_name} aggiornato ✏️`, {
+      description: `${Math.round(entry.grams)}g → ${newGrams}g · ${newCalories} kcal`,
+    });
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#f0fcf3", overflow: "hidden" }}>
 
-      {/* Date navigator — fuori dal container, full width come Chat */}
+      {/* Date navigator */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "center",
         background: "white", borderBottom: "0.5px solid #e5e7eb",
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
         padding: "14px 24px", position: "relative", flexShrink: 0,
       }}>
-        <button onClick={() => navigateDay(-1)} style={{
-          position: "absolute", left: "60px",
-          background: "none", border: "none",
-          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-        }}>
+        <button onClick={() => navigateDay(-1)} style={{ position: "absolute", left: "60px", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
         </button>
         <div style={{ textAlign: "center" }}>
-  <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
-    {isToday ? "Today" : format(selectedDate, "EEEE, MMM d")}
-  </h2>
-  <p style={{ fontSize: "11px", color: isPast ? "#f59e0b" : "#9ca3af" }}>
-    {isPast
-      ? `📅 ${format(selectedDate, "yyyy")} · past day`
-      : dayLog ? `${netCalories} kcal logged` : "Start tracking your meals"}
-  </p>
-</div>
-        <button onClick={() => navigateDay(1)} disabled={isToday} style={{
-          position: "absolute", right: "16px",
-          background: "none", border: "none",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1,
-        }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
+            {isToday ? "Today" : format(selectedDate, "EEEE, MMM d")}
+          </h2>
+          <p style={{ fontSize: "11px", color: isPast ? "#f59e0b" : "#9ca3af" }}>
+            {isPast
+              ? `📅 ${format(selectedDate, "yyyy")} · past day`
+              : dayLog ? `${netCalories} kcal logged` : "Start tracking your meals"}
+          </p>
+        </div>
+        <button onClick={() => navigateDay(1)} disabled={isToday} style={{ position: "absolute", right: "16px", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1 }}>
           <ChevronRight style={{ width: "20px", height: "20px", color: "#6b7280" }} />
         </button>
       </div>
@@ -144,20 +181,20 @@ export default function Summary() {
 
           {/* Hero calorie card */}
           <motion.div
-  initial={{ opacity: 0, y: 10 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.05 }}
-  style={{
-    background: isPast
-      ? "linear-gradient(135deg, #4b7c5a 0%, #3a6348 100%)"
-      : "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
-    borderRadius: "20px", padding: "18px", color: "white",
-    position: "relative", overflow: "hidden",
-  }}
->
-  <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
-  <div style={{ position: "absolute", bottom: "-20px", right: "30px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px", position: "relative" }}>
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            style={{
+              background: isPast
+                ? "linear-gradient(135deg, #4b7c5a 0%, #3a6348 100%)"
+                : "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+              borderRadius: "20px", padding: "18px", color: "white",
+              position: "relative", overflow: "hidden",
+            }}
+          >
+            <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
+            <div style={{ position: "absolute", bottom: "-20px", right: "30px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px", position: "relative" }}>
               <div>
                 <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)", marginBottom: "2px" }}>
                   {burnedCalories > 0 ? "Net calories" : "Calories today"}
@@ -237,21 +274,42 @@ export default function Summary() {
                   const foodKey = (entry.food_key || entry.food_name).toLowerCase().trim();
                   const key = `${foodKey}_${mealType}`;
                   if (!acc[key]) {
-                    acc[key] = { ...entry, meal_type: mealType, quantity: 1, ids: [entry.id], total_calories: entry.calories || 0, total_carbs: entry.carbs || 0, total_protein: entry.protein || 0, total_fats: entry.fats || 0, total_fiber: entry.fiber || 0 };
+                    acc[key] = {
+                      ...entry, meal_type: mealType, quantity: 1, ids: [entry.id],
+                      total_calories: entry.calories || 0, total_carbs: entry.carbs || 0,
+                      total_protein: entry.protein || 0, total_fats: entry.fats || 0,
+                      total_fiber: entry.fiber || 0,
+                      total_grams: entry.grams || null,
+                    };
                   } else {
-                    acc[key].quantity += 1; acc[key].ids.push(entry.id);
-                    acc[key].total_calories += entry.calories || 0; acc[key].total_carbs += entry.carbs || 0;
-                    acc[key].total_protein += entry.protein || 0; acc[key].total_fats += entry.fats || 0; acc[key].total_fiber += entry.fiber || 0;
+                    acc[key].quantity += 1;
+                    acc[key].ids.push(entry.id);
+                    acc[key].total_calories += entry.calories || 0;
+                    acc[key].total_carbs += entry.carbs || 0;
+                    acc[key].total_protein += entry.protein || 0;
+                    acc[key].total_fats += entry.fats || 0;
+                    acc[key].total_fiber += entry.fiber || 0;
+                    if (entry.grams) acc[key].total_grams = (acc[key].total_grams || 0) + entry.grams;
                   }
                   return acc;
                 }, {});
                 return Object.values(grouped).map(group => (
                   <FoodEntryItem
                     key={group.ids[0]}
-                    entry={{ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber }}
+                    entry={{
+                      ...group,
+                      id: group.ids[0],
+                      calories: group.total_calories,
+                      carbs: group.total_carbs,
+                      protein: group.total_protein,
+                      fats: group.total_fats,
+                      fiber: group.total_fiber,
+                      grams: group.total_grams,
+                    }}
                     quantity={group.quantity}
                     onAdd={() => handleAddEntry(group)}
                     onRemove={() => handleRemoveEntry(group)}
+                    onUpdateGrams={!isPast ? (entry, newGrams) => handleUpdateGrams({ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber, grams: group.total_grams }, newGrams) : undefined}
                   />
                 ));
               })() : (

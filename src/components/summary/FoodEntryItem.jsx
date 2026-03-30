@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { Flame, Coffee, Utensils, Moon, Cookie, Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -17,16 +18,35 @@ function getFoodEmoji(foodName) {
   return "🍽️";
 }
 
-function formatGrams(grams) {
-  if (!grams) return null;
-  if (grams < 10) return `${grams}ml`;
-  return `${Math.round(grams)}g`;
-}
-
-export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove }) {
+export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove, onUpdateGrams }) {
   const MealIcon = mealIcons[entry.meal_type] || Utensils;
   const mealStyle = mealStyles[entry.meal_type] || { bg: "#f3f4f6", color: "#6b7280" };
-  const gramsLabel = formatGrams(entry.grams);
+  const [editingGrams, setEditingGrams] = useState(false);
+  const [gramsValue, setGramsValue] = useState(entry.grams ? String(Math.round(entry.grams)) : "");
+  const inputRef = useRef(null);
+
+  const handleGramsClick = () => {
+    if (!onUpdateGrams) return;
+    setEditingGrams(true);
+    setTimeout(() => inputRef.current?.select(), 50);
+  };
+
+  const handleGramsConfirm = () => {
+    setEditingGrams(false);
+    const newGrams = parseFloat(gramsValue);
+    if (!newGrams || newGrams <= 0 || newGrams === entry.grams) return;
+    onUpdateGrams(entry, newGrams);
+  };
+
+  const handleGramsKeyDown = (e) => {
+    if (e.key === "Enter") handleGramsConfirm();
+    if (e.key === "Escape") {
+      setEditingGrams(false);
+      setGramsValue(entry.grams ? String(Math.round(entry.grams)) : "");
+    }
+  };
+
+  const gramsLabel = entry.grams ? `${Math.round(entry.grams)}g` : null;
 
   return (
     <motion.div
@@ -47,15 +67,52 @@ export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove }) 
             <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {entry.food_name}
             </p>
-            {gramsLabel && (
-              <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 400, flexShrink: 0 }}>
+            {/* Grammi editabili */}
+            {editingGrams ? (
+              <input
+                ref={inputRef}
+                type="number"
+                value={gramsValue}
+                onChange={e => setGramsValue(e.target.value)}
+                onBlur={handleGramsConfirm}
+                onKeyDown={handleGramsKeyDown}
+                style={{
+                  width: "52px", fontSize: "11px", color: "#16a34a", fontWeight: 600,
+                  border: "1px solid #16a34a", borderRadius: "6px",
+                  padding: "1px 4px", outline: "none", background: "#f0fdf4",
+                  fontFamily: "inherit",
+                }}
+              />
+            ) : gramsLabel ? (
+              <span
+                onClick={handleGramsClick}
+                title={onUpdateGrams ? "Tap to edit" : ""}
+                style={{
+                  fontSize: "11px", color: onUpdateGrams ? "#16a34a" : "#9ca3af",
+                  fontWeight: onUpdateGrams ? 500 : 400,
+                  flexShrink: 0,
+                  cursor: onUpdateGrams ? "pointer" : "default",
+                  borderBottom: onUpdateGrams ? "1px dashed #16a34a" : "none",
+                  lineHeight: 1.4,
+                }}
+              >
                 {gramsLabel}
               </span>
-            )}
+            ) : onUpdateGrams ? (
+              <span
+                onClick={handleGramsClick}
+                style={{
+                  fontSize: "10px", color: "#9ca3af", cursor: "pointer",
+                  borderBottom: "1px dashed #d1d5db", lineHeight: 1.4,
+                }}
+              >
+                + add g
+              </span>
+            ) : null}
           </div>
 
-          {/* Badge pasto + macros */}
-          <div style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "3px", flexWrap: "wrap" }}>
+          {/* Badge pasto */}
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "3px" }}>
             {entry.meal_type && (
               <span style={{
                 fontSize: "10px", padding: "2px 7px", borderRadius: "20px",
@@ -66,19 +123,12 @@ export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove }) 
                 {entry.meal_type}
               </span>
             )}
-            {/* Macros mini */}
-            {(entry.protein > 0 || entry.carbs > 0 || entry.fats > 0) && (
-              <span style={{ fontSize: "9px", color: "#9ca3af" }}>
-                P {Math.round(entry.protein || 0)}g · C {Math.round(entry.carbs || 0)}g · F {Math.round(entry.fats || 0)}g
-              </span>
-            )}
           </div>
         </div>
       </div>
 
       {/* Destra: kcal + controlli quantità */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-        {/* Kcal */}
         <div style={{
           display: "flex", alignItems: "center", gap: "3px",
           background: "#fef2f2", borderRadius: "20px", padding: "3px 8px",
@@ -87,33 +137,18 @@ export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove }) 
           <span style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626" }}>{Math.round(entry.calories || 0)}</span>
         </div>
 
-        {/* Controlli quantità */}
         <div style={{
-          display: "flex", alignItems: "center", gap: "0px",
+          display: "flex", alignItems: "center",
           background: "#f9fafb", borderRadius: "20px",
           border: "0.5px solid #e5e7eb", overflow: "hidden",
         }}>
-          <button
-            onClick={() => onRemove?.()}
-            style={{
-              width: "28px", height: "28px", border: "none", background: "transparent",
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#9ca3af", fontSize: "16px",
-            }}
-          >
+          <button onClick={() => onRemove?.()} style={{ width: "28px", height: "28px", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af" }}>
             <Minus style={{ width: "12px", height: "12px" }} />
           </button>
           <span style={{ fontSize: "12px", fontWeight: 600, color: "#1a3a22", minWidth: "16px", textAlign: "center" }}>
             {quantity}
           </span>
-          <button
-            onClick={() => onAdd?.()}
-            style={{
-              width: "28px", height: "28px", border: "none", background: "transparent",
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#16a34a", fontSize: "16px",
-            }}
-          >
+          <button onClick={() => onAdd?.()} style={{ width: "28px", height: "28px", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#16a34a" }}>
             <Plus style={{ width: "12px", height: "12px" }} />
           </button>
         </div>
