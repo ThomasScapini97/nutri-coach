@@ -120,13 +120,15 @@ export default function Summary() {
           <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
         </button>
         <div style={{ textAlign: "center" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
-            {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
-          </h2>
-          <p style={{ fontSize: "11px", color: "#9ca3af" }}>
-            {dayLog ? `${netCalories} kcal logged` : "Start tracking your meals"}
-          </p>
-        </div>
+  <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
+    {isToday ? "Today" : format(selectedDate, "EEEE, MMM d")}
+  </h2>
+  <p style={{ fontSize: "11px", color: isPast ? "#f59e0b" : "#9ca3af" }}>
+    {isPast
+      ? `📅 ${format(selectedDate, "yyyy")} · past day`
+      : dayLog ? `${netCalories} kcal logged` : "Start tracking your meals"}
+  </p>
+</div>
         <button onClick={() => navigateDay(1)} disabled={isToday} style={{
           position: "absolute", right: "16px",
           background: "none", border: "none",
@@ -142,18 +144,31 @@ export default function Summary() {
 
           {/* Hero calorie card */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            style={{
-              background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
-              borderRadius: "20px", padding: "18px", color: "white",
-              position: "relative", overflow: "hidden",
-            }}
-          >
-            <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
-            <div style={{ position: "absolute", bottom: "-20px", right: "30px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px", position: "relative" }}>
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.05 }}
+  style={{
+    background: isPast
+      ? "linear-gradient(135deg, #4b7c5a 0%, #3a6348 100%)"
+      : "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+    borderRadius: "20px", padding: "18px", color: "white",
+    position: "relative", overflow: "hidden",
+  }}
+>
+  {isPast && (
+    <div style={{
+      position: "absolute", top: "12px", right: "12px",
+      background: "rgba(255,255,255,0.15)",
+      borderRadius: "20px", padding: "3px 10px",
+      fontSize: "10px", color: "rgba(255,255,255,0.9)",
+      backdropFilter: "blur(4px)",
+    }}>
+      📅 {format(selectedDate, "MMM d, yyyy")}
+    </div>
+  )}
+  <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
+  <div style={{ position: "absolute", bottom: "-20px", right: "30px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px", position: "relative" }}>
               <div>
                 <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)", marginBottom: "2px" }}>
                   {burnedCalories > 0 ? "Net calories" : "Calories today"}
