@@ -97,11 +97,11 @@ export default async function handler(req, res) {
     const today = new Date().toISOString().split("T")[0];
 
     const { data: rateData } = await supabase
-      .from("rate_limits")
-      .select("message_count")
-      .eq("user_id", user.id)
-      .eq("date", today)
-      .single();
+  .from("rate_limits")
+  .select("message_count")
+  .eq("user_id", user.id)
+  .eq("date", today)
+  .maybeSingle(); // ← restituisce null invece di crashare
 
     const currentCount = rateData?.message_count || 0;
 
