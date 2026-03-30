@@ -175,9 +175,9 @@ export default function Chat() {
   });
 
   const { data: todayLogs } = useQuery({
-    queryKey: ["foodlog", TODAY, user?.id],
+    queryKey: ["foodlog", getToday(), user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('food_logs').select('*').eq('date', TODAY).eq('user_id', user.id);
+      const { data } = await supabase.from('food_logs').select('*').eq('date', getToday()).eq('user_id', user.id);
       return data || [];
     },
     enabled: !!user?.id,
@@ -235,12 +235,12 @@ export default function Chat() {
     return () => clearInterval(interval);
   }, [todayLog, calorieGoal, dailyEvaluation, evaluationDismissed]);
 
-useEffect(() => {
-  const now = new Date();
-  const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5).getTime() - now.getTime();
-  const timer = setTimeout(() => window.location.reload(), msUntilMidnight);
-  return () => clearTimeout(timer);
-}, []);
+  useEffect(() => {
+    const now = new Date();
+    const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5).getTime() - now.getTime();
+    const timer = setTimeout(() => window.location.reload(), msUntilMidnight);
+    return () => clearTimeout(timer);
+  }, []);
 
   const lastLogTime = chatMessages?.length ? chatMessages[chatMessages.length - 1].timestamp : null;
   useMealReminderCheck(lastLogTime);
@@ -304,7 +304,7 @@ useEffect(() => {
       let currentLogId = todayLog?.id;
       if (!currentLogId) {
         const { data: created } = await supabase.from('food_logs').insert({
-          date: TODAY, user_id: user.id,
+          date: getToday(), user_id: user.id,
           total_calories: 0, total_carbs: 0, total_protein: 0, total_fats: 0, total_fiber: 0, total_burned_calories: 0,
         }).select().single();
         currentLogId = created.id;
