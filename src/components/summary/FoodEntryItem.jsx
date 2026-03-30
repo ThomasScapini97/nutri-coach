@@ -83,32 +83,42 @@ export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove, on
                   fontFamily: "inherit",
                 }}
               />
-            ) : gramsLabel ? (
-              <span
-                onClick={handleGramsClick}
-                title={onUpdateGrams ? "Tap to edit" : ""}
-                style={{
-                  fontSize: "11px", color: onUpdateGrams ? "#16a34a" : "#9ca3af",
-                  fontWeight: onUpdateGrams ? 500 : 400,
-                  flexShrink: 0,
-                  cursor: onUpdateGrams ? "pointer" : "default",
-                  borderBottom: onUpdateGrams ? "1px dashed #16a34a" : "none",
-                  lineHeight: 1.4,
-                }}
-              >
-                {gramsLabel}
-              </span>
-            ) : onUpdateGrams ? (
-              <span
-                onClick={handleGramsClick}
-                style={{
-                  fontSize: "10px", color: "#9ca3af", cursor: "pointer",
-                  borderBottom: "1px dashed #d1d5db", lineHeight: 1.4,
-                }}
-              >
-                + add g
-              </span>
-            ) : null}
+) : gramsLabel ? (
+  <span
+    onClick={handleGramsClick}
+    title={onUpdateGrams ? "Tap to edit" : ""}
+    style={{
+      fontSize: "11px",
+      color: "#1a3a22",
+      fontWeight: 500,
+      flexShrink: 0,
+      cursor: onUpdateGrams ? "pointer" : "default",
+      background: "white",
+      border: "1px solid #e5e7eb",
+      borderRadius: "20px",
+      padding: "2px 8px",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+    }}
+  >
+    {gramsLabel}
+  </span>
+) : onUpdateGrams ? (
+  <span
+    onClick={handleGramsClick}
+    style={{
+      fontSize: "10px",
+      color: "#9ca3af",
+      cursor: "pointer",
+      background: "white",
+      border: "1px solid #e5e7eb",
+      borderRadius: "20px",
+      padding: "2px 8px",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+    }}
+  >
+    + add g
+  </span>
+) : null}
           </div>
 
           {/* Badge pasto */}
