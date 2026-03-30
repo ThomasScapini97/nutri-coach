@@ -155,17 +155,6 @@ export default function Summary() {
     position: "relative", overflow: "hidden",
   }}
 >
-  {isPast && (
-    <div style={{
-      position: "absolute", top: "12px", right: "12px",
-      background: "rgba(255,255,255,0.15)",
-      borderRadius: "20px", padding: "3px 10px",
-      fontSize: "10px", color: "rgba(255,255,255,0.9)",
-      backdropFilter: "blur(4px)",
-    }}>
-      📅 {format(selectedDate, "MMM d, yyyy")}
-    </div>
-  )}
   <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
   <div style={{ position: "absolute", bottom: "-20px", right: "30px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px", position: "relative" }}>
