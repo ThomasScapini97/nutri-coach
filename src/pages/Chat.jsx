@@ -312,6 +312,7 @@ export default function Chat() {
             food_name: food.food_name,
             food_key: food.food_name.toLowerCase().trim().replace(/\s+/g, '_'),
             meal_type: food.meal_type,
+            grams: food.grams || null,
             calories: food.calories || 0,
             carbs: food.carbs || 0,
             protein: food.protein || 0,
