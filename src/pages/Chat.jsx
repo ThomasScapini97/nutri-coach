@@ -86,7 +86,7 @@ You MUST calculate calories and macros accurately based on the EXACT quantity sp
 
 Unit conversion reference:
 - 1 tablespoon (cucchiaio) oil = 10ml = ~9g fat = ~83 kcal
-- 1 teaspoon (cucchiaino) oil = 5ml = ~4.5g fat = ~42 kcal  
+- 1 teaspoon (cucchiaino) oil = 5ml = ~4.5g fat = ~42 kcal
 - 1 slice bread (fetta di pane) = ~30g
 - 1 toast slice = ~25g
 - 1 egg (uovo) = ~55g
@@ -113,22 +113,20 @@ Nutrition values per 100g (use these as reference, apply to actual quantity):
 - Avocado: 160 kcal, 2g protein, 9g carbs, 15g fat, 7g fiber
 
 CALCULATION EXAMPLE:
-User says "150g bresaola" → calories = (155 / 100) * 150 = 232 kcal, protein = (32/100)*150 = 48g
-User says "2 cucchiai olio" → grams = 18g, calories = (884/100)*18 = 159 kcal, fat = (100/100)*18 = 18g
+User says "150g bresaola" → calories = (155/100)*150 = 232 kcal, protein = (32/100)*150 = 48g
+User says "2 cucchiai olio" → grams = 18g, calories = (884/100)*18 = 159 kcal, fat = 18g
 User says "100g parmigiano" → calories = (392/100)*100 = 392 kcal, protein = 33g, fat = 28g
 
 **CRITICAL: food_name must be CLEAN**
 - food_name: only the food name, NO quantities, NO descriptions (e.g. "bresaola", "olio d'oliva", "parmigiano reggiano", "pane tostato")
 - grams: the actual quantity in grams (convert units if needed: cucchiai→g, fette→g, ml→g)
-- If quantity not specified, use a reasonable default and mention it in the message (e.g. "Ho considerato una porzione standard di 30g")
+- If quantity not specified, use a reasonable default and mention it in the message
 - Descriptions like "a scaglie", "al vapore", "grigliato" go in food_name only if they significantly change nutrition, otherwise omit
 
 **CRITICAL: Multi-Food Parsing**
 When user mentions multiple foods, create ONE object per food type in the "foods" array with the TOTAL calories for that food.
 Do NOT split into multiple entries for quantities — use the grams field instead.
 Example: "2 fette di pane tostato" → ONE entry: food_name="pane tostato", grams=50, calories=155
-
-Exception: if the user mentions the SAME food multiple times as separate occasions, log separately.
 
 **CRITICAL: Food vs Question vs Exercise**
 1. User ATE something → LOG IT (foods array)
@@ -162,6 +160,7 @@ export default function Chat() {
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
   const [dailyEvaluation, setDailyEvaluation] = useState(null);
+  const [evaluationDismissed, setEvaluationDismissed] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
@@ -226,7 +225,7 @@ export default function Chat() {
   useEffect(() => {
     const checkEndOfDay = () => {
       const hour = new Date().getHours();
-      if (hour === 22 && todayLog && !dailyEvaluation) {
+      if (hour === 21 && todayLog && !dailyEvaluation && !evaluationDismissed) {
         const evaluation = evaluateDailyNutrition(todayLog, calorieGoal);
         if (evaluation) setDailyEvaluation(evaluation);
       }
@@ -234,7 +233,7 @@ export default function Chat() {
     const interval = setInterval(checkEndOfDay, 60000);
     checkEndOfDay();
     return () => clearInterval(interval);
-  }, [todayLog, calorieGoal, dailyEvaluation]);
+  }, [todayLog, calorieGoal, dailyEvaluation, evaluationDismissed]);
 
   const lastLogTime = chatMessages?.length ? chatMessages[chatMessages.length - 1].timestamp : null;
   useMealReminderCheck(lastLogTime);
@@ -356,7 +355,13 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)", borderRadius: "20px", backgroundColor: "#f0fcf3" }}>
-      <DailyNotificationPopup evaluation={dailyEvaluation} onClose={() => setDailyEvaluation(null)} />
+      <DailyNotificationPopup
+        evaluation={dailyEvaluation}
+        onClose={() => {
+          setDailyEvaluation(null);
+          setEvaluationDismissed(true);
+        }}
+      />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderBottom: "0.5px solid #e5e7eb", background: "white", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
         <div style={{ textAlign: "center" }}>
           <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>NutriCoach</h2>
