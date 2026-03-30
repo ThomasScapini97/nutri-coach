@@ -5,6 +5,29 @@ import { motion } from "framer-motion";
 
 export default function ChatBubble({ message, foodEntries }) {
   const isUser = message.role === "user";
+  const isSystem = message.role === "system";
+
+  // Messaggio di sistema — riga grigia centrata
+  if (isSystem) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "2px 16px" }}
+      >
+        <div style={{
+          display: "flex", alignItems: "center", gap: "8px",
+          background: "#f3f4f6", borderRadius: "20px",
+          padding: "5px 14px", maxWidth: "90%",
+        }}>
+          <span style={{ fontSize: "10px", color: "#6b7280", textAlign: "center", lineHeight: 1.4 }}>
+            {message.content}
+          </span>
+        </div>
+      </motion.div>
+    );
+  }
 
   const content = message.content || "";
   const looksLikeJson = content.trim().startsWith("{") && content.includes('"message"');
