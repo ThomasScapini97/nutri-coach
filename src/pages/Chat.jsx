@@ -3,12 +3,9 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Sparkles } from "lucide-react";
 import ChatBubble from "../components/chat/ChatBubble";
 import ChatInput from "../components/chat/ChatInput";
 import TypingIndicator from "../components/chat/TypingIndicator";
-import MotivationalBanner from "../components/chat/MotivationalBanner";
-import ExerciseBanner from "../components/chat/ExerciseBanner";
 import DailyDashboard from "../components/chat/DailyDashboard";
 import DailyNotificationPopup from "../components/notifications/DailyNotificationPopup";
 import { evaluateDailyNutrition } from "../components/notifications/DailyEvaluation";
@@ -16,7 +13,6 @@ import { useMealReminderCheck } from "../components/notifications/MealReminderTo
 import { toast } from "sonner";
 import { recalculateTotals } from "@/lib/nutritionUtils";
 import BarcodeScanner from "../components/chat/BarcodeScanner";
-import WaterTracker from "../components/chat/WaterTracker";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -216,7 +212,7 @@ export default function Chat() {
         }),
       });
 
-            if (response.status === 429) {
+      if (response.status === 429) {
         const errorData = await response.json();
         toast.error("Daily limit reached! 🌅", {
           description: errorData.message || "Come back tomorrow for more messages.",
@@ -304,7 +300,7 @@ export default function Chat() {
   return (
     <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)", borderRadius: "20px", backgroundColor: "#f0fcf3" }}>
       <DailyNotificationPopup evaluation={dailyEvaluation} onClose={() => setDailyEvaluation(null)} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderBottom: "0.5px solid #e5e7eb", background: "white", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderBottom: "0.5px solid #e5e7eb", background: "white", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
         <div style={{ textAlign: "center" }}>
           <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>NutriCoach</h2>
           <p style={{ fontSize: "11px", color: "#9ca3af" }}>
@@ -312,8 +308,7 @@ export default function Chat() {
           </p>
         </div>
       </div>
-            <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
-      <ExerciseBanner burnedCalories={todayLog?.total_burned_calories} />
+      <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
       <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40" style={{ backgroundColor: "#f0fcf3" }}>
         <div className="max-w-4xl mx-auto space-y-5 px-4">
           {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
