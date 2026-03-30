@@ -47,15 +47,20 @@ export default function Diary() {
   const [chartData, setChartData] = useState([]);
   const [lastWeight, setLastWeight] = useState(null);
   const [weightGoal, setWeightGoal] = useState(null);
+  const [startWeight, setStartWeight] = useState(null); // peso iniziale da profilo
 
   useEffect(() => {
     if (!user?.id) return;
 
     const loadData = async () => {
-      // Carica profilo per weight_goal
+      // Carica profilo per weight_goal e weight iniziale
       const { data: profileData } = await supabase
-        .from("user_profiles").select("weight_goal").eq("user_id", user.id).single();
+        .from("user_profiles")
+        .select("weight_goal, weight")
+        .eq("user_id", user.id)
+        .single();
       setWeightGoal(profileData?.weight_goal || null);
+      setStartWeight(profileData?.weight || null);
 
       // Carica ultima entry con peso
       const { data: lastData } = await supabase
@@ -138,7 +143,20 @@ export default function Diary() {
     ? (Number(form.weight) - Number(weightGoal)).toFixed(1)
     : null;
 
-  const goalReached = toGoal !== null && Number(toGoal) <= 0;
+  // Calcolo progresso barra
+  const weightProgress = (() => {
+    if (!form.weight || !weightGoal || !startWeight) return null;
+    const current = Number(form.weight);
+    const goal = Number(weightGoal);
+    const start = Number(startWeight);
+    if (start === goal) return null;
+    const totalDelta = Math.abs(start - goal);
+    const doneDelta = Math.abs(start - current);
+    const raw = (doneDelta / totalDelta) * 100;
+    return Math.min(Math.max(raw, 0), 100);
+  })();
+
+  const goalReached = weightProgress !== null && weightProgress >= 100;
 
   const inputStyle = {
     background: "#f9fafb", border: "0.5px solid #e5e7eb",
@@ -198,7 +216,7 @@ export default function Diary() {
                 <Minus style={{ width: "16px", height: "16px", color: "#6b7280" }} />
               </button>
               <div style={{ textAlign: "center" }}>
-                       {weightDiff !== null && (
+                {weightDiff !== null && (
                   <div style={{ marginBottom: "4px", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
                     <span style={{
                       fontSize: "11px", fontWeight: 500, padding: "2px 8px", borderRadius: "20px",
@@ -224,23 +242,48 @@ export default function Diary() {
               </button>
             </div>
 
-            {/* Banner distanza dal goal */}
-            {toGoal !== null && (
-              <div style={{
-                margin: "0 14px 10px",
-                background: goalReached ? "#dcfce7" : "#f0fdf4",
-                borderRadius: "10px", padding: "8px 12px",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                border: `0.5px solid ${goalReached ? "#bbf7d0" : "#e5e7eb"}`,
-              }}>
-                <span style={{ fontSize: "11px", color: goalReached ? "#16a34a" : "#6b7280" }}>
-                  {goalReached ? "🎉 Goal reached!" : `🎯 Goal: ${weightGoal} kg`}
-                </span>
-                {!goalReached && (
-                  <span style={{ fontSize: "11px", fontWeight: 600, color: "#16a34a" }}>
-                    {Math.abs(Number(toGoal))} kg to go
+            {/* Barra progresso verso il goal */}
+            {weightProgress !== null && (
+              <div style={{ margin: "0 14px 12px", background: goalReached ? "#dcfce7" : "#f0fdf4", borderRadius: "12px", padding: "10px 12px", border: `0.5px solid ${goalReached ? "#bbf7d0" : "#e5e7eb"}` }}>
+
+                {/* Header banner */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "11px", color: goalReached ? "#16a34a" : "#6b7280" }}>
+                    {goalReached ? "🎉 Goal reached!" : `🎯 Goal: ${weightGoal} kg`}
                   </span>
-                )}
+                  {!goalReached && (
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: "#16a34a" }}>
+                      {Math.abs(Number(toGoal)).toFixed(1)} kg to go
+                    </span>
+                  )}
+                </div>
+
+                {/* Barra */}
+                <div style={{ background: "#e5e7eb", borderRadius: "99px", height: "8px", overflow: "hidden" }}>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${weightProgress}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    style={{
+                      height: "100%",
+                      borderRadius: "99px",
+                      background: goalReached
+                        ? "#16a34a"
+                        : weightProgress > 66
+                          ? "#22c55e"
+                          : weightProgress > 33
+                            ? "#86efac"
+                            : "#bbf7d0",
+                    }}
+                  />
+                </div>
+
+                {/* Footer */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
+                  <span style={{ fontSize: "9px", color: "#9ca3af" }}>Start: {startWeight} kg</span>
+                  <span style={{ fontSize: "10px", color: "#16a34a", fontWeight: 600 }}>{Math.round(weightProgress)}%</span>
+                  <span style={{ fontSize: "9px", color: "#9ca3af" }}>Goal: {weightGoal} kg</span>
+                </div>
               </div>
             )}
 
