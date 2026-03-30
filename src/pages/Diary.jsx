@@ -47,13 +47,12 @@ export default function Diary() {
   const [chartData, setChartData] = useState([]);
   const [lastWeight, setLastWeight] = useState(null);
   const [weightGoal, setWeightGoal] = useState(null);
-  const [startWeight, setStartWeight] = useState(null); // peso iniziale da profilo
+  const [startWeight, setStartWeight] = useState(null);
 
   useEffect(() => {
     if (!user?.id) return;
 
     const loadData = async () => {
-      // Carica profilo per weight_goal e weight iniziale
       const { data: profileData } = await supabase
         .from("user_profiles")
         .select("weight_goal, weight")
@@ -62,7 +61,6 @@ export default function Diary() {
       setWeightGoal(profileData?.weight_goal || null);
       setStartWeight(profileData?.weight || null);
 
-      // Carica ultima entry con peso
       const { data: lastData } = await supabase
         .from("diary_entries").select("weight").eq("user_id", user.id)
         .lt("date", dateStr).not("weight", "is", null)
@@ -70,7 +68,6 @@ export default function Diary() {
       const prevWeight = lastData?.[0]?.weight || null;
       setLastWeight(prevWeight);
 
-      // Carica entry del giorno
       const { data } = await supabase
         .from("diary_entries").select("*").eq("user_id", user.id).eq("date", dateStr).single();
 
@@ -143,16 +140,22 @@ export default function Diary() {
     ? (Number(form.weight) - Number(weightGoal)).toFixed(1)
     : null;
 
-  // Calcolo progresso barra
+  // Calcolo progresso barra — direzione corretta
   const weightProgress = (() => {
     if (!form.weight || !weightGoal || !startWeight) return null;
     const current = Number(form.weight);
     const goal = Number(weightGoal);
     const start = Number(startWeight);
     if (start === goal) return null;
-    const totalDelta = Math.abs(start - goal);
-    const doneDelta = Math.abs(start - current);
-    const raw = (doneDelta / totalDelta) * 100;
+
+    const losing = goal < start;
+    let raw;
+    if (losing) {
+      raw = ((start - current) / (start - goal)) * 100;
+    } else {
+      raw = ((current - start) / (goal - start)) * 100;
+    }
+
     return Math.min(Math.max(raw, 0), 100);
   })();
 
@@ -251,7 +254,7 @@ export default function Diary() {
                   <span style={{ fontSize: "11px", color: goalReached ? "#16a34a" : "#6b7280" }}>
                     {goalReached ? "🎉 Goal reached!" : `🎯 Goal: ${weightGoal} kg`}
                   </span>
-                  {!goalReached && (
+                  {!goalReached && toGoal !== null && (
                     <span style={{ fontSize: "11px", fontWeight: 600, color: "#16a34a" }}>
                       {Math.abs(Number(toGoal)).toFixed(1)} kg to go
                     </span>
@@ -267,13 +270,7 @@ export default function Diary() {
                     style={{
                       height: "100%",
                       borderRadius: "99px",
-                      background: goalReached
-                        ? "#16a34a"
-                        : weightProgress > 66
-                          ? "#22c55e"
-                          : weightProgress > 33
-                            ? "#86efac"
-                            : "#bbf7d0",
+                      background: goalReached ? "#16a34a" : "#22c55e",
                     }}
                   />
                 </div>
