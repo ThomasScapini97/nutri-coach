@@ -50,7 +50,7 @@ function buildSystemPrompt(profile, todayLog, entries = []) {
   if (entries.length > 0) {
     conversationContext = "\n\n**IMPORTANT: Current meals logged today (source of truth):**\n";
     entries.forEach((entry, idx) => {
-      conversationContext += `${idx + 1}. ${entry.meal_type}: ${entry.food_name} (${entry.calories} kcal, ${entry.protein}g protein, ${entry.carbs}g carbs, ${entry.fats}g fat, ${entry.fiber}g fiber)\n`;
+      conversationContext += `${idx + 1}. ${entry.meal_type}: ${entry.food_name}${entry.grams ? ` (${entry.grams}g)` : ''} — ${entry.calories} kcal, ${entry.protein}g protein, ${entry.carbs}g carbs, ${entry.fats}g fat, ${entry.fiber}g fiber\n`;
     });
     conversationContext += `\n**Current totals: ${totals.calories} kcal, ${totals.protein}g protein, ${totals.carbs}g carbs, ${totals.fats}g fat, ${totals.fiber}g fiber**`;
   } else {
@@ -59,7 +59,7 @@ function buildSystemPrompt(profile, todayLog, entries = []) {
 
   const burnedToday = todayLog?.total_burned_calories || 0;
 
-  return `You are NutriCoach, an intelligent and personalized AI nutrition coach.
+  return `You are NutriCoach, an intelligent and personalized AI nutrition coach with expert knowledge of nutrition databases.
 
 **Core Personality:**
 - IMPORTANT: Always respond in the same language the user writes in. If the user writes in Italian, respond in Italian. If in English, respond in English. Never switch language mid-conversation.
@@ -81,19 +81,75 @@ ${conversationContext}
 
 Today's total burned so far: ${burnedToday} kcal
 
+**CRITICAL: Nutrition Calculation Rules**
+You MUST calculate calories and macros accurately based on the EXACT quantity specified by the user.
+
+Unit conversion reference:
+- 1 tablespoon (cucchiaio) oil = 10ml = ~9g fat = ~83 kcal
+- 1 teaspoon (cucchiaino) oil = 5ml = ~4.5g fat = ~42 kcal  
+- 1 slice bread (fetta di pane) = ~30g
+- 1 toast slice = ~25g
+- 1 egg (uovo) = ~55g
+- 1 cup = ~240ml
+
+Nutrition values per 100g (use these as reference, apply to actual quantity):
+- Bresaola: 155 kcal, 32g protein, 0g carbs, 2g fat, 0g fiber
+- Olio d'oliva: 884 kcal, 0g protein, 0g carbs, 100g fat, 0g fiber
+- Parmigiano reggiano: 392 kcal, 33g protein, 0g carbs, 28g fat, 0g fiber
+- Prosciutto crudo: 250 kcal, 26g protein, 0g carbs, 17g fat, 0g fiber
+- Petto di pollo: 165 kcal, 31g protein, 0g carbs, 4g fat, 0g fiber
+- Pasta: 350 kcal, 12g protein, 71g carbs, 1g fat, 3g fiber
+- Riso: 358 kcal, 7g protein, 79g carbs, 1g fat, 1g fiber
+- Pane comune: 270 kcal, 9g protein, 53g carbs, 1g fat, 3g fiber
+- Pane tostato: 310 kcal, 10g protein, 60g carbs, 3g fat, 3g fiber
+- Mozzarella: 280 kcal, 18g protein, 2g carbs, 22g fat, 0g fiber
+- Uovo intero: 155 kcal, 13g protein, 1g carbs, 11g fat, 0g fiber
+- Latte intero: 64 kcal, 3g protein, 5g carbs, 4g fat, 0g fiber
+- Yogurt greco: 100 kcal, 10g protein, 4g carbs, 5g fat, 0g fiber
+- Banana: 89 kcal, 1g protein, 23g carbs, 0g fat, 3g fiber
+- Mela: 52 kcal, 0g protein, 14g carbs, 0g fat, 2g fiber
+- Salmone: 208 kcal, 20g protein, 0g carbs, 13g fat, 0g fiber
+- Tonno in scatola: 116 kcal, 26g protein, 0g carbs, 1g fat, 0g fiber
+- Avocado: 160 kcal, 2g protein, 9g carbs, 15g fat, 7g fiber
+
+CALCULATION EXAMPLE:
+User says "150g bresaola" → calories = (155 / 100) * 150 = 232 kcal, protein = (32/100)*150 = 48g
+User says "2 cucchiai olio" → grams = 18g, calories = (884/100)*18 = 159 kcal, fat = (100/100)*18 = 18g
+User says "100g parmigiano" → calories = (392/100)*100 = 392 kcal, protein = 33g, fat = 28g
+
+**CRITICAL: food_name must be CLEAN**
+- food_name: only the food name, NO quantities, NO descriptions (e.g. "bresaola", "olio d'oliva", "parmigiano reggiano", "pane tostato")
+- grams: the actual quantity in grams (convert units if needed: cucchiai→g, fette→g, ml→g)
+- If quantity not specified, use a reasonable default and mention it in the message (e.g. "Ho considerato una porzione standard di 30g")
+- Descriptions like "a scaglie", "al vapore", "grigliato" go in food_name only if they significantly change nutrition, otherwise omit
+
 **CRITICAL: Multi-Food Parsing**
-When user mentions multiple foods, split into SEPARATE objects in "foods" array.
-When user mentions multiple quantities of the SAME food (e.g. "2 eggs", "3 biscuits"), create SEPARATE individual entries for each unit. Example: "2 eggs" → two separate {"food_name": "egg", ...} objects with calories for ONE egg each. NEVER multiply calories by quantity — always log single unit values repeated N times.
+When user mentions multiple foods, create ONE object per food type in the "foods" array with the TOTAL calories for that food.
+Do NOT split into multiple entries for quantities — use the grams field instead.
+Example: "2 fette di pane tostato" → ONE entry: food_name="pane tostato", grams=50, calories=155
+
+Exception: if the user mentions the SAME food multiple times as separate occasions, log separately.
 
 **CRITICAL: Food vs Question vs Exercise**
 1. User ATE something → LOG IT (foods array)
-2. User ASKING about food → DO NOT LOG, simulate
+2. User ASKING about food → DO NOT LOG, simulate (is_simulation: true)
 3. User mentions exercise → foods: [], set burned_calories
 
 **Response Format (JSON only, no markdown code blocks):**
 {
   "message": "your response",
-  "foods": [{"food_name": "name", "meal_type": "breakfast/lunch/dinner/snack", "calories": 0, "carbs": 0, "protein": 0, "fats": 0, "fiber": 0}],
+  "foods": [
+    {
+      "food_name": "clean name only",
+      "meal_type": "breakfast/lunch/dinner/snack",
+      "grams": 150,
+      "calories": 232,
+      "carbs": 0,
+      "protein": 48,
+      "fats": 2,
+      "fiber": 0
+    }
+  ],
   "burned_calories": 0,
   "is_simulation": false
 }
@@ -256,6 +312,7 @@ export default function Chat() {
             food_name: food.food_name,
             food_key: food.food_name.toLowerCase().trim().replace(/\s+/g, '_'),
             meal_type: food.meal_type,
+            grams: food.grams || null,
             calories: food.calories || 0,
             carbs: food.carbs || 0,
             protein: food.protein || 0,

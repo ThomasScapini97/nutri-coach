@@ -1,7 +1,8 @@
 import { Flame, Coffee, Utensils, Moon, Cookie, Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 
-const foodEmojis = { pasta: "🍝", chicken: "🐔", beef: "🥩", fish: "🐟", rice: "🍚", bread: "🍞", egg: "🥚", cheese: "🧀", apple: "🍎", banana: "🍌", salad: "🥗", pizza: "🍕", burger: "🍔", oatmeal: "🥣", yogurt: "🥛", nuts: "🥜" };
+const foodEmojis = { pasta: "🍝", chicken: "🐔", pollo: "🐔", beef: "🥩", manzo: "🥩", fish: "🐟", pesce: "🐟", salmone: "🐟", tonno: "🐟", rice: "🍚", riso: "🍚", bread: "🍞", pane: "🍞", egg: "🥚", uovo: "🥚", uova: "🥚", cheese: "🧀", parmigiano: "🧀", mozzarella: "🧀", apple: "🍎", mela: "🍎", banana: "🍌", salad: "🥗", insalata: "🥗", pizza: "🍕", burger: "🍔", oatmeal: "🥣", avena: "🥣", yogurt: "🥛", nuts: "🥜", bresaola: "🥩", prosciutto: "🥩", olio: "🫒", avocado: "🥑" };
+
 const mealIcons = { breakfast: Coffee, lunch: Utensils, dinner: Moon, snack: Cookie };
 const mealStyles = {
   breakfast: { bg: "#fef3c7", color: "#92400e" },
@@ -16,9 +17,16 @@ function getFoodEmoji(foodName) {
   return "🍽️";
 }
 
+function formatGrams(grams) {
+  if (!grams) return null;
+  if (grams < 10) return `${grams}ml`;
+  return `${Math.round(grams)}g`;
+}
+
 export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove }) {
   const MealIcon = mealIcons[entry.meal_type] || Utensils;
   const mealStyle = mealStyles[entry.meal_type] || { bg: "#f3f4f6", color: "#6b7280" };
+  const gramsLabel = formatGrams(entry.grams);
 
   return (
     <motion.div
@@ -34,19 +42,37 @@ export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove }) 
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
         <span style={{ fontSize: "22px", flexShrink: 0 }}>{getFoodEmoji(entry.food_name)}</span>
         <div style={{ minWidth: 0 }}>
-          <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {entry.food_name}
-          </p>
-          {entry.meal_type && (
-            <span style={{
-              fontSize: "10px", padding: "2px 7px", borderRadius: "20px",
-              background: mealStyle.bg, color: mealStyle.color,
-              fontWeight: 500, display: "inline-flex", alignItems: "center", gap: "3px", marginTop: "2px",
-            }}>
-              <MealIcon style={{ width: "10px", height: "10px" }} />
-              {entry.meal_type}
-            </span>
-          )}
+          {/* Nome + grammi */}
+          <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
+            <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {entry.food_name}
+            </p>
+            {gramsLabel && (
+              <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 400, flexShrink: 0 }}>
+                {gramsLabel}
+              </span>
+            )}
+          </div>
+
+          {/* Badge pasto + macros */}
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "3px", flexWrap: "wrap" }}>
+            {entry.meal_type && (
+              <span style={{
+                fontSize: "10px", padding: "2px 7px", borderRadius: "20px",
+                background: mealStyle.bg, color: mealStyle.color,
+                fontWeight: 500, display: "inline-flex", alignItems: "center", gap: "3px",
+              }}>
+                <MealIcon style={{ width: "10px", height: "10px" }} />
+                {entry.meal_type}
+              </span>
+            )}
+            {/* Macros mini */}
+            {(entry.protein > 0 || entry.carbs > 0 || entry.fats > 0) && (
+              <span style={{ fontSize: "9px", color: "#9ca3af" }}>
+                P {Math.round(entry.protein || 0)}g · C {Math.round(entry.carbs || 0)}g · F {Math.round(entry.fats || 0)}g
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
