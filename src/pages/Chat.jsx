@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { recalculateTotals } from "@/lib/nutritionUtils";
 import BarcodeScanner from "../components/chat/BarcodeScanner";
 
-const TODAY = format(new Date(), "yyyy-MM-dd");
+const getToday = () => format(new Date(), "yyyy-MM-dd");
 
 const WELCOME_MESSAGE = {
   id: "welcome_message",
@@ -234,6 +234,13 @@ export default function Chat() {
     checkEndOfDay();
     return () => clearInterval(interval);
   }, [todayLog, calorieGoal, dailyEvaluation, evaluationDismissed]);
+
+useEffect(() => {
+  const now = new Date();
+  const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5).getTime() - now.getTime();
+  const timer = setTimeout(() => window.location.reload(), msUntilMidnight);
+  return () => clearTimeout(timer);
+}, []);
 
   const lastLogTime = chatMessages?.length ? chatMessages[chatMessages.length - 1].timestamp : null;
   useMealReminderCheck(lastLogTime);
