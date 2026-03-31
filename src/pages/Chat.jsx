@@ -369,14 +369,7 @@ export default function Chat() {
           setEvaluationDismissed(true);
         }}
       />
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderBottom: "0.5px solid #e5e7eb", background: "white", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
-        <div style={{ textAlign: "center" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>NutriCoach</h2>
-          <p style={{ fontSize: "11px", color: "#9ca3af" }}>
-            {todayLog ? `${todayLog.total_calories || 0} kcal logged today` : "Start tracking your meals"}
-          </p>
-        </div>
-      </div>
+
       <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
       <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40" style={{ backgroundColor: "#f0fcf3" }}>
         <div className="max-w-4xl mx-auto space-y-5 px-4">
