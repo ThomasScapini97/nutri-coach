@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wheat, Drumstick, Droplets, Salad, ChevronRight, ChevronDown, GlassWater } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Wheat, Drumstick, Droplets, Salad, ChevronDown, GlassWater } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
@@ -201,11 +200,6 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
             </p>
           )}
         </div>
-
-        {/* View full summary — sempre visibile */}
-        <Link to="/Summary" className="flex items-center justify-center gap-1 pb-3 text-xs text-primary font-medium">
-          View full summary <ChevronRight className="w-3 h-3" />
-        </Link>
 
       </div>
     </motion.div>
