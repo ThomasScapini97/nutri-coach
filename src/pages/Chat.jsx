@@ -370,6 +370,16 @@ export default function Chat() {
         }}
       />
 
+      {/* Top bar */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "white", borderBottom: "0.5px solid #e5e7eb",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        padding: "14px 24px", flexShrink: 0,
+      }}>
+        <span style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22" }}>NutriCoach</span>
+      </div>
+
       <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
       <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40" style={{ backgroundColor: "#f0fcf3" }}>
         <div className="max-w-4xl mx-auto space-y-5 px-4">
