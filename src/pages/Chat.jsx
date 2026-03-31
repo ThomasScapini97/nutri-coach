@@ -379,7 +379,7 @@ export default function Chat() {
       }}>
         <div style={{ textAlign: "center" }}>
           <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2, margin: 0 }}>NutriCoach</h2>
-          <p style={{ fontSize: "11px", color: "transparent", margin: 0 }}>&nbsp;</p>
+          <p style={{ fontSize: "11px", color: "#9ca3af", margin: 0 }}>Your nutrition coach</p>
         </div>
       </div>
 
