@@ -125,9 +125,16 @@ export default function Exercise() {
       });
       const newTotal = (dayLog?.total_burned_calories || 0) + calories;
       await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", logId);
+      await supabase.from("messages").insert({
+        foodlog_id: logId,
+        role: "system",
+        content: `${selectedExercise.emoji} **${selectedExercise.name}** aggiunto: ${Number(minutes)} min · ${calories} kcal bruciati`,
+        timestamp: new Date().toISOString(),
+      });
       queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
       queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+      queryClient.invalidateQueries({ queryKey: ["messages", logId] });
       toast.success(`${selectedExercise.emoji} ${selectedExercise.name} logged! 🔥`, { description: `${calories} kcal burned` });
       setShowAddSheet(false);
       setSelectedExercise(null);
@@ -142,7 +149,16 @@ export default function Exercise() {
     if (isPast) return;
     await supabase.from("exercise_logs").delete().eq("id", exercise.id);
     const newTotal = Math.max(0, totalBurnedToday - exercise.calories_burned);
-    if (dayLog?.id) await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", dayLog.id);
+    if (dayLog?.id) {
+      await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", dayLog.id);
+      await supabase.from("messages").insert({
+        foodlog_id: dayLog.id,
+        role: "system",
+        content: `🗑️ **${exercise.exercise_name}** rimosso (${exercise.calories_burned} kcal)`,
+        timestamp: new Date().toISOString(),
+      });
+      queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
+    }
     queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
     queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
     queryClient.invalidateQueries({ queryKey: ["foodlog"] });

@@ -87,8 +87,15 @@ export default function Summary() {
       timestamp: new Date().toISOString(),
     });
     await recalculateTotals(dayLog.id);
+    await supabase.from("messages").insert({
+      foodlog_id: dayLog.id,
+      role: "system",
+      content: `➕ **${group.food_name}** aggiunto (x${group.quantity + 1})`,
+      timestamp: new Date().toISOString(),
+    });
     queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
     queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+    queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
     toast.success(`Added ${group.food_name} ➕`);
   };
 
@@ -97,8 +104,18 @@ export default function Summary() {
     const idToDelete = group.ids[group.ids.length - 1];
     await supabase.from("food_entries").delete().eq("id", idToDelete);
     await recalculateTotals(dayLog.id);
+    const isDeleted = group.quantity === 1;
+    await supabase.from("messages").insert({
+      foodlog_id: dayLog.id,
+      role: "system",
+      content: isDeleted
+        ? `🗑️ **${group.food_name}** eliminato`
+        : `➖ **${group.food_name}** rimosso (x${group.quantity - 1})`,
+      timestamp: new Date().toISOString(),
+    });
     queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
     queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+    queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
     toast.success(`Removed ${group.food_name} ➖`);
   };
 
