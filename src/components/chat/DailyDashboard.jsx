@@ -95,7 +95,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
         </div>
 
         {/* Barra calorie — sempre visibile */}
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-3">
           <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
