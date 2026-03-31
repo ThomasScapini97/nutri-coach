@@ -72,7 +72,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
 
   return (
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-4 mb-3">
-       <div className="bg-white rounded-3xl shadow-lg transition-all" style={{ paddingBottom: "2px" }}>
+       <div className="bg-white rounded-3xl shadow-lg transition-all" style={{ paddingBottom: "10px" }}>
 
         {/* Header — sempre visibile */}
         <div className="flex items-center justify-between p-4 pb-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
