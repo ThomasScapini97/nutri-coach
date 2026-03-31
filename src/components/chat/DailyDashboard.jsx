@@ -46,7 +46,6 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
   const isDanger = caloriePercentage >= 100;
   const isWarning = caloriePercentage >= 85 && !isDanger;
   const glasses = todayLog?.water_glasses || 0;
-  const waterPercentage = Math.min((glasses / WATER_GOAL) * 100, 100);
 
   const updateWater = async (newCount) => {
     if (waterLoading) return;
@@ -96,9 +95,8 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
           </div>
         </div>
 
-        {/* Barre sempre visibili — calorie + acqua */}
-        <div className="px-4 pb-3 space-y-2">
-          {/* Barra calorie */}
+        {/* Barra calorie — sempre visibile */}
+        <div className="px-4 pb-2">
           <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
@@ -107,25 +105,9 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
               className={cn("h-full rounded-full", isDanger ? "bg-rose-500" : isWarning ? "bg-rose-400" : "bg-rose-500")}
             />
           </div>
-
-          {/* Barra acqua mini — sempre visibile */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <GlassWater style={{ width: "11px", height: "11px", color: "#3b82f6", flexShrink: 0 }} />
-            <div className="relative flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${waterPercentage}%` }}
-                transition={{ duration: 0.8 }}
-                style={{ height: "100%", borderRadius: "99px", background: "#3b82f6" }}
-              />
-            </div>
-            <span style={{ fontSize: "10px", color: "#3b82f6", fontWeight: 500, flexShrink: 0 }}>
-              {glasses}/{WATER_GOAL}
-            </span>
-          </div>
         </div>
 
-        {/* Dettagli macros + water — visibili solo se expanded */}
+        {/* Macros — visibili solo se expanded */}
         <AnimatePresence>
           {expanded && (
             <motion.div
@@ -141,88 +123,90 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
                 <MacroProgressMini label="Fats" value={fats} max={fatsGoal} unit="g" icon={Droplets} color="blue-500" />
                 <MacroProgressMini label="Fiber" value={fiber} max={fiberGoal} unit="g" icon={Salad} color="primary" />
               </div>
-
-              {/* Water tracker */}
-              <div style={{
-                margin: "0 16px 12px",
-                background: "#eff6ff",
-                borderRadius: "12px",
-                padding: "8px 12px",
-                border: "0.5px solid #bfdbfe",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <GlassWater style={{ width: "14px", height: "14px", color: "#3b82f6" }} />
-                    <span style={{ fontSize: "11px", fontWeight: 500, color: "#1e40af" }}>Water</span>
-                    <span style={{ fontSize: "10px", color: "#93c5fd" }}>{glasses * 250}ml / 2000ml</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); if (glasses > 0) updateWater(glasses - 1); }}
-                      disabled={glasses === 0 || waterLoading}
-                      style={{
-                        width: "20px", height: "20px", borderRadius: "50%",
-                        background: glasses === 0 ? "#dbeafe" : "white",
-                        border: "0.5px solid #bfdbfe",
-                        color: glasses === 0 ? "#93c5fd" : "#3b82f6",
-                        fontSize: "14px", cursor: glasses === 0 ? "default" : "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
-                      }}
-                    >−</button>
-                    <span style={{ fontSize: "11px", fontWeight: 500, color: "#1e40af", minWidth: "24px", textAlign: "center" }}>
-                      {glasses}/{WATER_GOAL}
-                    </span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); if (glasses < WATER_GOAL) updateWater(glasses + 1); }}
-                      disabled={glasses === WATER_GOAL || waterLoading}
-                      style={{
-                        width: "20px", height: "20px", borderRadius: "50%",
-                        background: glasses === WATER_GOAL ? "#dbeafe" : "#3b82f6",
-                        border: "none",
-                        color: "white",
-                        fontSize: "14px", cursor: glasses === WATER_GOAL ? "default" : "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
-                      }}
-                    >+</button>
-                  </div>
-                </div>
-
-                {/* Bicchieri */}
-                <div style={{ display: "flex", gap: "3px" }}>
-                  {Array.from({ length: WATER_GOAL }).map((_, i) => (
-                    <motion.button
-                      key={i}
-                      onClick={(e) => { e.stopPropagation(); updateWater(i < glasses ? i : i + 1); }}
-                      animate={{ opacity: i < glasses ? 1 : 0.3 }}
-                      transition={{ duration: 0.15 }}
-                      style={{
-                        flex: 1, height: "20px", borderRadius: "4px",
-                        background: i < glasses ? "#3b82f6" : "#bfdbfe",
-                        border: "none", cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: "9px",
-                      }}
-                    >
-                      {i < glasses ? "💧" : ""}
-                    </motion.button>
-                  ))}
-                </div>
-
-                {glasses === WATER_GOAL && (
-                  <p style={{ fontSize: "10px", color: "#1d4ed8", textAlign: "center", marginTop: "5px", fontWeight: 500 }}>
-                    Daily water goal reached! 🎉
-                  </p>
-                )}
-              </div>
-
-              <Link to="/Summary" className="flex items-center justify-center gap-1 pb-3 text-xs text-primary font-medium">
-                View full summary <ChevronRight className="w-3 h-3" />
-              </Link>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Water tracker — sempre visibile */}
+        <div style={{
+          margin: "0 16px 12px",
+          background: "#eff6ff",
+          borderRadius: "12px",
+          padding: "8px 12px",
+          border: "0.5px solid #bfdbfe",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <GlassWater style={{ width: "14px", height: "14px", color: "#3b82f6" }} />
+              <span style={{ fontSize: "11px", fontWeight: 500, color: "#1e40af" }}>Water</span>
+              <span style={{ fontSize: "10px", color: "#93c5fd" }}>{glasses * 250}ml / 2000ml</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); if (glasses > 0) updateWater(glasses - 1); }}
+                disabled={glasses === 0 || waterLoading}
+                style={{
+                  width: "20px", height: "20px", borderRadius: "50%",
+                  background: glasses === 0 ? "#dbeafe" : "white",
+                  border: "0.5px solid #bfdbfe",
+                  color: glasses === 0 ? "#93c5fd" : "#3b82f6",
+                  fontSize: "14px", cursor: glasses === 0 ? "default" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
+                }}
+              >−</button>
+              <span style={{ fontSize: "11px", fontWeight: 500, color: "#1e40af", minWidth: "24px", textAlign: "center" }}>
+                {glasses}/{WATER_GOAL}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); if (glasses < WATER_GOAL) updateWater(glasses + 1); }}
+                disabled={glasses === WATER_GOAL || waterLoading}
+                style={{
+                  width: "20px", height: "20px", borderRadius: "50%",
+                  background: glasses === WATER_GOAL ? "#dbeafe" : "#3b82f6",
+                  border: "none",
+                  color: "white",
+                  fontSize: "14px", cursor: glasses === WATER_GOAL ? "default" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
+                }}
+              >+</button>
+            </div>
+          </div>
+
+          {/* Bicchieri */}
+          <div style={{ display: "flex", gap: "3px" }}>
+            {Array.from({ length: WATER_GOAL }).map((_, i) => (
+              <motion.button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); updateWater(i < glasses ? i : i + 1); }}
+                animate={{ opacity: i < glasses ? 1 : 0.3 }}
+                transition={{ duration: 0.15 }}
+                style={{
+                  flex: 1, height: "20px", borderRadius: "4px",
+                  background: i < glasses ? "#3b82f6" : "#bfdbfe",
+                  border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "9px",
+                }}
+              >
+                {i < glasses ? "💧" : ""}
+              </motion.button>
+            ))}
+          </div>
+
+          {glasses === WATER_GOAL && (
+            <p style={{ fontSize: "10px", color: "#1d4ed8", textAlign: "center", marginTop: "5px", fontWeight: 500 }}>
+              Daily water goal reached! 🎉
+            </p>
+          )}
+        </div>
+
+        {/* View full summary — sempre visibile */}
+        <Link to="/Summary" className="flex items-center justify-center gap-1 pb-3 text-xs text-primary font-medium">
+          View full summary <ChevronRight className="w-3 h-3" />
+        </Link>
+
       </div>
     </motion.div>
   );
