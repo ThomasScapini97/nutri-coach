@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Wheat, Drumstick, Droplets, Salad, ChevronRight, ChevronDown, GlassWater } from "lucide-react";
+import { Wheat, Drumstick, Droplets, Salad, ChevronRight, ChevronDown, GlassWater } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -46,6 +46,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
   const isDanger = caloriePercentage >= 100;
   const isWarning = caloriePercentage >= 85 && !isDanger;
   const glasses = todayLog?.water_glasses || 0;
+  const waterPercentage = Math.min((glasses / WATER_GOAL) * 100, 100);
 
   const updateWater = async (newCount) => {
     if (waterLoading) return;
@@ -76,7 +77,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
       <div className="bg-white rounded-3xl shadow-lg transition-all">
 
         {/* Header — sempre visibile */}
-        <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+        <div className="flex items-center justify-between p-4 pb-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
           <div className="flex items-center gap-2">
             <span className="text-xl">🔥</span>
             <div>
@@ -86,45 +87,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-
-            {/* Acqua con +/- visibile quando chiuso */}
-{!expanded && (
-  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-    <button
-      onClick={(e) => { e.stopPropagation(); if (glasses > 0) updateWater(glasses - 1); }}
-      disabled={glasses === 0 || waterLoading}
-      style={{
-        width: "18px", height: "18px", borderRadius: "50%",
-        background: glasses === 0 ? "#dbeafe" : "white",
-        border: "0.5px solid #bfdbfe",
-        color: glasses === 0 ? "#93c5fd" : "#3b82f6",
-        fontSize: "12px", cursor: glasses === 0 ? "default" : "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
-      }}
-    >−</button>
-    <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-      <GlassWater style={{ width: "13px", height: "13px", color: "#3b82f6" }} />
-      <span style={{ fontSize: "11px", fontWeight: 600, color: "#3b82f6" }}>
-        {glasses}/{WATER_GOAL}
-      </span>
-    </div>
-    <button
-      onClick={(e) => { e.stopPropagation(); if (glasses < WATER_GOAL) updateWater(glasses + 1); }}
-      disabled={glasses === WATER_GOAL || waterLoading}
-      style={{
-        width: "18px", height: "18px", borderRadius: "50%",
-        background: glasses === WATER_GOAL ? "#dbeafe" : "#3b82f6",
-        border: "none",
-        color: "white",
-        fontSize: "12px", cursor: glasses === WATER_GOAL ? "default" : "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
-      }}
-    >+</button>
-  </div>
-)}
+          <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-foreground">
               {Math.round(netCalories)}
               <span className="text-muted-foreground font-normal text-xs"> / {calorieGoal}</span>
@@ -133,8 +96,9 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
           </div>
         </div>
 
-        {/* Barra calorie — sempre visibile */}
-        <div className="px-4 pb-3">
+        {/* Barre sempre visibili — calorie + acqua */}
+        <div className="px-4 pb-3 space-y-2">
+          {/* Barra calorie */}
           <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
@@ -142,6 +106,22 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
               transition={{ duration: 0.8 }}
               className={cn("h-full rounded-full", isDanger ? "bg-rose-500" : isWarning ? "bg-rose-400" : "bg-rose-500")}
             />
+          </div>
+
+          {/* Barra acqua mini — sempre visibile */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <GlassWater style={{ width: "11px", height: "11px", color: "#3b82f6", flexShrink: 0 }} />
+            <div className="relative flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${waterPercentage}%` }}
+                transition={{ duration: 0.8 }}
+                style={{ height: "100%", borderRadius: "99px", background: "#3b82f6" }}
+              />
+            </div>
+            <span style={{ fontSize: "10px", color: "#3b82f6", fontWeight: 500, flexShrink: 0 }}>
+              {glasses}/{WATER_GOAL}
+            </span>
           </div>
         </div>
 
