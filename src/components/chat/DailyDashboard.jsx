@@ -89,43 +89,42 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
           <div className="flex items-center gap-3">
 
             {/* Acqua con +/- visibile quando chiuso */}
-            {!expanded && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <button
-                  onClick={(e) => { e.stopPropagation(); if (glasses > 0) updateWater(glasses - 1); }}
-                  disabled={glasses === 0 || waterLoading}
-                  style={{
-                    width: "22px", height: "22px", borderRadius: "50%",
-                    background: glasses === 0 ? "#dbeafe" : "white",
-                    border: "0.5px solid #bfdbfe",
-                    color: glasses === 0 ? "#93c5fd" : "#3b82f6",
-                    fontSize: "14px", cursor: glasses === 0 ? "default" : "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
-                  }}
-                >−</button>
-                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  <GlassWater style={{ width: "16px", height: "16px", color: "#3b82f6" }} />
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#3b82f6" }}>
-                    {glasses}/{WATER_GOAL}
-                  </span>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); if (glasses < WATER_GOAL) updateWater(glasses + 1); }}
-                  disabled={glasses === WATER_GOAL || waterLoading}
-                  style={{
-                    width: "22px", height: "22px", borderRadius: "50%",
-                    background: glasses === WATER_GOAL ? "#dbeafe" : "#3b82f6",
-                    border: "none",
-                    color: "white",
-                    fontSize: "14px", cursor: glasses === WATER_GOAL ? "default" : "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
-                  }}
-                >+</button>
-              </div>
-            )}
-
+{!expanded && (
+  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+    <button
+      onClick={(e) => { e.stopPropagation(); if (glasses > 0) updateWater(glasses - 1); }}
+      disabled={glasses === 0 || waterLoading}
+      style={{
+        width: "18px", height: "18px", borderRadius: "50%",
+        background: glasses === 0 ? "#dbeafe" : "white",
+        border: "0.5px solid #bfdbfe",
+        color: glasses === 0 ? "#93c5fd" : "#3b82f6",
+        fontSize: "12px", cursor: glasses === 0 ? "default" : "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
+      }}
+    >−</button>
+    <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+      <GlassWater style={{ width: "13px", height: "13px", color: "#3b82f6" }} />
+      <span style={{ fontSize: "11px", fontWeight: 600, color: "#3b82f6" }}>
+        {glasses}/{WATER_GOAL}
+      </span>
+    </div>
+    <button
+      onClick={(e) => { e.stopPropagation(); if (glasses < WATER_GOAL) updateWater(glasses + 1); }}
+      disabled={glasses === WATER_GOAL || waterLoading}
+      style={{
+        width: "18px", height: "18px", borderRadius: "50%",
+        background: glasses === WATER_GOAL ? "#dbeafe" : "#3b82f6",
+        border: "none",
+        color: "white",
+        fontSize: "12px", cursor: glasses === WATER_GOAL ? "default" : "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
+      }}
+    >+</button>
+  </div>
+)}
             <span className="text-sm font-bold text-foreground">
               {Math.round(netCalories)}
               <span className="text-muted-foreground font-normal text-xs"> / {calorieGoal}</span>
