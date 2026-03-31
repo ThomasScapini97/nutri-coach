@@ -12,7 +12,7 @@ const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "prima
   const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   const isDanger = percentage >= 100;
   const isWarning = percentage >= 85 && !isDanger;
-   const barColor = color === "chart-4" ? "bg-red-400" : color === "chart-3" ? "bg-amber-400" : color === "blue-500" ? "bg-blue-500" : "bg-emerald-500";
+  const barColor = color === "chart-4" ? "bg-red-400" : color === "chart-3" ? "bg-amber-400" : color === "blue-500" ? "bg-blue-500" : "bg-emerald-500";
   const iconColor = isDanger ? "text-destructive" : isWarning ? "text-accent" : color === "chart-4" ? "text-red-400" : color === "chart-3" ? "text-amber-400" : color === "blue-500" ? "text-blue-500" : "text-emerald-500";
   return (
     <div className="space-y-1.5">
@@ -31,7 +31,7 @@ const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "prima
 };
 
 export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, carbsGoal, fatsGoal, fiberGoal, onWaterUpdate }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false); // ← parte chiusa
   const [waterLoading, setWaterLoading] = useState(false);
 
   const calories = todayLog?.total_calories || 0;
@@ -81,11 +81,25 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
             <span className="text-xl">🔥</span>
             <div>
               <h3 className="text-sm font-bold text-foreground">Today's Progress</h3>
-              <p className="text-[10px] text-muted-foreground">{caloriesRemaining > 0 ? `${caloriesRemaining} kcal left` : "Goal reached! 🎉"}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {caloriesRemaining > 0 ? `${caloriesRemaining} kcal left` : "Goal reached! 🎉"}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-foreground">{Math.round(netCalories)}<span className="text-muted-foreground font-normal text-xs"> / {calorieGoal}</span></span>
+          <div className="flex items-center gap-3">
+            {/* Acqua visibile anche da chiuso */}
+            {!expanded && (
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <GlassWater style={{ width: "12px", height: "12px", color: "#3b82f6" }} />
+                <span style={{ fontSize: "11px", fontWeight: 500, color: "#3b82f6" }}>
+                  {glasses}/{WATER_GOAL}
+                </span>
+              </div>
+            )}
+            <span className="text-sm font-bold text-foreground">
+              {Math.round(netCalories)}
+              <span className="text-muted-foreground font-normal text-xs"> / {calorieGoal}</span>
+            </span>
             <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", expanded && "rotate-180")} />
           </div>
         </div>
@@ -93,7 +107,12 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
         {/* Barra calorie — sempre visibile */}
         <div className="px-4 pb-3">
           <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-            <motion.div initial={{ width: 0 }} animate={{ width: `${caloriePercentage}%` }} transition={{ duration: 0.8 }} className={cn("h-full rounded-full", isDanger ? "bg-rose-500" : isWarning ? "bg-rose-400" : "bg-rose-500")} />
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${caloriePercentage}%` }}
+              transition={{ duration: 0.8 }}
+              className={cn("h-full rounded-full", isDanger ? "bg-rose-500" : isWarning ? "bg-rose-400" : "bg-rose-500")}
+            />
           </div>
         </div>
 
