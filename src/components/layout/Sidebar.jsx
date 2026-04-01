@@ -14,7 +14,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-72 bg-white border-r border-border/50 h-screen sticky top-0">
       <div className="p-6 border-b border-border/50">
         <Link to="/Chat" className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center shadow-md">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -27,14 +27,14 @@ export default function Sidebar() {
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <Link key={item.path} to={item.path} className={cn("flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-200", isActive ? "bg-gradient-to-r from-primary to-primary/90 text-white shadow-md" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+            <Link key={item.path} to={item.path} className={cn("flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-200", isActive ? "bg-green-600 text-white shadow-md" : "text-gray-500 hover:bg-gray-100 hover:text-gray-900")}>
               <item.icon className="w-5 h-5" />
               {item.label}
             </Link>
           );
         })}
       </nav>
-      <div className="p-5 m-4 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+      <div className="p-5 m-4 rounded-2xl bg-green-50 border border-green-200">
         <p className="text-xs text-foreground leading-relaxed">💚 Tell me what you ate today and I'll help you reach your wellness goals!</p>
       </div>
     </aside>

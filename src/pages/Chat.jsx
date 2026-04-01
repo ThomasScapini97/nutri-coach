@@ -397,7 +397,7 @@ export default function Chat() {
       </div>
 
       <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
-      <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40 bg-mint">
+      <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40 md:pb-24 bg-mint">
         <div className="max-w-4xl mx-auto space-y-5 px-4">
           {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
           {isLoading && <TypingIndicator />}
