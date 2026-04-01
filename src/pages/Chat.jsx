@@ -235,10 +235,15 @@ export default function Chat() {
     return () => clearInterval(interval);
   }, [todayLog, calorieGoal, dailyEvaluation, evaluationDismissed]);
 
+  const isLoadingRef = useRef(false);
+  useEffect(() => { isLoadingRef.current = isLoading; }, [isLoading]);
+
   useEffect(() => {
     const now = new Date();
     const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5).getTime() - now.getTime();
-    const timer = setTimeout(() => window.location.reload(), msUntilMidnight);
+    const timer = setTimeout(() => {
+      if (!isLoadingRef.current) window.location.reload();
+    }, msUntilMidnight);
     return () => clearTimeout(timer);
   }, []);
 

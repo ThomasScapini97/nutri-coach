@@ -1,9 +1,10 @@
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import NutritionCard from "./NutritionCard";
 import { motion } from "framer-motion";
 
-export default function ChatBubble({ message, foodEntries }) {
+const ChatBubble = memo(function ChatBubble({ message, foodEntries }) {
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
 
@@ -77,4 +78,6 @@ export default function ChatBubble({ message, foodEntries }) {
       </div>
     </motion.div>
   );
-}
+});
+
+export default ChatBubble;

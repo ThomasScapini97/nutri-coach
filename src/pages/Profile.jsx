@@ -125,16 +125,32 @@ export default function Profile() {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      const { data: logs } = await supabase.from("food_logs").select("id").eq("user_id", user.id);
+      const { data: logs, error: logsError } = await supabase.from("food_logs").select("id").eq("user_id", user.id);
+      if (logsError) throw logsError;
+
       if (logs?.length > 0) {
         const logIds = logs.map(l => l.id);
-        await supabase.from("food_entries").delete().in("foodlog_id", logIds);
-        await supabase.from("messages").delete().in("foodlog_id", logIds);
-        await supabase.from("food_logs").delete().eq("user_id", user.id);
+        // Delete children first, then parents — order matters
+        const { error: e1 } = await supabase.from("food_entries").delete().in("foodlog_id", logIds);
+        if (e1) throw e1;
+        const { error: e2 } = await supabase.from("messages").delete().in("foodlog_id", logIds);
+        if (e2) throw e2;
+        const { error: e3 } = await supabase.from("exercise_logs").delete().eq("user_id", user.id);
+        if (e3) throw e3;
+        const { error: e4 } = await supabase.from("food_logs").delete().eq("user_id", user.id);
+        if (e4) throw e4;
       }
-      await supabase.from("user_profiles").delete().eq("user_id", user.id);
+
+      const { error: e5 } = await supabase.from("diary_entries").delete().eq("user_id", user.id);
+      if (e5) throw e5;
+      const { error: e6 } = await supabase.from("rate_limits").delete().eq("user_id", user.id);
+      if (e6) throw e6;
+      const { error: e7 } = await supabase.from("user_profiles").delete().eq("user_id", user.id);
+      if (e7) throw e7;
+
       await supabase.auth.signOut();
-    } catch {
+    } catch (err) {
+      console.error("Delete account error:", err);
       toast.error("Failed to delete account. Please try again.");
       setDeleting(false);
     }

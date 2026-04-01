@@ -85,8 +85,12 @@ const startCamera = async () => {
         setError("Product not found. Try searching by name.");
         setMode("search");
       }
-    } catch {
-      setError("Connection error. Please try again.");
+    } catch (e) {
+      if (!navigator.onLine) {
+        setError("No internet connection. Check your connection and try again.");
+      } else {
+        setError("OpenFoodFacts service is unavailable. Try again in a few minutes or enter the food manually in chat.");
+      }
       setMode("search");
     } finally {
       setSearching(false);
@@ -126,7 +130,11 @@ const startCamera = async () => {
       if (parsed.length === 0) setError("No products found. Try a different search term.");
       setResults(parsed);
     } catch {
-      setError("Connection error. Please try again.");
+      if (!navigator.onLine) {
+        setError("No internet connection. Check your connection and try again.");
+      } else {
+        setError("OpenFoodFacts service is unavailable. You can still enter the food manually in chat.");
+      }
     } finally {
       setSearching(false);
     }
