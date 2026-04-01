@@ -13,7 +13,7 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="px-5 pt-3 pb-4 bg-white border-t border-gray-200 fixed bottom-20 left-0 right-0 md:bottom-0 md:left-72 z-40">
+    <form onSubmit={handleSubmit} className="px-5 pt-3 pb-4 bg-white border-t border-gray-200 fixed bottom-20 left-0 right-0 z-40 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto">
       <div className="max-w-4xl mx-auto flex items-end gap-2">
         <button
           type="button"
