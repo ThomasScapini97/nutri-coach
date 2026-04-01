@@ -294,7 +294,12 @@ export default function Chat() {
         result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
         if (!result || !result.message) throw new Error("Invalid");
       } catch {
-        result = { message: rawText.replace(/```json|```|\{[\s\S]*\}/g, "").trim() || "Sorry, something went wrong.", foods: [], burned_calories: 0 };
+        // Try to salvage just the message field from malformed JSON
+        const msgMatch = rawText.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        const fallbackMsg = msgMatch
+          ? msgMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"')
+          : rawText.replace(/```json|```/g, "").trim() || "Sorry, something went wrong.";
+        result = { message: fallbackMsg, foods: [], burned_calories: 0 };
       }
 
       const foods = Array.isArray(result.foods) ? result.foods : [];
@@ -303,11 +308,19 @@ export default function Chat() {
 
       let currentLogId = todayLog?.id;
       if (!currentLogId) {
-        const { data: created } = await supabase.from('food_logs').insert({
+        const { data: created, error: insertError } = await supabase.from('food_logs').insert({
           date: getToday(), user_id: user.id,
           total_calories: 0, total_carbs: 0, total_protein: 0, total_fats: 0, total_fiber: 0, total_burned_calories: 0,
         }).select().single();
-        currentLogId = created.id;
+        if (insertError) {
+          // Race condition: another request already created the log — re-fetch it
+          const { data: existing } = await supabase.from('food_logs')
+            .select('id').eq('date', getToday()).eq('user_id', user.id).single();
+          currentLogId = existing?.id;
+        } else {
+          currentLogId = created?.id;
+        }
+        if (!currentLogId) throw new Error("Failed to create food log");
       }
 
       let createdEntries = [];
@@ -361,7 +374,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)", borderRadius: "20px", backgroundColor: "#f0fcf3" }}>
+    <div className="flex flex-col overflow-hidden h-[100dvh] pb-[env(safe-area-inset-bottom)] rounded-[20px] bg-mint">
       <DailyNotificationPopup
         evaluation={dailyEvaluation}
         onClose={() => {
@@ -371,20 +384,15 @@ export default function Chat() {
       />
 
       {/* Top bar */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: "white", borderBottom: "0.5px solid #e5e7eb",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-        padding: "14px 24px", flexShrink: 0,
-      }}>
-        <div style={{ textAlign: "center" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2, margin: 0 }}>NutriCoach</h2>
-          <p style={{ fontSize: "11px", color: "#9ca3af", margin: 0 }}>Your nutrition coach</p>
+      <div className="flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-6 py-[14px] shrink-0">
+        <div className="text-center">
+          <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">NutriCoach</h2>
+          <p className="text-[11px] text-gray-400 m-0">Your nutrition coach</p>
         </div>
       </div>
 
       <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
-      <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40" style={{ backgroundColor: "#f0fcf3" }}>
+      <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40 bg-mint">
         <div className="max-w-4xl mx-auto space-y-5 px-4">
           {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
           {isLoading && <TypingIndicator />}
