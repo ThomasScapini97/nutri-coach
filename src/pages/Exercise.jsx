@@ -26,13 +26,36 @@ const EXERCISES = [
   { name: "Rowing", emoji: "🚣", met: 7.0, type: "cardio" },
   { name: "Yoga", emoji: "🧘", met: 2.5, type: "cardio" },
   { name: "Pilates", emoji: "🤸", met: 3.0, type: "cardio" },
-  // Strength
-  { name: "Weight Training", emoji: "🏋️", type: "strength" },
-  { name: "Bench Press", emoji: "💪", type: "strength" },
+  // Strength — free weights
+  { name: "Bench Press", emoji: "🏋️", type: "strength" },
   { name: "Deadlift", emoji: "🏋️", type: "strength" },
   { name: "Squat", emoji: "🦵", type: "strength" },
+  { name: "Shoulder Press", emoji: "🏋️", type: "strength" },
+  { name: "Bicep Curl", emoji: "💪", type: "strength" },
+  { name: "Tricep Extension", emoji: "💪", type: "strength" },
+  { name: "Lateral Raise", emoji: "💪", type: "strength" },
+  { name: "Romanian Deadlift", emoji: "🏋️", type: "strength" },
+  { name: "Dumbbell Row", emoji: "🏋️", type: "strength" },
+  { name: "Lunges", emoji: "🦵", type: "strength" },
+  // Strength — bodyweight
   { name: "Pull-ups", emoji: "🙌", type: "strength" },
   { name: "Push-ups", emoji: "✊", type: "strength" },
+  { name: "Dips", emoji: "✊", type: "strength" },
+  { name: "Plank", emoji: "🤸", type: "strength" },
+  { name: "Sit-ups", emoji: "🤸", type: "strength" },
+  // Strength — machines
+  { name: "Leg Press", emoji: "🦵", type: "strength" },
+  { name: "Leg Curl", emoji: "🦵", type: "strength" },
+  { name: "Leg Extension", emoji: "🦵", type: "strength" },
+  { name: "Lat Pulldown", emoji: "🙌", type: "strength" },
+  { name: "Cable Row", emoji: "🙌", type: "strength" },
+  { name: "Chest Fly", emoji: "💪", type: "strength" },
+  { name: "Pec Deck", emoji: "💪", type: "strength" },
+  { name: "Smith Machine Squat", emoji: "🦵", type: "strength" },
+  { name: "Hip Thrust", emoji: "🦵", type: "strength" },
+  { name: "Cable Curl", emoji: "💪", type: "strength" },
+  { name: "Tricep Pushdown", emoji: "💪", type: "strength" },
+  { name: "Face Pull", emoji: "🙌", type: "strength" },
 ];
 
 function getCardioMET(exerciseName, speedKmh) {
@@ -59,19 +82,29 @@ function getCardioMET(exerciseName, speedKmh) {
   return ex?.met || 5;
 }
 
-function computeCalories({ exerciseType, exerciseName, speedKmh, minutes, sets, reps, strengthWeight, userWeight }) {
+function calcBMR(weight, height, age, gender) {
+  // Mifflin-St Jeor
+  const base = 10 * weight + 6.25 * height - 5 * age;
+  return gender === "female" ? base - 161 : base + 5;
+}
+
+function computeCalories({ exerciseType, exerciseName, speedKmh, minutes, sets, reps, strengthWeight, userWeight, userAge, userHeight, userGender }) {
   if (exerciseType === "cardio") {
     const mins = Number(minutes) || 0;
     if (mins <= 0) return 0;
     const met = getCardioMET(exerciseName, speedKmh);
-    return Math.round(met * userWeight * (mins / 60));
+    // ISO gross: MET × 3.5 × weight / 200 × minutes
+    const gross = met * 3.5 * userWeight / 200 * mins;
+    // Subtract resting metabolism during exercise (BMR / 1440 × minutes)
+    const bmr = calcBMR(userWeight, userHeight || 170, userAge || 30, userGender || "male");
+    const rest = (bmr / 1440) * mins;
+    return Math.max(0, Math.round(gross - rest));
   }
   if (exerciseType === "strength") {
     const s = Number(sets) || 0;
     const r = Number(reps) || 0;
     const w = parseFloat(strengthWeight);
     if (w > 0) {
-      // Weight-based: sets × reps × kg × 0.1
       return Math.round(s * r * w * 0.1);
     }
     // Bodyweight estimate: ~0.5 kcal per rep
@@ -158,6 +191,9 @@ export default function Exercise() {
   });
 
   const weight = profile?.weight || 70;
+  const age = profile?.age || 30;
+  const height = profile?.height || 170;
+  const gender = profile?.gender || "male";
   const activeDaysGoal = profile?.active_days_goal || 3;
   const burnGoal = profile?.burn_goal || 300;
 
@@ -218,6 +254,9 @@ export default function Exercise() {
         reps,
         strengthWeight,
         userWeight: weight,
+        userAge: age,
+        userHeight: height,
+        userGender: gender,
       })
     : 0;
 
@@ -754,7 +793,7 @@ export default function Exercise() {
 
               {/* Exercise grid */}
               <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Choose exercise</p>
-              <div className="grid grid-cols-4 gap-2 mb-4">
+              <div className={`grid gap-2 mb-4 ${exerciseType === "strength" ? "grid-cols-3" : "grid-cols-4"}`}>
                 {filteredExercises.map((ex) => (
                   <button key={ex.name} onClick={() => setSelectedExercise(ex)}
                     className="flex flex-col items-center gap-1 py-[10px] px-1 rounded-xl cursor-pointer font-[inherit]"
