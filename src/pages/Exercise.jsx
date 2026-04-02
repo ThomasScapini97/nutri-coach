@@ -64,26 +64,37 @@ const EXERCISES = [
 
 function getCardioMET(exerciseName, speedKmh) {
   const speed = parseFloat(speedKmh) || 0;
-  // Speed-based lookup (when speed is provided)
-  if (speed > 0) {
-    if (exerciseName === "Cycling") {
-      if (speed < 16) return 6;
-      if (speed <= 20) return 8;
-      return 10;
-    }
-    if (exerciseName === "Walking" || speed < 7) {
-      if (speed < 5) return 3.5;
-      return 4.5;
-    }
-    // Running / fast cardio
-    if (speed <= 8) return 8;
-    if (speed <= 10) return 10;
-    if (speed <= 12) return 12;
-    return 14;
+  if (speed <= 0) {
+    return EXERCISES.find(e => e.name === exerciseName)?.met || 5;
   }
-  // No speed provided: fall back to exercise's base MET
-  const ex = EXERCISES.find(e => e.name === exerciseName);
-  return ex?.met || 5;
+  if (exerciseName === "Walking") {
+    if (speed < 4) return 2.5;
+    if (speed < 5) return 3.5;
+    if (speed < 6) return 4.5;
+    if (speed < 7) return 5.5;
+    return 7.0; // race walking
+  }
+  if (exerciseName === "Cycling") {
+    if (speed < 16) return 6;
+    if (speed <= 20) return 8;
+    return 10;
+  }
+  if (exerciseName === "Rowing") {
+    if (speed < 4) return 5.0;
+    if (speed < 6) return 7.0;
+    return 9.0;
+  }
+  if (exerciseName === "Hiking") {
+    if (speed < 3) return 5.5;
+    if (speed < 5) return 6.5;
+    return 7.5;
+  }
+  // Running (default for speed-based)
+  if (speed < 7) return 6.0;
+  if (speed <= 8) return 8.0;
+  if (speed <= 10) return 10.0;
+  if (speed <= 12) return 12.0;
+  return 14.0;
 }
 
 function calcBMR(weight, height, age, gender) {
