@@ -1,36 +1,126 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Plus, X, Clock, Trash2, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { Flame, Plus, X, Clock, Trash2, TrendingUp, ChevronLeft, ChevronRight, Bookmark, Save } from "lucide-react";
 import { toast } from "sonner";
 import ScrollableExerciseChart from "../components/summary/ScrollableExerciseChart";
 
 const getToday = () => format(new Date(), "yyyy-MM-dd");
 
 const EXERCISES = [
-  { name: "Running", emoji: "🏃", met: 9.8 },
-  { name: "Walking", emoji: "🚶", met: 3.5 },
-  { name: "Cycling", emoji: "🚴", met: 7.5 },
-  { name: "Swimming", emoji: "🏊", met: 8.0 },
-  { name: "Weight Training", emoji: "🏋️", met: 5.0 },
-  { name: "Yoga", emoji: "🧘", met: 2.5 },
-  { name: "HIIT", emoji: "⚡", met: 10.0 },
-  { name: "Football", emoji: "⚽", met: 7.0 },
-  { name: "Basketball", emoji: "🏀", met: 6.5 },
-  { name: "Tennis", emoji: "🎾", met: 7.0 },
-  { name: "Dancing", emoji: "💃", met: 5.0 },
-  { name: "Hiking", emoji: "🥾", met: 6.0 },
-  { name: "Jump Rope", emoji: "🪃", met: 11.0 },
-  { name: "Rowing", emoji: "🚣", met: 7.0 },
-  { name: "Pilates", emoji: "🤸", met: 3.0 },
-  { name: "Other", emoji: "💪", met: 5.0 },
+  // Cardio
+  { name: "Running", emoji: "🏃", met: 9.8, type: "cardio", hasSpeed: true },
+  { name: "Walking", emoji: "🚶", met: 3.5, type: "cardio", hasSpeed: true },
+  { name: "Cycling", emoji: "🚴", met: 7.5, type: "cardio", hasSpeed: true },
+  { name: "Swimming", emoji: "🏊", met: 8.0, type: "cardio", hasSpeed: false },
+  { name: "HIIT", emoji: "⚡", met: 10.0, type: "cardio", hasSpeed: false },
+  { name: "Football", emoji: "⚽", met: 7.0, type: "cardio", hasSpeed: false },
+  { name: "Basketball", emoji: "🏀", met: 6.5, type: "cardio", hasSpeed: false },
+  { name: "Tennis", emoji: "🎾", met: 7.0, type: "cardio", hasSpeed: false },
+  { name: "Dancing", emoji: "💃", met: 5.0, type: "cardio", hasSpeed: false },
+  { name: "Hiking", emoji: "🥾", met: 6.0, type: "cardio", hasSpeed: false },
+  { name: "Jump Rope", emoji: "🪃", met: 11.0, type: "cardio", hasSpeed: false },
+  { name: "Rowing", emoji: "🚣", met: 7.0, type: "cardio", hasSpeed: false },
+  // Strength
+  { name: "Weight Training", emoji: "🏋️", type: "strength" },
+  { name: "Bench Press", emoji: "💪", type: "strength" },
+  { name: "Deadlift", emoji: "🏋️", type: "strength" },
+  { name: "Squat", emoji: "🦵", type: "strength" },
+  { name: "Pull-ups", emoji: "🙌", type: "strength" },
+  { name: "Push-ups", emoji: "✊", type: "strength" },
+  // Other
+  { name: "Yoga", emoji: "🧘", met: 2.5, type: "other" },
+  { name: "Pilates", emoji: "🤸", met: 3.0, type: "other" },
+  { name: "Stretching", emoji: "🙆", met: 2.0, type: "other" },
+  { name: "Other", emoji: "✨", met: 5.0, type: "other" },
 ];
 
-function calculateCalories(met, weightKg, minutes) {
-  return Math.round(met * weightKg * (minutes / 60));
+function getCardioMET(exerciseName, speedKmh) {
+  const speed = parseFloat(speedKmh) || 0;
+  if (exerciseName === "Swimming") return 8;
+  if (exerciseName === "Cycling") {
+    if (speed > 0 && speed < 16) return 6;
+    if (speed >= 16 && speed <= 20) return 8;
+    if (speed > 20) return 10;
+    return 7.5;
+  }
+  if (exerciseName === "Walking") {
+    if (speed > 0 && speed < 5) return 3.5;
+    if (speed >= 5) return 4.5;
+    return 3.5;
+  }
+  // Running / other speed-based
+  if (speed > 0) {
+    if (speed <= 8) return 8;
+    if (speed <= 10) return 10;
+    if (speed <= 12) return 12;
+    return 14;
+  }
+  const ex = EXERCISES.find(e => e.name === exerciseName);
+  return ex?.met || 9.8;
+}
+
+function computeCalories({ exerciseType, exerciseName, speedKmh, minutes, sets, reps, strengthWeight, userWeight }) {
+  if (exerciseType === "cardio") {
+    const mins = Number(minutes) || 0;
+    if (mins <= 0) return 0;
+    const ex = EXERCISES.find(e => e.name === exerciseName);
+    const met = (ex?.hasSpeed && speedKmh) ? getCardioMET(exerciseName, speedKmh) : (ex?.met || 5);
+    return Math.round(met * userWeight * (mins / 60));
+  }
+  if (exerciseType === "strength") {
+    const s = Number(sets) || 0;
+    const r = Number(reps) || 0;
+    const w = Number(strengthWeight) || 0;
+    return Math.round(s * r * w * 0.1);
+  }
+  // other
+  const mins = Number(minutes) || 0;
+  if (mins <= 0) return 0;
+  const ex = EXERCISES.find(e => e.name === exerciseName);
+  return Math.round((ex?.met || 5) * userWeight * (mins / 60));
+}
+
+function getPresetSummary(preset) {
+  const count = preset.exercises.length;
+  const totalMin = preset.exercises.reduce((sum, e) => sum + (e.duration_minutes || 0), 0);
+  const totalCals = preset.exercises.reduce((sum, e) => sum + (e.calories_burned || 0), 0);
+  const minPart = totalMin > 0 ? ` · ${totalMin} min` : "";
+  return `${count} exercise${count !== 1 ? "s" : ""}${minPart} · ${totalCals} kcal`;
+}
+
+function ExerciseDetails({ exercise }) {
+  const type = exercise.exercise_type || "other";
+  if (type === "strength") {
+    return (
+      <div className="flex items-center gap-1 mt-[2px] flex-wrap">
+        {exercise.sets && exercise.reps && (
+          <span className="text-[11px] text-gray-400">
+            {exercise.sets}×{exercise.reps}{exercise.weight_kg ? ` · ${exercise.weight_kg}kg` : " (bodyweight)"}
+          </span>
+        )}
+        {exercise.duration_minutes > 0 && (
+          <span className="text-[11px] text-gray-400">· {exercise.duration_minutes} min</span>
+        )}
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1 mt-[2px]">
+      {exercise.duration_minutes > 0 && (
+        <>
+          <Clock className="w-[10px] h-[10px] text-gray-400" />
+          <span className="text-[11px] text-gray-400">{exercise.duration_minutes} min</span>
+        </>
+      )}
+      {exercise.speed_kmh > 0 && (
+        <span className="text-[11px] text-gray-400">· {exercise.speed_kmh} km/h</span>
+      )}
+    </div>
+  );
 }
 
 export default function Exercise() {
@@ -40,10 +130,27 @@ export default function Exercise() {
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === getToday();
   const isPast = !isToday;
+
+  // Sheet state
   const [showAddSheet, setShowAddSheet] = useState(false);
+  const [showSavePreset, setShowSavePreset] = useState(false);
+
+  // Exercise form state
+  const [exerciseType, setExerciseType] = useState("cardio");
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [minutes, setMinutes] = useState("30");
+  const [speedKmh, setSpeedKmh] = useState("");
+  const [sets, setSets] = useState("3");
+  const [reps, setReps] = useState("10");
+  const [strengthWeight, setStrengthWeight] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Preset state
+  const [presetName, setPresetName] = useState("");
+  const [savingPreset, setSavingPreset] = useState(false);
+  const pressTimerRef = useRef(null);
+
+  // ─── Queries ────────────────────────────────────────────────────────────────
 
   const { data: profile } = useQuery({
     queryKey: ["userProfile", user?.id],
@@ -88,11 +195,46 @@ export default function Exercise() {
     initialData: [],
   });
 
+  const { data: workoutPresets } = useQuery({
+    queryKey: ["workout-presets", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("workout_presets").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  // ─── Derived values ──────────────────────────────────────────────────────────
+
   const totalBurnedToday = dayLog?.total_burned_calories || 0;
-  const totalMinutesToday = dayExercises.reduce((sum, e) => sum + e.duration_minutes, 0);
+  const totalMinutesToday = dayExercises.reduce((sum, e) => sum + (e.duration_minutes || 0), 0);
   const activeDaysThisWeek = new Set(weekExercises.map(e => e.date)).size;
   const kcalPerMin = totalMinutesToday > 0 ? (totalBurnedToday / totalMinutesToday).toFixed(1) : "—";
-  const previewCalories = selectedExercise && minutes ? calculateCalories(selectedExercise.met, weight, Number(minutes)) : 0;
+
+  const previewCalories = selectedExercise
+    ? computeCalories({
+        exerciseType,
+        exerciseName: selectedExercise.name,
+        speedKmh,
+        minutes,
+        sets,
+        reps,
+        strengthWeight,
+        userWeight: weight,
+      })
+    : 0;
+
+  const canSave = () => {
+    if (!selectedExercise) return false;
+    if (exerciseType === "cardio") return !!minutes && Number(minutes) > 0;
+    if (exerciseType === "strength") return !!sets && !!reps && Number(sets) > 0 && Number(reps) > 0;
+    return !!minutes && Number(minutes) > 0;
+  };
+
+  const filteredExercises = EXERCISES.filter(e => e.type === exerciseType);
+
+  // ─── Handlers ────────────────────────────────────────────────────────────────
 
   const navigateDay = (dir) => {
     setSelectedDate(prev => {
@@ -102,43 +244,87 @@ export default function Exercise() {
     });
   };
 
+  const resetForm = () => {
+    setSelectedExercise(null);
+    setExerciseType("cardio");
+    setMinutes("30");
+    setSpeedKmh("");
+    setSets("3");
+    setReps("10");
+    setStrengthWeight("");
+  };
+
+  const handleTypeChange = (type) => {
+    setExerciseType(type);
+    if (selectedExercise && selectedExercise.type !== type) {
+      setSelectedExercise(null);
+    }
+  };
+
+  const ensureFoodLog = async () => {
+    if (dayLog?.id) return dayLog.id;
+    const { data: created } = await supabase.from("food_logs").insert({
+      date: getToday(), user_id: user.id,
+      total_calories: 0, total_carbs: 0, total_protein: 0,
+      total_fats: 0, total_fiber: 0, total_burned_calories: 0,
+    }).select().single();
+    return created?.id;
+  };
+
   const handleSave = async () => {
-    if (!selectedExercise || !minutes || Number(minutes) <= 0 || isPast) return;
+    if (!canSave() || isPast) return;
     setSaving(true);
     try {
-      const calories = calculateCalories(selectedExercise.met, weight, Number(minutes));
-      let logId = dayLog?.id;
-      if (!logId) {
-        const { data: created } = await supabase.from("food_logs").insert({
-          date: getToday(), user_id: user.id,
-          total_calories: 0, total_carbs: 0, total_protein: 0,
-          total_fats: 0, total_fiber: 0, total_burned_calories: 0,
-        }).select().single();
-        logId = created?.id;
-      }
-      await supabase.from("exercise_logs").insert({
-        user_id: user.id, foodlog_id: logId, date: getToday(),
+      const calories = previewCalories;
+      const logId = await ensureFoodLog();
+
+      const entry = {
+        user_id: user.id,
+        foodlog_id: logId,
+        date: getToday(),
         exercise_name: selectedExercise.name,
-        duration_minutes: Number(minutes),
         calories_burned: calories,
-      });
+        exercise_type: exerciseType,
+      };
+
+      if (exerciseType === "cardio") {
+        entry.duration_minutes = Number(minutes);
+        if (selectedExercise.hasSpeed && speedKmh) entry.speed_kmh = Number(speedKmh);
+      } else if (exerciseType === "strength") {
+        entry.sets = Number(sets);
+        entry.reps = Number(reps);
+        if (strengthWeight) entry.weight_kg = Number(strengthWeight);
+        if (minutes && Number(minutes) > 0) entry.duration_minutes = Number(minutes);
+      } else {
+        entry.duration_minutes = Number(minutes);
+      }
+
+      await supabase.from("exercise_logs").insert(entry);
+
       const newTotal = (dayLog?.total_burned_calories || 0) + calories;
       await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", logId);
+
+      const durationLabel = entry.duration_minutes ? ` · ${entry.duration_minutes} min` : "";
+      const strengthLabel = exerciseType === "strength"
+        ? ` · ${sets}×${reps}${strengthWeight ? ` ${strengthWeight}kg` : " bodyweight"}`
+        : "";
+
       await supabase.from("messages").insert({
         foodlog_id: logId,
         role: "system",
-        content: `${selectedExercise.emoji} **${selectedExercise.name}** aggiunto: ${Number(minutes)} min · ${calories} kcal bruciati`,
+        content: `${selectedExercise.emoji} **${selectedExercise.name}** aggiunto${durationLabel}${strengthLabel} · ${calories} kcal bruciati`,
         timestamp: new Date().toISOString(),
       });
+
       queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
       queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       queryClient.invalidateQueries({ queryKey: ["messages", logId] });
+
       toast.success(`${selectedExercise.emoji} ${selectedExercise.name} logged! 🔥`, { description: `${calories} kcal burned` });
       setShowAddSheet(false);
-      setSelectedExercise(null);
-      setMinutes("30");
-    } catch (err) {
+      resetForm();
+    } catch {
       toast.error("Something went wrong. Please try again.");
     }
     setSaving(false);
@@ -147,8 +333,7 @@ export default function Exercise() {
   const handleDelete = async (exercise) => {
     if (isPast) return;
     try {
-      const { error } = await supabase.from("exercise_logs").delete().eq("id", exercise.id);
-      if (error) throw error;
+      await supabase.from("exercise_logs").delete().eq("id", exercise.id);
       const newTotal = Math.max(0, totalBurnedToday - exercise.calories_burned);
       if (dayLog?.id) {
         await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", dayLog.id);
@@ -168,6 +353,111 @@ export default function Exercise() {
       toast.error("Failed to remove exercise. Please try again.");
     }
   };
+
+  const handleLogPreset = async (preset) => {
+    if (isPast) return;
+    setSaving(true);
+    try {
+      const logId = await ensureFoodLog();
+      let totalCals = 0;
+
+      for (const ex of preset.exercises) {
+        await supabase.from("exercise_logs").insert({
+          user_id: user.id,
+          foodlog_id: logId,
+          date: getToday(),
+          exercise_name: ex.exercise_name,
+          duration_minutes: ex.duration_minutes || null,
+          calories_burned: ex.calories_burned || 0,
+          exercise_type: ex.exercise_type || "other",
+          speed_kmh: ex.speed_kmh || null,
+          sets: ex.sets || null,
+          reps: ex.reps || null,
+          weight_kg: ex.weight_kg || null,
+        });
+        totalCals += ex.calories_burned || 0;
+      }
+
+      const newTotal = (dayLog?.total_burned_calories || 0) + totalCals;
+      await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", logId);
+
+      await supabase.from("messages").insert({
+        foodlog_id: logId,
+        role: "system",
+        content: `💾 **${preset.name}** preset logged: ${preset.exercises.length} exercises · ${totalCals} kcal bruciati`,
+        timestamp: new Date().toISOString(),
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
+      queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
+      queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+      queryClient.invalidateQueries({ queryKey: ["messages", logId] });
+
+      toast.success(`💾 ${preset.name} logged! 🔥`, { description: `${totalCals} kcal burned` });
+    } catch {
+      toast.error("Failed to log preset. Please try again.");
+    }
+    setSaving(false);
+  };
+
+  const handleDeletePreset = async (preset) => {
+    try {
+      await supabase.from("workout_presets").delete().eq("id", preset.id);
+      queryClient.invalidateQueries({ queryKey: ["workout-presets"] });
+      toast.success(`"${preset.name}" deleted`);
+    } catch {
+      toast.error("Failed to delete preset.");
+    }
+  };
+
+  const handlePresetLongPress = (preset) => {
+    pressTimerRef.current = setTimeout(() => {
+      pressTimerRef.current = null;
+      if (window.confirm(`Delete preset "${preset.name}"?`)) {
+        handleDeletePreset(preset);
+      }
+    }, 600);
+  };
+
+  const handlePresetPressEnd = () => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+
+  const handleSavePreset = async () => {
+    if (!presetName.trim() || dayExercises.length === 0) return;
+    setSavingPreset(true);
+    try {
+      const exercises = dayExercises.map(e => ({
+        exercise_name: e.exercise_name,
+        duration_minutes: e.duration_minutes || null,
+        calories_burned: e.calories_burned || 0,
+        exercise_type: e.exercise_type || "other",
+        speed_kmh: e.speed_kmh || null,
+        sets: e.sets || null,
+        reps: e.reps || null,
+        weight_kg: e.weight_kg || null,
+      }));
+
+      await supabase.from("workout_presets").insert({
+        user_id: user.id,
+        name: presetName.trim(),
+        exercises,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["workout-presets"] });
+      toast.success("Preset saved!");
+      setShowSavePreset(false);
+      setPresetName("");
+    } catch {
+      toast.error("Failed to save preset.");
+    }
+    setSavingPreset(false);
+  };
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col overflow-hidden h-[100dvh] bg-mint">
@@ -220,7 +510,9 @@ export default function Exercise() {
               <div className="flex gap-[6px] flex-wrap relative">
                 {dayExercises.map((e, i) => (
                   <span key={i} className="text-[10px] bg-white/[0.15] text-white/90 px-2 py-[2px] rounded-full">
-                    {EXERCISES.find(ex => ex.name === e.exercise_name)?.emoji || "💪"} {e.exercise_name} · {e.duration_minutes}min
+                    {EXERCISES.find(ex => ex.name === e.exercise_name)?.emoji || "💪"} {e.exercise_name}
+                    {e.duration_minutes ? ` · ${e.duration_minutes}min` : ""}
+                    {e.sets && e.reps ? ` · ${e.sets}×${e.reps}` : ""}
                   </span>
                 ))}
               </div>
@@ -274,6 +566,51 @@ export default function Exercise() {
             </div>
           </motion.div>
 
+          {/* Workout Presets */}
+          {workoutPresets.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+              <div className="flex items-center gap-[6px] mb-2 px-[2px]">
+                <Bookmark className="w-[13px] h-[13px] text-red-600" />
+                <p className="text-[13px] font-medium text-forest m-0">Saved Workouts</p>
+              </div>
+              <div className="flex gap-[8px] overflow-x-auto pb-[4px] scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+                {workoutPresets.map(preset => (
+                  <button
+                    key={preset.id}
+                    disabled={isPast || saving}
+                    onClick={() => handleLogPreset(preset)}
+                    onTouchStart={() => handlePresetLongPress(preset)}
+                    onTouchEnd={handlePresetPressEnd}
+                    onTouchCancel={handlePresetPressEnd}
+                    onMouseLeave={handlePresetPressEnd}
+                    className="shrink-0 text-left bg-white rounded-[14px] border border-black/[0.06] px-3 py-[10px] min-w-[130px] max-w-[160px] relative cursor-pointer font-[inherit]"
+                    style={{
+                      opacity: isPast || saving ? 0.5 : 1,
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-1">
+                      <p className="text-[12px] font-medium text-forest m-0 leading-[1.3] line-clamp-2 flex-1">{preset.name}</p>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleDeletePreset(preset); }}
+                        className="w-5 h-5 rounded-full bg-gray-100 border-none flex items-center justify-center cursor-pointer shrink-0 p-0"
+                      >
+                        <X className="w-[10px] h-[10px] text-gray-400" />
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-gray-400 m-0 mt-[4px]">{getPresetSummary(preset)}</p>
+                    {!isPast && (
+                      <div className="mt-[8px] bg-red-50 rounded-[8px] py-[4px] px-2 flex items-center justify-center gap-1">
+                        <Plus className="w-[10px] h-[10px] text-red-600" />
+                        <span className="text-[10px] text-red-600 font-medium">Log all</span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Log exercise button */}
           {!isPast && (
             <motion.button
@@ -306,10 +643,7 @@ export default function Exercise() {
                       <span className="text-[22px] shrink-0">{ex?.emoji || "💪"}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-medium text-forest m-0">{exercise.exercise_name}</p>
-                        <div className="flex items-center gap-1 mt-[2px]">
-                          <Clock className="w-[10px] h-[10px] text-gray-400" />
-                          <span className="text-[11px] text-gray-400">{exercise.duration_minutes} min</span>
-                        </div>
+                        <ExerciseDetails exercise={exercise} />
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <div className="bg-red-50 rounded-full py-[3px] px-2 flex items-center gap-[3px]">
@@ -326,6 +660,18 @@ export default function Exercise() {
                   );
                 })}
               </div>
+
+              {/* Save as preset button */}
+              {isToday && (
+                <button
+                  onClick={() => setShowSavePreset(true)}
+                  className="w-full mt-2 border rounded-[14px] py-[10px] text-[13px] font-medium cursor-pointer font-[inherit] flex items-center justify-center gap-2"
+                  style={{ borderColor: "rgba(0,0,0,0.08)", background: "white", color: "#6b7280" }}
+                >
+                  <Save className="w-[14px] h-[14px]" />
+                  Save session as preset
+                </button>
+              )}
             </motion.div>
           ) : (
             <div className="text-center p-6 bg-white rounded-2xl border border-black/[0.06]">
@@ -368,33 +714,57 @@ export default function Exercise() {
         </div>
       </div>
 
-      {/* Add exercise sheet */}
+      {/* ── Add exercise sheet ──────────────────────────────────────────────── */}
       <AnimatePresence>
         {showAddSheet && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[9999] bg-black/50 flex items-end justify-center"
-            onClick={() => setShowAddSheet(false)}
+            onClick={() => { setShowAddSheet(false); resetForm(); }}
           >
             <motion.div
               initial={{ y: 400 }} animate={{ y: 0 }} exit={{ y: 400 }}
               transition={{ type: "spring", damping: 25 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white rounded-[24px_24px_0_0] p-5 w-full max-w-[480px] max-h-[85vh] overflow-y-auto"
+              className="bg-white rounded-[24px_24px_0_0] p-5 w-full max-w-[480px] max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-[15px] font-medium text-forest m-0">Log exercise</p>
-                  <p className="text-[11px] text-gray-400 m-0">Based on your weight: {weight}kg</p>
+                  <p className="text-[11px] text-gray-400 m-0">Your weight: {weight}kg</p>
                 </div>
-                <button onClick={() => setShowAddSheet(false)} className="bg-gray-100 border-none rounded-full w-7 h-7 cursor-pointer flex items-center justify-center p-0">
+                <button onClick={() => { setShowAddSheet(false); resetForm(); }} className="bg-gray-100 border-none rounded-full w-7 h-7 cursor-pointer flex items-center justify-center p-0">
                   <X className="w-[14px] h-[14px] text-gray-500" />
                 </button>
               </div>
 
+              {/* Type selector */}
+              <div className="flex gap-[6px] mb-4 bg-gray-100 rounded-[12px] p-[3px]">
+                {[
+                  { id: "cardio", label: "Cardio", emoji: "🏃" },
+                  { id: "strength", label: "Strength", emoji: "🏋️" },
+                  { id: "other", label: "Other", emoji: "🧘" },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTypeChange(tab.id)}
+                    className="flex-1 py-[7px] rounded-[10px] text-[12px] font-medium cursor-pointer font-[inherit] border-none flex items-center justify-center gap-1 transition-all"
+                    style={{
+                      background: exerciseType === tab.id ? "white" : "transparent",
+                      color: exerciseType === tab.id ? "#dc2626" : "#6b7280",
+                      boxShadow: exerciseType === tab.id ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    }}
+                  >
+                    <span className="text-[14px]">{tab.emoji}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Exercise grid */}
               <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Choose exercise</p>
               <div className="grid grid-cols-4 gap-2 mb-4">
-                {EXERCISES.map((ex) => (
+                {filteredExercises.map((ex) => (
                   <button key={ex.name} onClick={() => setSelectedExercise(ex)}
                     className="flex flex-col items-center gap-1 py-[10px] px-1 rounded-xl cursor-pointer font-[inherit]"
                     style={{
@@ -410,43 +780,212 @@ export default function Exercise() {
                 ))}
               </div>
 
-              <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Duration</p>
-              <div className="flex gap-2 mb-3">
-                {[15, 30, 45, 60, 90].map(m => (
-                  <button key={m} onClick={() => setMinutes(String(m))}
-                    className="flex-1 py-2 px-1 rounded-[10px] text-xs font-medium cursor-pointer font-[inherit]"
-                    style={{
-                      border: minutes === String(m) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
-                      background: minutes === String(m) ? "#fef2f2" : "#f9fafb",
-                      color: minutes === String(m) ? "#dc2626" : "#6b7280",
-                    }}
-                  >{m}m</button>
-                ))}
-              </div>
+              {/* ── Cardio fields ── */}
+              {exerciseType === "cardio" && (
+                <>
+                  {selectedExercise?.hasSpeed && (
+                    <div className="mb-3">
+                      <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Speed (km/h)</p>
+                      <div className="flex gap-2">
+                        {[6, 8, 10, 12, 15].map(s => (
+                          <button key={s} onClick={() => setSpeedKmh(String(s))}
+                            className="flex-1 py-2 px-1 rounded-[10px] text-xs font-medium cursor-pointer font-[inherit]"
+                            style={{
+                              border: speedKmh === String(s) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                              background: speedKmh === String(s) ? "#fef2f2" : "#f9fafb",
+                              color: speedKmh === String(s) ? "#dc2626" : "#6b7280",
+                            }}
+                          >{s}</button>
+                        ))}
+                      </div>
+                      <input
+                        type="number" value={speedKmh} onChange={e => setSpeedKmh(e.target.value)}
+                        placeholder="Custom km/h..."
+                        className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit] mt-2"
+                      />
+                    </div>
+                  )}
 
-              <div className="flex items-center gap-2 mb-4">
-                <input
-                  type="number" value={minutes} onChange={e => setMinutes(e.target.value)}
-                  placeholder="Custom minutes..."
-                  className="flex-1 bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit]"
-                />
-                <div className="bg-red-50 rounded-[10px] py-[10px] px-[14px] flex items-center gap-[6px]">
-                  <Flame className="w-[14px] h-[14px] text-red-600" />
-                  <span className="text-[14px] font-semibold text-red-600">{previewCalories} kcal</span>
-                </div>
-              </div>
+                  <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Duration</p>
+                  <div className="flex gap-2 mb-2">
+                    {[15, 30, 45, 60, 90].map(m => (
+                      <button key={m} onClick={() => setMinutes(String(m))}
+                        className="flex-1 py-2 px-1 rounded-[10px] text-xs font-medium cursor-pointer font-[inherit]"
+                        style={{
+                          border: minutes === String(m) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                          background: minutes === String(m) ? "#fef2f2" : "#f9fafb",
+                          color: minutes === String(m) ? "#dc2626" : "#6b7280",
+                        }}
+                      >{m}m</button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <input
+                      type="number" value={minutes} onChange={e => setMinutes(e.target.value)}
+                      placeholder="Custom minutes..."
+                      className="flex-1 bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit]"
+                    />
+                    <div className="bg-red-50 rounded-[10px] py-[10px] px-[14px] flex items-center gap-[6px] shrink-0">
+                      <Flame className="w-[14px] h-[14px] text-red-600" />
+                      <span className="text-[14px] font-semibold text-red-600">{previewCalories} kcal</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* ── Strength fields ── */}
+              {exerciseType === "strength" && (
+                <>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div>
+                      <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">Sets</p>
+                      <input
+                        type="number" value={sets} onChange={e => setSets(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[10px] text-[14px] text-forest outline-none font-[inherit] text-center"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">Reps</p>
+                      <input
+                        type="number" value={reps} onChange={e => setReps(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[10px] text-[14px] text-forest outline-none font-[inherit] text-center"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">kg (opt.)</p>
+                      <input
+                        type="number" value={strengthWeight} onChange={e => setStrengthWeight(e.target.value)}
+                        placeholder="BW"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[10px] text-[14px] text-forest outline-none font-[inherit] text-center"
+                      />
+                    </div>
+                  </div>
+                  <div className="mb-3">
+                    <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">Duration (opt.)</p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number" value={minutes} onChange={e => setMinutes(e.target.value)}
+                        placeholder="Minutes..."
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit]"
+                      />
+                      <div className="bg-red-50 rounded-[10px] py-[10px] px-[14px] flex items-center gap-[6px] shrink-0">
+                        <Flame className="w-[14px] h-[14px] text-red-600" />
+                        <span className="text-[14px] font-semibold text-red-600">{previewCalories} kcal</span>
+                      </div>
+                    </div>
+                    {!strengthWeight && (
+                      <p className="text-[10px] text-gray-400 mt-1 m-0">Add weight to estimate calories burned</p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* ── Other fields ── */}
+              {exerciseType === "other" && (
+                <>
+                  <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Duration</p>
+                  <div className="flex gap-2 mb-2">
+                    {[15, 30, 45, 60, 90].map(m => (
+                      <button key={m} onClick={() => setMinutes(String(m))}
+                        className="flex-1 py-2 px-1 rounded-[10px] text-xs font-medium cursor-pointer font-[inherit]"
+                        style={{
+                          border: minutes === String(m) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                          background: minutes === String(m) ? "#fef2f2" : "#f9fafb",
+                          color: minutes === String(m) ? "#dc2626" : "#6b7280",
+                        }}
+                      >{m}m</button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <input
+                      type="number" value={minutes} onChange={e => setMinutes(e.target.value)}
+                      placeholder="Custom minutes..."
+                      className="flex-1 bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit]"
+                    />
+                    <div className="bg-red-50 rounded-[10px] py-[10px] px-[14px] flex items-center gap-[6px] shrink-0">
+                      <Flame className="w-[14px] h-[14px] text-red-600" />
+                      <span className="text-[14px] font-semibold text-red-600">{previewCalories} kcal</span>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <button
                 onClick={handleSave}
-                disabled={!selectedExercise || !minutes || Number(minutes) <= 0 || saving}
+                disabled={!canSave() || saving}
                 className="w-full border-none rounded-[14px] py-[14px] text-[14px] font-medium font-[inherit]"
                 style={{
-                  background: selectedExercise && minutes && Number(minutes) > 0 ? "#dc2626" : "#f3f4f6",
-                  color: selectedExercise && minutes && Number(minutes) > 0 ? "white" : "#9ca3af",
-                  cursor: selectedExercise && minutes ? "pointer" : "default",
+                  background: canSave() ? "#dc2626" : "#f3f4f6",
+                  color: canSave() ? "white" : "#9ca3af",
+                  cursor: canSave() ? "pointer" : "default",
                 }}
               >
-                {saving ? "Saving..." : selectedExercise && minutes ? `Log ${previewCalories} kcal burned` : "Select exercise and duration"}
+                {saving ? "Saving..." : canSave() ? `Log ${previewCalories} kcal burned` : "Select exercise and details"}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Save preset sheet ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showSavePreset && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-black/50 flex items-end justify-center"
+            onClick={() => setShowSavePreset(false)}
+          >
+            <motion.div
+              initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }}
+              transition={{ type: "spring", damping: 25 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-[24px_24px_0_0] p-5 w-full max-w-[480px]"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-[15px] font-medium text-forest m-0">Save workout preset</p>
+                  <p className="text-[11px] text-gray-400 m-0">{dayExercises.length} exercise{dayExercises.length !== 1 ? "s" : ""} will be saved</p>
+                </div>
+                <button onClick={() => setShowSavePreset(false)} className="bg-gray-100 border-none rounded-full w-7 h-7 cursor-pointer flex items-center justify-center p-0">
+                  <X className="w-[14px] h-[14px] text-gray-500" />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-[6px] mb-4">
+                {dayExercises.map((e, i) => {
+                  const ex = EXERCISES.find(x => x.name === e.exercise_name);
+                  return (
+                    <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-[10px] px-3 py-[8px]">
+                      <span className="text-[16px]">{ex?.emoji || "💪"}</span>
+                      <span className="text-[12px] text-forest flex-1">{e.exercise_name}</span>
+                      <span className="text-[11px] text-red-600 font-medium">{e.calories_burned} kcal</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Preset name</p>
+              <input
+                type="text"
+                value={presetName}
+                onChange={e => setPresetName(e.target.value)}
+                placeholder="e.g. Morning Routine, Gym Day A..."
+                autoFocus
+                className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[12px] px-[14px] text-[14px] text-forest outline-none font-[inherit] mb-4"
+                onKeyDown={e => e.key === "Enter" && handleSavePreset()}
+              />
+
+              <button
+                onClick={handleSavePreset}
+                disabled={!presetName.trim() || savingPreset}
+                className="w-full border-none rounded-[14px] py-[14px] text-[14px] font-medium font-[inherit]"
+                style={{
+                  background: presetName.trim() ? "#dc2626" : "#f3f4f6",
+                  color: presetName.trim() ? "white" : "#9ca3af",
+                  cursor: presetName.trim() ? "pointer" : "default",
+                }}
+              >
+                {savingPreset ? "Saving..." : "Save Preset"}
               </button>
             </motion.div>
           </motion.div>
