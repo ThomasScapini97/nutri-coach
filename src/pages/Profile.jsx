@@ -42,7 +42,7 @@ function calculateCalorieGoal(profile) {
     const minSafe = profile.gender === "male" ? 1500 : 1200;
     tdee = Math.max(tdee * 0.80, minSafe);
   }
-  if (profile.goal === "gain_muscle") tdee += 300;
+  if (profile.goal === "gain_muscle") tdee += 350;
   return Math.round(tdee);
 }
 
