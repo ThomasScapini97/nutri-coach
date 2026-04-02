@@ -96,31 +96,23 @@ export default async function handler(req, res) {
 
     const today = new Date().toISOString().split("T")[0];
 
-    const { data: rateData } = await supabase
-  .from("rate_limits")
-  .select("message_count")
-  .eq("user_id", user.id)
-  .eq("date", today)
-  .maybeSingle(); // ← restituisce null invece di crashare
+    // Atomic increment — uses a Postgres function to avoid read-check-write race condition
+    const { data: newCount, error: rateError } = await supabase
+      .rpc("increment_rate_limit", { p_user_id: user.id, p_date: today });
 
-    const currentCount = rateData?.message_count || 0;
+    if (rateError) {
+      console.error("Rate limit RPC error:", rateError);
+      return res.status(500).json({ error: "Internal server error" });
+    }
 
-    if (currentCount >= DAILY_LIMIT) {
+    if (newCount > DAILY_LIMIT) {
       return res.status(429).json({
         error: "daily_limit_reached",
         message: `You've reached your daily limit of ${DAILY_LIMIT} messages. Come back tomorrow! 🌅`,
-        count: currentCount,
+        count: newCount,
         limit: DAILY_LIMIT,
       });
     }
-
-    await supabase
-      .from("rate_limits")
-      .upsert({
-        user_id: user.id,
-        date: today,
-        message_count: currentCount + 1,
-      }, { onConflict: "user_id,date" });
 
     const { model, max_tokens, system, messages } = req.body;
 
@@ -182,7 +174,7 @@ export default async function handler(req, res) {
     }
 
     res.setHeader("X-RateLimit-Limit", DAILY_LIMIT);
-    res.setHeader("X-RateLimit-Remaining", DAILY_LIMIT - (currentCount + 1));
+    res.setHeader("X-RateLimit-Remaining", Math.max(DAILY_LIMIT - newCount, 0));
 
     return res.status(200).json(data);
 

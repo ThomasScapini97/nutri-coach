@@ -107,18 +107,17 @@ export default function Exercise() {
     setSaving(true);
     try {
       const calories = calculateCalories(selectedExercise.met, weight, Number(minutes));
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
       let logId = dayLog?.id;
       if (!logId) {
         const { data: created } = await supabase.from("food_logs").insert({
-          date: getToday(), user_id: currentUser.id,
+          date: getToday(), user_id: user.id,
           total_calories: 0, total_carbs: 0, total_protein: 0,
           total_fats: 0, total_fiber: 0, total_burned_calories: 0,
         }).select().single();
         logId = created?.id;
       }
       await supabase.from("exercise_logs").insert({
-        user_id: currentUser.id, foodlog_id: logId, date: getToday(),
+        user_id: user.id, foodlog_id: logId, date: getToday(),
         exercise_name: selectedExercise.name,
         duration_minutes: Number(minutes),
         calories_burned: calories,
