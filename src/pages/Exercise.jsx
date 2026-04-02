@@ -11,51 +11,55 @@ import ScrollableExerciseChart from "../components/summary/ScrollableExerciseCha
 const getToday = () => format(new Date(), "yyyy-MM-dd");
 
 const EXERCISES = [
-  // Cardio
-  { name: "Running", emoji: "🏃", met: 9.8, type: "cardio" },
-  { name: "Walking", emoji: "🚶", met: 3.5, type: "cardio" },
-  { name: "Cycling", emoji: "🚴", met: 7.5, type: "cardio" },
+  // Cardio con velocità
+  { name: "Running", emoji: "🏃", met: 9.8, type: "cardio-speed" },
+  { name: "Walking", emoji: "🚶", met: 3.5, type: "cardio-speed" },
+  { name: "Cycling", emoji: "🚴", met: 7.5, type: "cardio-speed" },
+  { name: "Rowing", emoji: "🚣", met: 7.0, type: "cardio-speed" },
+  { name: "Hiking", emoji: "🥾", met: 6.0, type: "cardio-speed" },
+  // Cardio senza velocità
   { name: "Swimming", emoji: "🏊", met: 8.0, type: "cardio" },
   { name: "HIIT", emoji: "⚡", met: 10.0, type: "cardio" },
   { name: "Football", emoji: "⚽", met: 7.0, type: "cardio" },
   { name: "Basketball", emoji: "🏀", met: 6.5, type: "cardio" },
   { name: "Tennis", emoji: "🎾", met: 7.0, type: "cardio" },
   { name: "Dancing", emoji: "💃", met: 5.0, type: "cardio" },
-  { name: "Hiking", emoji: "🥾", met: 6.0, type: "cardio" },
   { name: "Jump Rope", emoji: "🪃", met: 11.0, type: "cardio" },
-  { name: "Rowing", emoji: "🚣", met: 7.0, type: "cardio" },
-  { name: "Yoga", emoji: "🧘", met: 2.5, type: "cardio" },
-  { name: "Pilates", emoji: "🤸", met: 3.0, type: "cardio" },
+  // Flessibilità
+  { name: "Yoga", emoji: "🧘", met: 2.5, type: "flexibility" },
+  { name: "Pilates", emoji: "🤸", met: 3.0, type: "flexibility" },
+  { name: "Stretching", emoji: "🙆", met: 2.0, type: "flexibility" },
+  { name: "Tai Chi", emoji: "🥋", met: 3.0, type: "flexibility" },
   // Strength — free weights
-  { name: "Bench Press", emoji: "🏋️", type: "strength" },
-  { name: "Deadlift", emoji: "🏋️", type: "strength" },
-  { name: "Squat", emoji: "🦵", type: "strength" },
-  { name: "Shoulder Press", emoji: "🏋️", type: "strength" },
-  { name: "Bicep Curl", emoji: "💪", type: "strength" },
-  { name: "Tricep Extension", emoji: "💪", type: "strength" },
-  { name: "Lateral Raise", emoji: "💪", type: "strength" },
-  { name: "Romanian Deadlift", emoji: "🏋️", type: "strength" },
-  { name: "Dumbbell Row", emoji: "🏋️", type: "strength" },
-  { name: "Lunges", emoji: "🦵", type: "strength" },
+  { name: "Bench Press", emoji: "🏋️", met: 5.0, type: "strength" },
+  { name: "Deadlift", emoji: "🏋️", met: 6.0, type: "strength" },
+  { name: "Squat", emoji: "🦵", met: 5.5, type: "strength" },
+  { name: "Shoulder Press", emoji: "🏋️", met: 5.0, type: "strength" },
+  { name: "Bicep Curl", emoji: "💪", met: 3.5, type: "strength" },
+  { name: "Tricep Extension", emoji: "💪", met: 3.5, type: "strength" },
+  { name: "Lateral Raise", emoji: "💪", met: 3.0, type: "strength" },
+  { name: "Romanian Deadlift", emoji: "🏋️", met: 5.5, type: "strength" },
+  { name: "Dumbbell Row", emoji: "🏋️", met: 4.5, type: "strength" },
+  { name: "Lunges", emoji: "🦵", met: 4.5, type: "strength" },
   // Strength — bodyweight
-  { name: "Pull-ups", emoji: "🙌", type: "strength" },
-  { name: "Push-ups", emoji: "✊", type: "strength" },
-  { name: "Dips", emoji: "✊", type: "strength" },
-  { name: "Plank", emoji: "🤸", type: "strength" },
-  { name: "Sit-ups", emoji: "🤸", type: "strength" },
+  { name: "Pull-ups", emoji: "🙌", met: 8.0, type: "strength" },
+  { name: "Push-ups", emoji: "✊", met: 5.0, type: "strength" },
+  { name: "Dips", emoji: "✊", met: 6.0, type: "strength" },
+  { name: "Plank", emoji: "🤸", met: 3.0, type: "strength" },
+  { name: "Sit-ups", emoji: "🤸", met: 3.8, type: "strength" },
   // Strength — machines
-  { name: "Leg Press", emoji: "🦵", type: "strength" },
-  { name: "Leg Curl", emoji: "🦵", type: "strength" },
-  { name: "Leg Extension", emoji: "🦵", type: "strength" },
-  { name: "Lat Pulldown", emoji: "🙌", type: "strength" },
-  { name: "Cable Row", emoji: "🙌", type: "strength" },
-  { name: "Chest Fly", emoji: "💪", type: "strength" },
-  { name: "Pec Deck", emoji: "💪", type: "strength" },
-  { name: "Smith Machine Squat", emoji: "🦵", type: "strength" },
-  { name: "Hip Thrust", emoji: "🦵", type: "strength" },
-  { name: "Cable Curl", emoji: "💪", type: "strength" },
-  { name: "Tricep Pushdown", emoji: "💪", type: "strength" },
-  { name: "Face Pull", emoji: "🙌", type: "strength" },
+  { name: "Leg Press", emoji: "🦵", met: 5.0, type: "strength" },
+  { name: "Leg Curl", emoji: "🦵", met: 3.5, type: "strength" },
+  { name: "Leg Extension", emoji: "🦵", met: 3.5, type: "strength" },
+  { name: "Lat Pulldown", emoji: "🙌", met: 4.5, type: "strength" },
+  { name: "Cable Row", emoji: "🙌", met: 4.5, type: "strength" },
+  { name: "Chest Fly", emoji: "💪", met: 3.5, type: "strength" },
+  { name: "Pec Deck", emoji: "💪", met: 3.5, type: "strength" },
+  { name: "Smith Machine Squat", emoji: "🦵", met: 5.0, type: "strength" },
+  { name: "Hip Thrust", emoji: "🦵", met: 4.5, type: "strength" },
+  { name: "Cable Curl", emoji: "💪", met: 3.5, type: "strength" },
+  { name: "Tricep Pushdown", emoji: "💪", met: 3.5, type: "strength" },
+  { name: "Face Pull", emoji: "🙌", met: 3.5, type: "strength" },
 ];
 
 function getCardioMET(exerciseName, speedKmh) {
@@ -88,27 +92,29 @@ function calcBMR(weight, height, age, gender) {
   return gender === "female" ? base - 161 : base + 5;
 }
 
-function computeCalories({ exerciseType, exerciseName, speedKmh, minutes, sets, reps, strengthWeight, userWeight, userAge, userHeight, userGender }) {
-  if (exerciseType === "cardio") {
+function computeCalories({ exerciseType, exerciseName, speedKmh, minutes, sets, userWeight, userAge, userHeight, userGender }) {
+  if (exerciseType === "cardio-speed" || exerciseType === "cardio" || exerciseType === "flexibility") {
     const mins = Number(minutes) || 0;
     if (mins <= 0) return 0;
-    const met = getCardioMET(exerciseName, speedKmh);
-    // ISO gross: MET × 3.5 × weight / 200 × minutes
+    const met = exerciseType === "cardio-speed"
+      ? getCardioMET(exerciseName, speedKmh)
+      : (EXERCISES.find(e => e.name === exerciseName)?.met || 5);
     const gross = met * 3.5 * userWeight / 200 * mins;
-    // Subtract resting metabolism during exercise (BMR / 1440 × minutes)
     const bmr = calcBMR(userWeight, userHeight || 170, userAge || 30, userGender || "male");
     const rest = (bmr / 1440) * mins;
     return Math.max(0, Math.round(gross - rest));
   }
   if (exerciseType === "strength") {
     const s = Number(sets) || 0;
-    const r = Number(reps) || 0;
-    const w = parseFloat(strengthWeight);
-    if (w > 0) {
-      return Math.round(s * r * w * 0.1);
-    }
-    // Bodyweight estimate: ~0.5 kcal per rep
-    return Math.round(s * r * 0.5);
+    if (s <= 0) return 0;
+    // 90s per set = active contraction + elevated HR during rest
+    const effectiveMinutes = s * 1.5;
+    const ex = EXERCISES.find(e => e.name === exerciseName);
+    const met = ex?.met || 4.5;
+    const gross = met * 3.5 * userWeight / 200 * effectiveMinutes;
+    const bmr = calcBMR(userWeight, userHeight || 170, userAge || 30, userGender || "male");
+    const rest = (bmr / 1440) * effectiveMinutes;
+    return Math.max(0, Math.round(gross - rest));
   }
   return 0;
 }
@@ -165,7 +171,7 @@ export default function Exercise() {
   const [showSavePreset, setShowSavePreset] = useState(false);
 
   // Exercise form state
-  const [exerciseType, setExerciseType] = useState("cardio");
+  const [exerciseType, setExerciseType] = useState("cardio-speed");
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [minutes, setMinutes] = useState("30");
   const [speedKmh, setSpeedKmh] = useState("");
@@ -251,8 +257,6 @@ export default function Exercise() {
         speedKmh,
         minutes,
         sets,
-        reps,
-        strengthWeight,
         userWeight: weight,
         userAge: age,
         userHeight: height,
@@ -262,7 +266,7 @@ export default function Exercise() {
 
   const canSave = () => {
     if (!selectedExercise) return false;
-    if (exerciseType === "cardio") return !!minutes && Number(minutes) > 0;
+    if (["cardio-speed", "cardio", "flexibility"].includes(exerciseType)) return !!minutes && Number(minutes) > 0;
     if (exerciseType === "strength") return !!sets && !!reps && Number(sets) > 0 && Number(reps) > 0;
     return false;
   };
@@ -281,7 +285,7 @@ export default function Exercise() {
 
   const resetForm = () => {
     setSelectedExercise(null);
-    setExerciseType("cardio");
+    setExerciseType("cardio-speed");
     setMinutes("30");
     setSpeedKmh("");
     setSets("3");
@@ -322,9 +326,11 @@ export default function Exercise() {
         exercise_type: exerciseType,
       };
 
-      if (exerciseType === "cardio") {
+      if (exerciseType === "cardio-speed") {
         entry.duration_minutes = Number(minutes);
         if (speedKmh) entry.speed_kmh = Number(speedKmh);
+      } else if (exerciseType === "cardio" || exerciseType === "flexibility") {
+        entry.duration_minutes = Number(minutes);
       } else if (exerciseType === "strength") {
         entry.sets = Number(sets);
         entry.reps = Number(reps);
@@ -336,9 +342,9 @@ export default function Exercise() {
       const newTotal = (dayLog?.total_burned_calories || 0) + calories;
       await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", logId);
 
-      const activityLabel = exerciseType === "cardio"
-        ? `${entry.duration_minutes} min${speedKmh ? ` · ${speedKmh} km/h` : ""}`
-        : `${sets}×${reps}${strengthWeight ? ` · ${strengthWeight}kg` : " bodyweight"}`;
+      const activityLabel = exerciseType === "strength"
+        ? `${sets}×${reps}${strengthWeight ? ` · ${strengthWeight}kg` : " bodyweight"}`
+        : `${entry.duration_minutes} min${exerciseType === "cardio-speed" && speedKmh ? ` · ${speedKmh} km/h` : ""}`;
 
       await supabase.from("messages").insert({
         foodlog_id: logId,
@@ -770,22 +776,24 @@ export default function Exercise() {
               </div>
 
               {/* Type selector */}
-              <div className="flex gap-[6px] mb-4 bg-gray-100 rounded-[12px] p-[3px]">
+              <div className="flex gap-[4px] mb-4 bg-gray-100 rounded-[12px] p-[3px]">
                 {[
-                  { id: "cardio", label: "Cardio", emoji: "🏃" },
-                  { id: "strength", label: "Strength", emoji: "🏋️" },
+                  { id: "cardio-speed", label: "Speed", emoji: "🏃" },
+                  { id: "cardio", label: "Cardio", emoji: "⚡" },
+                  { id: "strength", label: "Weights", emoji: "🏋️" },
+                  { id: "flexibility", label: "Flex", emoji: "🧘" },
                 ].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => handleTypeChange(tab.id)}
-                    className="flex-1 py-[7px] rounded-[10px] text-[12px] font-medium cursor-pointer font-[inherit] border-none flex items-center justify-center gap-1 transition-all"
+                    className="flex-1 py-[7px] rounded-[10px] text-[11px] font-medium cursor-pointer font-[inherit] border-none flex items-center justify-center gap-[3px] transition-all"
                     style={{
                       background: exerciseType === tab.id ? "white" : "transparent",
                       color: exerciseType === tab.id ? "#dc2626" : "#6b7280",
                       boxShadow: exerciseType === tab.id ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                     }}
                   >
-                    <span className="text-[14px]">{tab.emoji}</span>
+                    <span className="text-[13px]">{tab.emoji}</span>
                     {tab.label}
                   </button>
                 ))}
@@ -793,7 +801,7 @@ export default function Exercise() {
 
               {/* Exercise grid */}
               <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Choose exercise</p>
-              <div className={`grid gap-2 mb-4 ${exerciseType === "strength" ? "grid-cols-3" : "grid-cols-4"}`}>
+              <div className={`grid gap-2 mb-4 ${exerciseType === "cardio" ? "grid-cols-4" : "grid-cols-3"}`}>
                 {filteredExercises.map((ex) => (
                   <button key={ex.name} onClick={() => setSelectedExercise(ex)}
                     className="flex flex-col items-center gap-1 py-[10px] px-1 rounded-xl cursor-pointer font-[inherit]"
@@ -810,30 +818,33 @@ export default function Exercise() {
                 ))}
               </div>
 
-              {/* ── Cardio fields ── */}
-              {exerciseType === "cardio" && (
-                <>
-                  <div className="mb-3">
-                    <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Speed (km/h) — optional</p>
-                    <div className="flex gap-2">
-                      {[6, 8, 10, 12, 15].map(s => (
-                        <button key={s} onClick={() => setSpeedKmh(String(s))}
-                          className="flex-1 py-2 px-1 rounded-[10px] text-xs font-medium cursor-pointer font-[inherit]"
-                          style={{
-                            border: speedKmh === String(s) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
-                            background: speedKmh === String(s) ? "#fef2f2" : "#f9fafb",
-                            color: speedKmh === String(s) ? "#dc2626" : "#6b7280",
-                          }}
-                        >{s}</button>
-                      ))}
-                    </div>
-                    <input
-                      type="number" value={speedKmh} onChange={e => setSpeedKmh(e.target.value)}
-                      placeholder="Custom km/h..."
-                      className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit] mt-2"
-                    />
+              {/* ── Speed field (solo cardio-speed) ── */}
+              {exerciseType === "cardio-speed" && (
+                <div className="mb-3">
+                  <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Speed (km/h) — optional</p>
+                  <div className="flex gap-2">
+                    {[6, 8, 10, 12, 15].map(s => (
+                      <button key={s} onClick={() => setSpeedKmh(String(s))}
+                        className="flex-1 py-2 px-1 rounded-[10px] text-xs font-medium cursor-pointer font-[inherit]"
+                        style={{
+                          border: speedKmh === String(s) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                          background: speedKmh === String(s) ? "#fef2f2" : "#f9fafb",
+                          color: speedKmh === String(s) ? "#dc2626" : "#6b7280",
+                        }}
+                      >{s}</button>
+                    ))}
                   </div>
+                  <input
+                    type="number" value={speedKmh} onChange={e => setSpeedKmh(e.target.value)}
+                    placeholder="Custom km/h..."
+                    className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit] mt-2"
+                  />
+                </div>
+              )}
 
+              {/* ── Duration (cardio-speed, cardio, flexibility) ── */}
+              {exerciseType !== "strength" && (
+                <>
                   <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Duration</p>
                   <div className="flex gap-2 mb-2">
                     {[15, 30, 45, 60, 90].map(m => (
