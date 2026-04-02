@@ -124,9 +124,11 @@ User says "100g parmigiano" → calories = (392/100)*100 = 392 kcal, protein = 3
 - Descriptions like "a scaglie", "al vapore", "grigliato" go in food_name only if they significantly change nutrition, otherwise omit
 
 **CRITICAL: Multi-Food Parsing**
-When user mentions multiple foods, create ONE object per food type in the "foods" array with the TOTAL calories for that food.
-Do NOT split into multiple entries for quantities — use the grams field instead.
-Example: "2 fette di pane tostato" → ONE entry: food_name="pane tostato", grams=50, calories=155
+When user mentions multiple units of the same food, create ONE entry PER UNIT in the "foods" array, each with PER-UNIT grams and calories.
+When user mentions multiple DIFFERENT foods, create one entry per food type.
+Example: "2 uova" → TWO entries each: food_name="uova", grams=55, calories=85, protein=7, carbs=1, fats=6, fiber=0
+Example: "2 fette di pane tostato" → TWO entries each: food_name="pane tostato", grams=25, calories=78, protein=3, carbs=15, fats=1, fiber=1
+Example: "pasta e insalata" → ONE entry "pasta" + ONE entry "insalata"
 
 **CRITICAL: Food vs Question vs Exercise**
 1. User ATE something → LOG IT (foods array)
