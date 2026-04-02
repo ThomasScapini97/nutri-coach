@@ -72,7 +72,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
 
   return (
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-4 mb-3">
-       <div className="bg-white rounded-3xl shadow-lg transition-all" style={{ paddingBottom: "1px" }}>
+       <div className="bg-white rounded-3xl shadow-lg transition-all pb-px">
 
         {/* Header — sempre visibile */}
         <div className="flex items-center justify-between p-4 pb-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
@@ -127,67 +127,39 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
         </AnimatePresence>
 
         {/* Water tracker — sempre visibile */}
-        <div style={{
-          margin: "0 16px 12px",
-          background: "#eff6ff",
-          borderRadius: "12px",
-          padding: "8px 12px",
-          border: "0.5px solid #bfdbfe",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <GlassWater style={{ width: "14px", height: "14px", color: "#3b82f6" }} />
-              <span style={{ fontSize: "11px", fontWeight: 500, color: "#1e40af" }}>Water</span>
-              <span style={{ fontSize: "10px", color: "#93c5fd" }}>{glasses * 250}ml / 2000ml</span>
+        <div className="mx-4 mb-3 bg-blue-50 rounded-xl px-3 py-2 border border-blue-200">
+          <div className="flex items-center justify-between mb-[6px]">
+            <div className="flex items-center gap-[6px]">
+              <GlassWater className="w-[14px] h-[14px] text-blue-500" />
+              <span className="text-[11px] font-medium text-blue-800">Water</span>
+              <span className="text-[10px] text-blue-300">{glasses * 250}ml / 2000ml</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div className="flex items-center gap-[6px]">
               <button
                 onClick={(e) => { e.stopPropagation(); if (glasses > 0) updateWater(glasses - 1); }}
                 disabled={glasses === 0 || waterLoading}
-                style={{
-                  width: "20px", height: "20px", borderRadius: "50%",
-                  background: glasses === 0 ? "#dbeafe" : "white",
-                  border: "0.5px solid #bfdbfe",
-                  color: glasses === 0 ? "#93c5fd" : "#3b82f6",
-                  fontSize: "14px", cursor: glasses === 0 ? "default" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
-                }}
+                className={`w-5 h-5 rounded-full border border-blue-200 text-[14px] flex items-center justify-center font-[inherit] leading-none shrink-0 ${glasses === 0 ? "bg-blue-100 text-blue-300 cursor-default" : "bg-white text-blue-500 cursor-pointer"}`}
               >−</button>
-              <span style={{ fontSize: "11px", fontWeight: 500, color: "#1e40af", minWidth: "24px", textAlign: "center" }}>
+              <span className="text-[11px] font-medium text-blue-800 min-w-[24px] text-center">
                 {glasses}/{WATER_GOAL}
               </span>
               <button
                 onClick={(e) => { e.stopPropagation(); if (glasses < WATER_GOAL) updateWater(glasses + 1); }}
                 disabled={glasses === WATER_GOAL || waterLoading}
-                style={{
-                  width: "20px", height: "20px", borderRadius: "50%",
-                  background: glasses === WATER_GOAL ? "#dbeafe" : "#3b82f6",
-                  border: "none",
-                  color: "white",
-                  fontSize: "14px", cursor: glasses === WATER_GOAL ? "default" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontFamily: "inherit", lineHeight: 1, flexShrink: 0,
-                }}
+                className={`w-5 h-5 rounded-full border-none text-white text-[14px] flex items-center justify-center font-[inherit] leading-none shrink-0 ${glasses === WATER_GOAL ? "bg-blue-100 cursor-default" : "bg-blue-500 cursor-pointer"}`}
               >+</button>
             </div>
           </div>
 
-          {/* Bicchieri */}
-          <div style={{ display: "flex", gap: "3px" }}>
+          {/* Glasses row */}
+          <div className="flex gap-[3px]">
             {Array.from({ length: WATER_GOAL }).map((_, i) => (
               <motion.button
                 key={i}
                 onClick={(e) => { e.stopPropagation(); updateWater(i < glasses ? i : i + 1); }}
                 animate={{ opacity: i < glasses ? 1 : 0.3 }}
                 transition={{ duration: 0.15 }}
-                style={{
-                  flex: 1, height: "20px", borderRadius: "4px",
-                  background: i < glasses ? "#3b82f6" : "#bfdbfe",
-                  border: "none", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "9px",
-                }}
+                className={`flex-1 h-5 rounded-[4px] border-none cursor-pointer flex items-center justify-center text-[9px] ${i < glasses ? "bg-blue-500" : "bg-blue-200"}`}
               >
                 {i < glasses ? "💧" : ""}
               </motion.button>
@@ -195,7 +167,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
           </div>
 
           {glasses === WATER_GOAL && (
-            <p style={{ fontSize: "10px", color: "#1d4ed8", textAlign: "center", marginTop: "5px", fontWeight: 500 }}>
+            <p className="text-[10px] text-blue-700 text-center mt-[5px] font-medium m-0">
               Daily water goal reached! 🎉
             </p>
           )}

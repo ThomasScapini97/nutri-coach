@@ -140,7 +140,6 @@ export default function Diary() {
     ? (Number(form.weight) - Number(weightGoal)).toFixed(1)
     : null;
 
-  // Calcolo progresso barra — direzione corretta
   const weightProgress = (() => {
     if (!form.weight || !weightGoal || !startWeight) return null;
     const current = Number(form.weight);
@@ -161,74 +160,60 @@ export default function Diary() {
 
   const goalReached = weightProgress !== null && weightProgress >= 100;
 
-  const inputStyle = {
-    background: "#f9fafb", border: "0.5px solid #e5e7eb",
-    borderRadius: "8px", padding: "6px 10px", fontSize: "14px",
-    color: "#1a3a22", width: "100%", outline: "none", fontFamily: "inherit",
-  };
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#f0fcf3", overflow: "hidden" }}>
+    <div className="flex flex-col overflow-hidden h-[100dvh] bg-mint">
 
       {/* Date navigator */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: "white", borderBottom: "0.5px solid #e5e7eb",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-        padding: "14px 24px", position: "relative", flexShrink: 0,
-      }}>
-        <button onClick={() => navigateDay(-1)} style={{ position: "absolute", left: "60px", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-          <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+      <div className="flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-6 py-[14px] relative shrink-0">
+        <button onClick={() => navigateDay(-1)} className="absolute left-[60px] bg-transparent border-none flex items-center justify-center cursor-pointer p-0">
+          <ChevronLeft className="w-5 h-5 text-gray-500" />
         </button>
-        <div style={{ textAlign: "center" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
+        <div className="text-center">
+          <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">
             {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
           </h2>
-          <p style={{ fontSize: "11px", color: "#9ca3af" }}>
+          <p className="text-[11px] text-gray-400 m-0">
             {isToday ? "Log your wellness" : "Past entry"}
           </p>
         </div>
-        <button onClick={() => navigateDay(1)} disabled={isToday} style={{ position: "absolute", right: "16px", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1 }}>
-          <ChevronRight style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+        <button onClick={() => navigateDay(1)} disabled={isToday} className={`absolute right-4 bg-transparent border-none flex items-center justify-center p-0 ${isToday ? "opacity-30 cursor-default" : "cursor-pointer"}`}>
+          <ChevronRight className="w-5 h-5 text-gray-500" />
         </button>
       </div>
 
-      {/* Contenuto scorrevole */}
-      <div style={{ flex: 1, overflowY: "auto", paddingBottom: "90px" }}>
-        <div style={{ maxWidth: "480px", margin: "0 auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto pb-[90px]">
+        <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
 
           {/* Weight card */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
-            style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden", opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto" }}
+            className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden"
+            style={{ opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto" }}
           >
-            {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
-              <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>⚖️</div>
-              <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Weight Progress</span>
-              {weightGoal && (
-                <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>
-                  Goal: {weightGoal} kg
-                </span>
-              )}
-              {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: weightGoal ? "8px" : "auto" }}>🔒 Read only</span>}
+            <div className="flex items-center gap-2 px-[14px] py-[10px] border-b border-gray-100">
+              <div className="w-[26px] h-[26px] rounded-[7px] bg-blue-100 flex items-center justify-center text-[13px]">⚖️</div>
+              <span className="text-xs font-medium text-forest">Weight Progress</span>
+              {weightGoal && <span className="text-[10px] text-gray-400 ml-auto">Goal: {weightGoal} kg</span>}
+              {isPast && <span className={`text-[10px] text-gray-400 ${weightGoal ? "ml-2" : "ml-auto"}`}>🔒 Read only</span>}
             </div>
 
-            {/* Peso con +/- */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "14px 14px 8px" }}>
-              <button onClick={() => adjustWeight(-0.1)} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Minus style={{ width: "16px", height: "16px", color: "#6b7280" }} />
+            {/* Weight +/- controls */}
+            <div className="flex items-center justify-center gap-4 px-[14px] pt-[14px] pb-2">
+              <button onClick={() => adjustWeight(-0.1)} className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 cursor-pointer flex items-center justify-center p-0">
+                <Minus className="w-4 h-4 text-gray-500" />
               </button>
-              <div style={{ textAlign: "center" }}>
+              <div className="text-center">
                 {weightDiff !== null && (
-                  <div style={{ marginBottom: "4px", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-                    <span style={{
-                      fontSize: "11px", fontWeight: 500, padding: "2px 8px", borderRadius: "20px",
-                      background: Number(weightDiff) < 0 ? "#dcfce7" : Number(weightDiff) > 0 ? "#fee2e2" : "#f3f4f6",
-                      color: Number(weightDiff) < 0 ? "#16a34a" : Number(weightDiff) > 0 ? "#dc2626" : "#9ca3af",
-                    }}>
+                  <div className="mb-1 flex flex-col items-center gap-[2px]">
+                    <span className="text-[11px] font-medium px-2 py-[2px] rounded-full"
+                      style={{
+                        background: Number(weightDiff) < 0 ? "#dcfce7" : Number(weightDiff) > 0 ? "#fee2e2" : "#f3f4f6",
+                        color: Number(weightDiff) < 0 ? "#16a34a" : Number(weightDiff) > 0 ? "#dc2626" : "#9ca3af",
+                      }}
+                    >
                       {Number(weightDiff) > 0 ? "+" : ""}{weightDiff} kg
                     </span>
-                    <span style={{ fontSize: "9px", color: "#9ca3af" }}>vs yesterday</span>
+                    <span className="text-[9px] text-gray-400">vs yesterday</span>
                   </div>
                 )}
                 <input
@@ -236,61 +221,56 @@ export default function Diary() {
                   value={form.weight}
                   onChange={e => setForm(f => ({ ...f, weight: e.target.value }))}
                   placeholder="—"
-                  style={{ background: "none", border: "none", outline: "none", fontSize: "36px", fontWeight: 600, color: "#1a3a22", width: "100px", textAlign: "center", fontFamily: "inherit", display: "block" }}
+                  className="bg-transparent border-none outline-none text-[36px] font-semibold text-forest w-[100px] text-center font-[inherit] block"
                 />
-                <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "-4px" }}>kg</div>
+                <div className="text-xs text-gray-400 -mt-1">kg</div>
               </div>
-              <button onClick={() => adjustWeight(0.1)} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#f3f4f6", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Plus style={{ width: "16px", height: "16px", color: "#6b7280" }} />
+              <button onClick={() => adjustWeight(0.1)} className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 cursor-pointer flex items-center justify-center p-0">
+                <Plus className="w-4 h-4 text-gray-500" />
               </button>
             </div>
 
-            {/* Barra progresso verso il goal */}
+            {/* Progress bar toward goal */}
             {weightProgress !== null && (
-              <div style={{ margin: "0 14px 12px", background: goalReached ? "#dcfce7" : "#f0fdf4", borderRadius: "12px", padding: "10px 12px", border: `0.5px solid ${goalReached ? "#bbf7d0" : "#e5e7eb"}` }}>
-
-                {/* Header banner */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "11px", color: goalReached ? "#16a34a" : "#6b7280" }}>
+              <div className="mx-[14px] mb-3 rounded-xl px-3 py-[10px] border"
+                style={{
+                  background: goalReached ? "#dcfce7" : "#f0fdf4",
+                  borderColor: goalReached ? "#bbf7d0" : "#e5e7eb",
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px]" style={{ color: goalReached ? "#16a34a" : "#6b7280" }}>
                     {goalReached ? "🎉 Goal reached!" : `🎯 Goal: ${weightGoal} kg`}
                   </span>
                   {!goalReached && toGoal !== null && (
-                    <span style={{ fontSize: "11px", fontWeight: 600, color: "#16a34a" }}>
+                    <span className="text-[11px] font-semibold text-green-600">
                       {Math.abs(Number(toGoal)).toFixed(1)} kg to go
                     </span>
                   )}
                 </div>
-
-                {/* Barra */}
-                <div style={{ background: "#e5e7eb", borderRadius: "99px", height: "8px", overflow: "hidden" }}>
+                <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${weightProgress}%` }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    style={{
-                      height: "100%",
-                      borderRadius: "99px",
-                      background: goalReached ? "#16a34a" : "#22c55e",
-                    }}
+                    className="h-full rounded-full"
+                    style={{ background: goalReached ? "#16a34a" : "#22c55e" }}
                   />
                 </div>
-
-                {/* Footer */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
-                  <span style={{ fontSize: "9px", color: "#9ca3af" }}>Start: {startWeight} kg</span>
-                  <span style={{ fontSize: "10px", color: "#16a34a", fontWeight: 600 }}>{Math.round(weightProgress)}%</span>
-                  <span style={{ fontSize: "9px", color: "#9ca3af" }}>Goal: {weightGoal} kg</span>
+                <div className="flex justify-between items-center mt-[6px]">
+                  <span className="text-[9px] text-gray-400">Start: {startWeight} kg</span>
+                  <span className="text-[10px] text-green-600 font-semibold">{Math.round(weightProgress)}%</span>
+                  <span className="text-[9px] text-gray-400">Goal: {weightGoal} kg</span>
                 </div>
               </div>
             )}
 
-            {/* Divisore */}
-            <div style={{ height: "0.5px", background: "#f3f4f6", margin: "0 14px" }} />
+            <div className="h-px bg-gray-100 mx-[14px]" />
 
-            {/* Grafico */}
-            <div style={{ padding: "10px 14px 8px" }}>
+            {/* Weight chart */}
+            <div className="p-[10px_14px_8px]">
               {chartData.length > 1 ? (
-                <div style={{ height: "120px" }}>
+                <div className="h-[120px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#9ca3af" }} />
@@ -307,74 +287,77 @@ export default function Diary() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: "11px", textAlign: "center" }}>
+                <div className="h-[60px] flex items-center justify-center text-gray-400 text-[11px] text-center">
                   Log weight for 2+ days to see trend
                 </div>
               )}
             </div>
 
             {/* Range selector */}
-            <div style={{ display: "flex", gap: "6px", justifyContent: "center", padding: "0 14px 14px" }}>
+            <div className="flex gap-[6px] justify-center px-[14px] pb-[14px]">
               {CHART_RANGES.map(r => (
-                <button key={r.label} onClick={() => setChartRange(r.days)} style={{
-                  padding: "3px 10px", borderRadius: "20px", fontSize: "10px", fontWeight: 500,
-                  border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                  background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
-                  color: chartRange === r.days ? "#16a34a" : "#9ca3af",
-                  cursor: "pointer", fontFamily: "inherit",
-                }}>{r.label}</button>
+                <button key={r.label} onClick={() => setChartRange(r.days)}
+                  className="px-[10px] py-[3px] rounded-full text-[10px] font-medium cursor-pointer font-[inherit]"
+                  style={{
+                    border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                    background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
+                    color: chartRange === r.days ? "#16a34a" : "#9ca3af",
+                  }}
+                >{r.label}</button>
               ))}
             </div>
           </motion.div>
 
           {/* Wellness card */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-            style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", overflow: "hidden", opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto" }}
+            className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden"
+            style={{ opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto" }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid #f3f4f6" }}>
-              <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>😊</div>
-              <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>How are you feeling?</span>
-              {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>🔒 Read only</span>}
+            <div className="flex items-center gap-2 px-[14px] py-[10px] border-b border-gray-100">
+              <div className="w-[26px] h-[26px] rounded-[7px] bg-amber-100 flex items-center justify-center text-[13px]">😊</div>
+              <span className="text-xs font-medium text-forest">How are you feeling?</span>
+              {isPast && <span className="text-[10px] text-gray-400 ml-auto">🔒 Read only</span>}
             </div>
 
-            <div style={{ display: "flex", gap: "6px", padding: "10px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
+            <div className="flex gap-[6px] px-3 py-[10px] border-b border-gray-100">
               {MOODS.map(m => (
-                <button key={m.value} onClick={() => setForm(f => ({ ...f, mood: m.value }))} style={{
-                  flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px",
-                  padding: "8px 2px", borderRadius: "10px",
-                  border: form.mood === m.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                  background: form.mood === m.value ? "#f0fdf4" : "#f9fafb",
-                  cursor: "pointer", fontFamily: "inherit",
-                }}>
-                  <span style={{ fontSize: "18px" }}>{m.emoji}</span>
-                  <span style={{ fontSize: "8px", color: form.mood === m.value ? "#16a34a" : "#9ca3af" }}>{m.label}</span>
+                <button key={m.value} onClick={() => setForm(f => ({ ...f, mood: m.value }))}
+                  className="flex-1 flex flex-col items-center gap-[3px] py-2 px-[2px] rounded-[10px] cursor-pointer font-[inherit]"
+                  style={{
+                    border: form.mood === m.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                    background: form.mood === m.value ? "#f0fdf4" : "#f9fafb",
+                  }}
+                >
+                  <span className="text-[18px]">{m.emoji}</span>
+                  <span className="text-[8px]" style={{ color: form.mood === m.value ? "#16a34a" : "#9ca3af" }}>{m.label}</span>
                 </button>
               ))}
             </div>
 
             {SCALES.map(scale => (
-              <div key={scale.key} style={{ padding: "8px 14px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
-                <span style={{ fontSize: "11px", color: "#6b7280", whiteSpace: "nowrap" }}>{scale.emoji} {scale.label}</span>
-                <div style={{ display: "flex", gap: "5px", flex: 1, justifyContent: "flex-end" }}>
+              <div key={scale.key} className="px-[14px] py-2 border-b border-gray-100 flex items-center justify-between gap-[10px]">
+                <span className="text-[11px] text-gray-500 whitespace-nowrap">{scale.emoji} {scale.label}</span>
+                <div className="flex gap-[5px] flex-1 justify-end">
                   {[1, 2, 3, 4, 5].map(v => (
-                    <button key={v} onClick={() => setForm(f => ({ ...f, [scale.key]: v }))} style={{
-                      width: "28px", height: "28px", borderRadius: "50%",
-                      background: form[scale.key] >= v ? scale.color : "#f3f4f6",
-                      border: "none", cursor: "pointer", fontSize: "11px", fontWeight: 600,
-                      color: form[scale.key] >= v ? "white" : "#9ca3af", fontFamily: "inherit",
-                    }}>{v}</button>
+                    <button key={v} onClick={() => setForm(f => ({ ...f, [scale.key]: v }))}
+                      className="w-7 h-7 rounded-full border-none cursor-pointer text-[11px] font-semibold font-[inherit]"
+                      style={{
+                        background: form[scale.key] >= v ? scale.color : "#f3f4f6",
+                        color: form[scale.key] >= v ? "white" : "#9ca3af",
+                      }}
+                    >{v}</button>
                   ))}
                 </div>
               </div>
             ))}
 
-            <div style={{ padding: "10px 14px" }}>
+            <div className="p-[10px_14px]">
               <textarea
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="How was your day? Any notes..."
                 rows={3}
-                style={{ ...inputStyle, resize: "none", fontSize: "13px", lineHeight: 1.5 }}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-[10px] py-[6px] text-[13px] text-forest outline-none font-[inherit] resize-none leading-relaxed"
               />
             </div>
           </motion.div>
@@ -387,22 +370,15 @@ export default function Diary() {
               transition={{ delay: 0.15 }}
               onClick={handleSave}
               disabled={saving}
-              style={{
-                width: "100%", background: "#16a34a", color: "white",
-                border: "none", borderRadius: "14px", padding: "13px",
-                fontSize: "14px", fontWeight: 500, cursor: "pointer",
-                fontFamily: "inherit", display: "flex", alignItems: "center",
-                justifyContent: "center", gap: "8px",
-              }}
+              className="w-full bg-green-600 text-white border-none rounded-[14px] py-[13px] text-[14px] font-medium cursor-pointer font-[inherit] flex items-center justify-center gap-2"
             >
-              {saving ? <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} /> : <Save style={{ width: "16px", height: "16px" }} />}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {saving ? "Saving..." : "Save today's entry"}
             </motion.button>
           )}
 
         </div>
       </div>
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

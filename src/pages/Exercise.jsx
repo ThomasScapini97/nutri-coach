@@ -166,73 +166,56 @@ export default function Exercise() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#f0fcf3", overflow: "hidden" }}>
+    <div className="flex flex-col overflow-hidden h-[100dvh] bg-mint">
 
-      {/* Barra navigazione giorni — full width */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: "white", borderBottom: "0.5px solid #e5e7eb",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-        padding: "14px 24px", position: "relative", flexShrink: 0,
-      }}>
-        <button onClick={() => navigateDay(-1)} style={{
-          position: "absolute", left: "60px",
-          background: "none", border: "none",
-          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-        }}>
-          <ChevronLeft style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+      {/* Date navigator */}
+      <div className="flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-6 py-[14px] relative shrink-0">
+        <button onClick={() => navigateDay(-1)} className="absolute left-[60px] bg-transparent border-none flex items-center justify-center cursor-pointer p-0">
+          <ChevronLeft className="w-5 h-5 text-gray-500" />
         </button>
-        <div style={{ textAlign: "center" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22", lineHeight: 1.2 }}>
+        <div className="text-center">
+          <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">
             {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
           </h2>
-          <p style={{ fontSize: "11px", color: "#9ca3af" }}>
+          <p className="text-[11px] text-gray-400 m-0">
             {isToday ? `${totalBurnedToday} kcal burned today` : isPast ? "Past day — read only" : ""}
           </p>
         </div>
-        <button onClick={() => navigateDay(1)} disabled={isToday} style={{
-          position: "absolute", right: "16px",
-          background: "none", border: "none",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: isToday ? "default" : "pointer", opacity: isToday ? 0.3 : 1,
-        }}>
-          <ChevronRight style={{ width: "20px", height: "20px", color: "#6b7280" }} />
+        <button onClick={() => navigateDay(1)} disabled={isToday} className={`absolute right-4 bg-transparent border-none flex items-center justify-center p-0 ${isToday ? "opacity-30 cursor-default" : "cursor-pointer"}`}>
+          <ChevronRight className="w-5 h-5 text-gray-500" />
         </button>
       </div>
 
-      {/* Parte scorrevole */}
-      <div style={{ flex: 1, overflowY: "auto", paddingBottom: "8px" }}>
-        <div style={{ maxWidth: "480px", margin: "0 auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto pb-2">
+        <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
 
           {/* Hero card */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            style={{
-              background: "linear-gradient(135deg, #ef4444, #dc2626)",
-              borderRadius: "20px", padding: "18px", color: "white",
-              position: "relative", overflow: "hidden",
-            }}
+            className="rounded-[20px] p-[18px] text-white relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)" }}
           >
-            <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
-            <div style={{ position: "absolute", bottom: "-20px", right: "30px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative" }}>
+            <div className="absolute -top-[30px] -right-[30px] w-[120px] h-[120px] rounded-full bg-white/[0.07]" />
+            <div className="absolute -bottom-[20px] right-[30px] w-[80px] h-[80px] rounded-full bg-white/[0.05]" />
+            <div className="flex justify-between items-start relative">
               <div>
-                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)", marginBottom: "2px" }}>Burned today</p>
-                <p style={{ fontSize: "42px", fontWeight: 500, lineHeight: 1, letterSpacing: "-1px" }}>{totalBurnedToday.toLocaleString()}</p>
-                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.65)", marginTop: "2px" }}>of {burnGoal} kcal goal</p>
+                <p className="text-[11px] text-white/75 mb-[2px] m-0">Burned today</p>
+                <p className="text-[42px] font-medium leading-none tracking-[-1px] m-0">{totalBurnedToday.toLocaleString()}</p>
+                <p className="text-[11px] text-white/65 mt-[2px] m-0">of {burnGoal} kcal goal</p>
               </div>
-              <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="w-11 h-11 rounded-[14px] bg-white/[0.18] flex items-center justify-center">
                 <Flame className="w-5 h-5 text-white" />
               </div>
             </div>
-            <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: "99px", height: "6px", overflow: "hidden", margin: "12px 0 6px", position: "relative" }}>
-              <div style={{ background: "white", height: "100%", borderRadius: "99px", width: `${Math.min((totalBurnedToday / burnGoal) * 100, 100)}%`, transition: "width 0.8s" }} />
+            <div className="bg-white/20 rounded-full h-[6px] overflow-hidden my-3 relative">
+              <div className="bg-white h-full rounded-full transition-[width] duration-700" style={{ width: `${Math.min((totalBurnedToday / burnGoal) * 100, 100)}%` }} />
             </div>
             {dayExercises.length > 0 && (
-              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", position: "relative" }}>
+              <div className="flex gap-[6px] flex-wrap relative">
                 {dayExercises.map((e, i) => (
-                  <span key={i} style={{ fontSize: "10px", background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.9)", padding: "2px 8px", borderRadius: "20px" }}>
+                  <span key={i} className="text-[10px] bg-white/[0.15] text-white/90 px-2 py-[2px] rounded-full">
                     {EXERCISES.find(ex => ex.name === e.exercise_name)?.emoji || "💪"} {e.exercise_name} · {e.duration_minutes}min
                   </span>
                 ))}
@@ -240,105 +223,98 @@ export default function Exercise() {
             )}
           </motion.div>
 
-          {/* Contatore giorni attivi */}
+          {/* Active days card */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.03 }}
+            className="rounded-[14px] px-[14px] py-[10px] flex items-center justify-between border"
             style={{
               background: activeDaysThisWeek >= activeDaysGoal ? "#dcfce7" : "white",
-              borderRadius: "14px", padding: "10px 14px",
-              border: `0.5px solid ${activeDaysThisWeek >= activeDaysGoal ? "#bbf7d0" : "rgba(0,0,0,0.06)"}`,
-              display: "flex", alignItems: "center", justifyContent: "space-between",
+              borderColor: activeDaysThisWeek >= activeDaysGoal ? "#bbf7d0" : "rgba(0,0,0,0.06)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "20px" }}>{activeDaysThisWeek >= activeDaysGoal ? "🎉" : "🎯"}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[20px]">{activeDaysThisWeek >= activeDaysGoal ? "🎉" : "🎯"}</span>
               <div>
-                <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>
+                <p className="text-[13px] font-medium text-forest m-0">
                   {activeDaysThisWeek >= activeDaysGoal ? "Weekly goal reached!" : "Weekly activity goal"}
                 </p>
-                <p style={{ fontSize: "11px", color: "#9ca3af" }}>
+                <p className="text-[11px] text-gray-400 m-0">
                   {activeDaysThisWeek}/{activeDaysGoal} active days · {burnGoal} kcal target/day
                 </p>
               </div>
             </div>
-            <div style={{ display: "flex", gap: "4px" }}>
+            <div className="flex gap-1">
               {Array.from({ length: activeDaysGoal }).map((_, i) => (
-                <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", background: i < activeDaysThisWeek ? "#16a34a" : "#e5e7eb" }} />
+                <div key={i} className={`w-2 h-2 rounded-full ${i < activeDaysThisWeek ? "bg-green-600" : "bg-gray-200"}`} />
               ))}
             </div>
           </motion.div>
 
-          {/* Stats grid 2x2 */}
+          {/* Stats grid */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            <div className="grid grid-cols-2 gap-2">
               {[
                 { emoji: "⏱️", value: `${totalMinutesToday}`, label: "Total minutes" },
                 { emoji: "💪", value: `${dayExercises.length}`, label: "Exercises done" },
                 { emoji: "⚡", value: `${kcalPerMin}`, label: "kcal / min avg" },
                 { emoji: "📅", value: `${activeDaysThisWeek}/${activeDaysGoal}`, label: "Active days this week" },
               ].map((s, i) => (
-                <div key={i} style={{ background: "white", borderRadius: "14px", padding: "12px", border: "0.5px solid rgba(0,0,0,0.06)" }}>
-                  <div style={{ fontSize: "20px", marginBottom: "6px" }}>{s.emoji}</div>
-                  <div style={{ fontSize: "20px", fontWeight: 500, color: "#1a3a22", lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: "10px", color: "#9ca3af", marginTop: "3px" }}>{s.label}</div>
+                <div key={i} className="bg-white rounded-[14px] p-3 border border-black/[0.06]">
+                  <div className="text-[20px] mb-[6px]">{s.emoji}</div>
+                  <div className="text-[20px] font-medium text-forest leading-none">{s.value}</div>
+                  <div className="text-[10px] text-gray-400 mt-[3px]">{s.label}</div>
                 </div>
               ))}
             </div>
           </motion.div>
 
-          {/* Bottone aggiungi — nascosto nel passato */}
+          {/* Log exercise button */}
           {!isPast && (
             <motion.button
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               onClick={() => setShowAddSheet(true)}
-              style={{
-                width: "100%", background: "#dc2626", color: "white",
-                border: "none", borderRadius: "14px", padding: "13px",
-                fontSize: "14px", fontWeight: 500, cursor: "pointer",
-                fontFamily: "inherit", display: "flex", alignItems: "center",
-                justifyContent: "center", gap: "8px",
-              }}
+              className="w-full bg-red-600 text-white border-none rounded-[14px] py-[13px] text-[14px] font-medium cursor-pointer font-[inherit] flex items-center justify-center gap-2"
             >
-              <Plus style={{ width: "18px", height: "18px" }} />
+              <Plus className="w-[18px] h-[18px]" />
               Log exercise
             </motion.button>
           )}
 
-          {/* Lista esercizi */}
+          {/* Exercise list */}
           {dayExercises.length > 0 ? (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-              style={{ opacity: isPast ? 0.7 : 1 }}
+              className={isPast ? "opacity-70" : ""}
             >
-              <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px", padding: "0 2px" }}>
+              <p className="text-[13px] font-medium text-forest mb-2 px-[2px] m-0">
                 🏃 {isToday ? "Today's exercises" : "Exercises logged"}
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <div className="flex flex-col gap-[6px]">
                 {dayExercises.map((exercise) => {
                   const ex = EXERCISES.find(e => e.name === exercise.exercise_name);
                   return (
                     <motion.div key={exercise.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-                      style={{ display: "flex", alignItems: "center", gap: "10px", background: "white", borderRadius: "14px", padding: "10px 12px", border: "0.5px solid rgba(0,0,0,0.06)" }}
+                      className="flex items-center gap-[10px] bg-white rounded-[14px] px-3 py-[10px] border border-black/[0.06]"
                     >
-                      <span style={{ fontSize: "22px", flexShrink: 0 }}>{ex?.emoji || "💪"}</span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>{exercise.exercise_name}</p>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-                          <Clock style={{ width: "10px", height: "10px", color: "#9ca3af" }} />
-                          <span style={{ fontSize: "11px", color: "#9ca3af" }}>{exercise.duration_minutes} min</span>
+                      <span className="text-[22px] shrink-0">{ex?.emoji || "💪"}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-forest m-0">{exercise.exercise_name}</p>
+                        <div className="flex items-center gap-1 mt-[2px]">
+                          <Clock className="w-[10px] h-[10px] text-gray-400" />
+                          <span className="text-[11px] text-gray-400">{exercise.duration_minutes} min</span>
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                        <div style={{ background: "#fef2f2", borderRadius: "20px", padding: "3px 8px", display: "flex", alignItems: "center", gap: "3px" }}>
-                          <Flame style={{ width: "12px", height: "12px", color: "#dc2626" }} />
-                          <span style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626" }}>{exercise.calories_burned}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="bg-red-50 rounded-full py-[3px] px-2 flex items-center gap-[3px]">
+                          <Flame className="w-3 h-3 text-red-600" />
+                          <span className="text-xs font-semibold text-red-600">{exercise.calories_burned}</span>
                         </div>
                         {!isPast && (
-                          <button onClick={() => handleDelete(exercise)} style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#f9fafb", border: "0.5px solid #e5e7eb", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Trash2 style={{ width: "12px", height: "12px", color: "#9ca3af" }} />
+                          <button onClick={() => handleDelete(exercise)} className="w-[26px] h-[26px] rounded-full bg-gray-50 border border-gray-200 cursor-pointer flex items-center justify-center p-0">
+                            <Trash2 className="w-3 h-3 text-gray-400" />
                           </button>
                         )}
                       </div>
@@ -348,12 +324,12 @@ export default function Exercise() {
               </div>
             </motion.div>
           ) : (
-            <div style={{ textAlign: "center", padding: "24px", background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)" }}>
-              <p style={{ fontSize: "32px", marginBottom: "8px" }}>🏃</p>
-              <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "4px" }}>
+            <div className="text-center p-6 bg-white rounded-2xl border border-black/[0.06]">
+              <p className="text-[32px] mb-2">🏃</p>
+              <p className="text-[13px] font-medium text-forest mb-1 m-0">
                 {isPast ? "No exercises logged this day" : "No exercises logged yet"}
               </p>
-              <p style={{ fontSize: "12px", color: "#9ca3af" }}>
+              <p className="text-xs text-gray-400 m-0">
                 {isPast ? "" : "Tap \"Log exercise\" to get started!"}
               </p>
             </div>
@@ -362,24 +338,24 @@ export default function Exercise() {
         </div>
       </div>
 
-      {/* Weekly trend fisso in basso */}
-      <div style={{ background: "#f0fcf3", padding: "8px 16px 90px", flexShrink: 0 }}>
-        <div style={{ background: "white", borderRadius: "20px", padding: "10px 16px", border: "0.5px solid rgba(0,0,0,0.06)", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", maxWidth: "480px", margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <TrendingUp style={{ width: "14px", height: "14px", color: "#dc2626" }} />
-              <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>Weekly burned</span>
+      {/* Bottom chart */}
+      <div className="bg-mint px-4 pb-[90px] shrink-0">
+        <div className="bg-white rounded-[20px] p-[10px_16px] border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.06)] max-w-[480px] mx-auto">
+          <div className="flex items-center justify-between mb-[10px]">
+            <div className="flex items-center gap-[6px]">
+              <TrendingUp className="w-[14px] h-[14px] text-red-600" />
+              <span className="text-[13px] font-medium text-forest">Weekly burned</span>
             </div>
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className="flex gap-2">
               {[
                 { color: "#16a34a", label: "On track" },
                 { color: "#f59e0b", label: "Close" },
                 { color: "#ef4444", label: "Off track" },
                 { color: "#e5e7eb", label: "Rest" },
               ].map(({ color, label }) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                  <div style={{ width: "6px", height: "6px", borderRadius: "2px", background: color, flexShrink: 0 }} />
-                  <span style={{ fontSize: "9px", color: "#9ca3af" }}>{label}</span>
+                <div key={label} className="flex items-center gap-[3px]">
+                  <div className="w-[6px] h-[6px] rounded-[2px] shrink-0" style={{ background: color }} />
+                  <span className="text-[9px] text-gray-400">{label}</span>
                 </div>
               ))}
             </div>
@@ -388,85 +364,82 @@ export default function Exercise() {
         </div>
       </div>
 
-      {/* Sheet aggiungi esercizio */}
+      {/* Add exercise sheet */}
       <AnimatePresence>
         {showAddSheet && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+            className="fixed inset-0 z-[9999] bg-black/50 flex items-end justify-center"
             onClick={() => setShowAddSheet(false)}
           >
             <motion.div
               initial={{ y: 400 }} animate={{ y: 0 }} exit={{ y: 400 }}
               transition={{ type: "spring", damping: 25 }}
               onClick={e => e.stopPropagation()}
-              style={{ background: "white", borderRadius: "24px 24px 0 0", padding: "20px", width: "100%", maxWidth: "480px", maxHeight: "85vh", overflowY: "auto" }}
+              className="bg-white rounded-[24px_24px_0_0] p-5 w-full max-w-[480px] max-h-[85vh] overflow-y-auto"
             >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22" }}>Log exercise</p>
-                  <p style={{ fontSize: "11px", color: "#9ca3af" }}>Based on your weight: {weight}kg</p>
+                  <p className="text-[15px] font-medium text-forest m-0">Log exercise</p>
+                  <p className="text-[11px] text-gray-400 m-0">Based on your weight: {weight}kg</p>
                 </div>
-                <button onClick={() => setShowAddSheet(false)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <X style={{ width: "14px", height: "14px", color: "#6b7280" }} />
+                <button onClick={() => setShowAddSheet(false)} className="bg-gray-100 border-none rounded-full w-7 h-7 cursor-pointer flex items-center justify-center p-0">
+                  <X className="w-[14px] h-[14px] text-gray-500" />
                 </button>
               </div>
 
-              <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.3px" }}>Choose exercise</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginBottom: "16px" }}>
+              <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Choose exercise</p>
+              <div className="grid grid-cols-4 gap-2 mb-4">
                 {EXERCISES.map((ex) => (
-                  <button key={ex.name} onClick={() => setSelectedExercise(ex)} style={{
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-                    padding: "10px 4px", borderRadius: "12px",
-                    border: selectedExercise?.name === ex.name ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
-                    background: selectedExercise?.name === ex.name ? "#fef2f2" : "#f9fafb",
-                    cursor: "pointer", fontFamily: "inherit",
-                  }}>
-                    <span style={{ fontSize: "20px" }}>{ex.emoji}</span>
-                    <span style={{ fontSize: "9px", color: selectedExercise?.name === ex.name ? "#dc2626" : "#6b7280", fontWeight: selectedExercise?.name === ex.name ? 500 : 400, textAlign: "center", lineHeight: 1.2 }}>
-                      {ex.name}
-                    </span>
+                  <button key={ex.name} onClick={() => setSelectedExercise(ex)}
+                    className="flex flex-col items-center gap-1 py-[10px] px-1 rounded-xl cursor-pointer font-[inherit]"
+                    style={{
+                      border: selectedExercise?.name === ex.name ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                      background: selectedExercise?.name === ex.name ? "#fef2f2" : "#f9fafb",
+                    }}
+                  >
+                    <span className="text-[20px]">{ex.emoji}</span>
+                    <span className="text-[9px] text-center leading-[1.2]"
+                      style={{ color: selectedExercise?.name === ex.name ? "#dc2626" : "#6b7280", fontWeight: selectedExercise?.name === ex.name ? 500 : 400 }}
+                    >{ex.name}</span>
                   </button>
                 ))}
               </div>
 
-              <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.3px" }}>Duration</p>
-              <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+              <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Duration</p>
+              <div className="flex gap-2 mb-3">
                 {[15, 30, 45, 60, 90].map(m => (
-                  <button key={m} onClick={() => setMinutes(String(m))} style={{
-                    flex: 1, padding: "8px 4px", borderRadius: "10px",
-                    border: minutes === String(m) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
-                    background: minutes === String(m) ? "#fef2f2" : "#f9fafb",
-                    fontSize: "12px", fontWeight: 500,
-                    color: minutes === String(m) ? "#dc2626" : "#6b7280",
-                    cursor: "pointer", fontFamily: "inherit",
-                  }}>{m}m</button>
+                  <button key={m} onClick={() => setMinutes(String(m))}
+                    className="flex-1 py-2 px-1 rounded-[10px] text-xs font-medium cursor-pointer font-[inherit]"
+                    style={{
+                      border: minutes === String(m) ? "1.5px solid #dc2626" : "0.5px solid #e5e7eb",
+                      background: minutes === String(m) ? "#fef2f2" : "#f9fafb",
+                      color: minutes === String(m) ? "#dc2626" : "#6b7280",
+                    }}
+                  >{m}m</button>
                 ))}
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+              <div className="flex items-center gap-2 mb-4">
                 <input
                   type="number" value={minutes} onChange={e => setMinutes(e.target.value)}
                   placeholder="Custom minutes..."
-                  style={{ flex: 1, background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a3a22", outline: "none", fontFamily: "inherit" }}
+                  className="flex-1 bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit]"
                 />
-                <div style={{ background: "#fef2f2", borderRadius: "10px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Flame style={{ width: "14px", height: "14px", color: "#dc2626" }} />
-                  <span style={{ fontSize: "14px", fontWeight: 600, color: "#dc2626" }}>{previewCalories} kcal</span>
+                <div className="bg-red-50 rounded-[10px] py-[10px] px-[14px] flex items-center gap-[6px]">
+                  <Flame className="w-[14px] h-[14px] text-red-600" />
+                  <span className="text-[14px] font-semibold text-red-600">{previewCalories} kcal</span>
                 </div>
               </div>
 
               <button
                 onClick={handleSave}
                 disabled={!selectedExercise || !minutes || Number(minutes) <= 0 || saving}
+                className="w-full border-none rounded-[14px] py-[14px] text-[14px] font-medium font-[inherit]"
                 style={{
-                  width: "100%",
                   background: selectedExercise && minutes && Number(minutes) > 0 ? "#dc2626" : "#f3f4f6",
                   color: selectedExercise && minutes && Number(minutes) > 0 ? "white" : "#9ca3af",
-                  border: "none", borderRadius: "14px", padding: "14px",
-                  fontSize: "14px", fontWeight: 500,
                   cursor: selectedExercise && minutes ? "pointer" : "default",
-                  fontFamily: "inherit",
                 }}
               >
                 {saving ? "Saving..." : selectedExercise && minutes ? `Log ${previewCalories} kcal burned` : "Select exercise and duration"}
