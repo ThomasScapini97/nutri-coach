@@ -1,5 +1,7 @@
 import { supabase } from './supabase';
 
+export const FIBER_GOAL = 30;
+
 export async function recalculateTotals(foodlogId) {
   const { data: entries } = await supabase
     .from('food_entries')

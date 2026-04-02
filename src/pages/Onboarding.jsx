@@ -35,7 +35,7 @@ function calculateCalorieGoal(profile) {
   }
   const multipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
   let tdee = bmr * (multipliers[profile.activity_level] || 1.2);
-  if (profile.goal === "lose_weight") tdee = tdee * 0.8;
+  if (profile.goal === "lose_weight") tdee -= 400;
   if (profile.goal === "gain_muscle") tdee += 300;
   return Math.round(tdee);
 }

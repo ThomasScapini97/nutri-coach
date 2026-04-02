@@ -34,7 +34,7 @@ async function searchOpenFoodFacts(foodName) {
       // Valida che abbia almeno calorie > 0
       if (per100.calories > 0) {
         return {
-          name: product.product_name || foodName,
+          name: (product.product_name || foodName).replace(/[^\w\s\-'àèéìòùÀÈÉÌÒÙ]/g, "").slice(0, 100),
           per100,
         };
       }
@@ -128,6 +128,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid request" });
     }
 
+    const ALLOWED_MODELS = ["claude-haiku-4-5-20251001"];
+    const safeModel = ALLOWED_MODELS.includes(model) ? model : "claude-haiku-4-5-20251001";
+    const safeMaxTokens = Math.min(Math.max(Number(max_tokens) || 1500, 100), 2000);
+
     // Ottieni l'ultimo messaggio utente
     const lastUserMessage = [...messages].reverse().find(m => m.role === "user")?.content || "";
 
@@ -164,8 +168,8 @@ export default async function handler(req, res) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: model || "claude-haiku-4-5-20251001",
-        max_tokens: max_tokens || 1500,
+        model: safeModel,
+        max_tokens: safeMaxTokens,
         system: enhancedSystem,
         messages,
       }),

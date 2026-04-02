@@ -8,7 +8,7 @@ import { Flame, Plus, X, Clock, Trash2, TrendingUp, ChevronLeft, ChevronRight } 
 import { toast } from "sonner";
 import ScrollableExerciseChart from "../components/summary/ScrollableExerciseChart";
 
-const TODAY = format(new Date(), "yyyy-MM-dd");
+const getToday = () => format(new Date(), "yyyy-MM-dd");
 
 const EXERCISES = [
   { name: "Running", emoji: "🏃", met: 9.8 },
@@ -38,7 +38,7 @@ export default function Exercise() {
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = format(selectedDate, "yyyy-MM-dd");
-  const isToday = dateStr === TODAY;
+  const isToday = dateStr === getToday();
   const isPast = !isToday;
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -81,7 +81,7 @@ export default function Exercise() {
     queryKey: ["exercises-week", user?.id],
     queryFn: async () => {
       const from = format(subDays(new Date(), 6), "yyyy-MM-dd");
-      const { data } = await supabase.from("exercise_logs").select("date, calories_burned").eq("user_id", user.id).gte("date", from).lte("date", TODAY);
+      const { data } = await supabase.from("exercise_logs").select("date, calories_burned").eq("user_id", user.id).gte("date", from).lte("date", getToday());
       return data || [];
     },
     enabled: !!user?.id,
@@ -111,14 +111,14 @@ export default function Exercise() {
       let logId = dayLog?.id;
       if (!logId) {
         const { data: created } = await supabase.from("food_logs").insert({
-          date: TODAY, user_id: currentUser.id,
+          date: getToday(), user_id: currentUser.id,
           total_calories: 0, total_carbs: 0, total_protein: 0,
           total_fats: 0, total_fiber: 0, total_burned_calories: 0,
         }).select().single();
         logId = created?.id;
       }
       await supabase.from("exercise_logs").insert({
-        user_id: currentUser.id, foodlog_id: logId, date: TODAY,
+        user_id: currentUser.id, foodlog_id: logId, date: getToday(),
         exercise_name: selectedExercise.name,
         duration_minutes: Number(minutes),
         calories_burned: calories,

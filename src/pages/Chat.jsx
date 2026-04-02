@@ -337,11 +337,11 @@ export default function Chat() {
             food_key: food.food_name.toLowerCase().trim().replace(/\s+/g, '_'),
             meal_type: food.meal_type,
             grams: food.grams || null,
-            calories: food.calories || 0,
-            carbs: food.carbs || 0,
-            protein: food.protein || 0,
-            fats: food.fats || 0,
-            fiber: food.fiber || 0,
+            calories: Math.min(food.calories || 0, 3000),
+            carbs: Math.min(food.carbs || 0, 500),
+            protein: Math.min(food.protein || 0, 300),
+            fats: Math.min(food.fats || 0, 200),
+            fiber: Math.min(food.fiber || 0, 100),
             timestamp: new Date().toISOString(),
           }))
         ).select();

@@ -5,7 +5,7 @@ import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "da
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, X } from "lucide-react";
 
-const TODAY = new Date();
+const getToday = () => new Date();
 const BAR_WIDTH = 36;
 const BAR_GAP = 6;
 const DAYS_BACK = 90;
@@ -38,13 +38,13 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
   const scrollRef = useRef(null);
 
   const allDays = Array.from({ length: DAYS_BACK + FUTURE_DAYS + 1 }, (_, i) =>
-    format(subDays(TODAY, DAYS_BACK - i), "yyyy-MM-dd")
+    format(subDays(getToday(), DAYS_BACK - i), "yyyy-MM-dd")
   );
 
   useEffect(() => {
     if (!user?.id) return;
-    const from = format(subDays(TODAY, DAYS_BACK), "yyyy-MM-dd");
-    const to = format(TODAY, "yyyy-MM-dd");
+    const from = format(subDays(getToday(), DAYS_BACK), "yyyy-MM-dd");
+    const to = format(getToday(), "yyyy-MM-dd");
     supabase
       .from("food_logs")
       .select("date, total_calories")
@@ -60,12 +60,12 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
 
   useEffect(() => {
     if (!scrollRef.current) return;
-    const todayIndex = allDays.findIndex(d => d === format(TODAY, "yyyy-MM-dd"));
+    const todayIndex = allDays.findIndex(d => d === format(getToday(), "yyyy-MM-dd"));
     scrollRef.current.scrollLeft = (todayIndex - 4) * (BAR_WIDTH + BAR_GAP);
   }, []);
 
   const openDayDetail = async (dateStr) => {
-    if (dateStr >= format(TODAY, "yyyy-MM-dd") && dateStr !== format(TODAY, "yyyy-MM-dd")) return;
+    if (dateStr >= format(getToday(), "yyyy-MM-dd") && dateStr !== format(getToday(), "yyyy-MM-dd")) return;
     setSelectedDay(dateStr);
     setDayEntries([]);
     setLoadingEntries(true);
@@ -124,7 +124,7 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
         }}>
           {allDays.map((dateStr) => {
             const calories = logs[dateStr] || 0;
-            const todayStr = format(TODAY, "yyyy-MM-dd");
+            const todayStr = format(getToday(), "yyyy-MM-dd");
             const isTodayBar = dateStr === todayStr;
             const isFutureBar = dateStr > todayStr;
             const barColor = isFutureBar ? "#f3f4f6" : getBarColor(calories, calorieGoal);
@@ -271,8 +271,8 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                   <button
                     onClick={() => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1))}
-                    disabled={format(calendarMonth, "yyyy-MM") >= format(TODAY, "yyyy-MM")}
-                    style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", padding: "4px 8px", color: "#6b7280", opacity: format(calendarMonth, "yyyy-MM") >= format(TODAY, "yyyy-MM") ? 0.3 : 1 }}
+                    disabled={format(calendarMonth, "yyyy-MM") >= format(getToday(), "yyyy-MM")}
+                    style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", padding: "4px 8px", color: "#6b7280", opacity: format(calendarMonth, "yyyy-MM") >= format(getToday(), "yyyy-MM") ? 0.3 : 1 }}
                   >›</button>
                   <button onClick={() => setShowCalendar(false)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <X style={{ width: "14px", height: "14px", color: "#6b7280" }} />
@@ -301,7 +301,7 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
                     {cells.map((day, i) => {
                       if (!day) return <div key={i} />;
                       const dateStr = format(day, "yyyy-MM-dd");
-                      const todayStr = format(TODAY, "yyyy-MM-dd");
+                      const todayStr = format(getToday(), "yyyy-MM-dd");
                       const isFutureDay = dateStr > todayStr;
                       const isTodayDay = dateStr === todayStr;
                       const calories = logs[dateStr] || 0;

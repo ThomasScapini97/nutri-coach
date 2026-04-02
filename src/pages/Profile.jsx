@@ -91,7 +91,7 @@ export default function Profile() {
     const fatsGoal = Math.round((calorieGoal * 0.25) / 9);
     const carbsGoal = Math.round((calorieGoal - proteinGoal * 4 - fatsGoal * 9) / 4);
 
-    await supabase.from("user_profiles").upsert({
+    const { error } = await supabase.from("user_profiles").upsert({
       user_id: user.id,
       age: Number(form.age), weight: Number(form.weight),
       height: Number(form.height), gender: form.gender,
@@ -104,8 +104,12 @@ export default function Profile() {
       fats_goal: fatsGoal, carbs_goal: carbsGoal,
     }, { onConflict: "user_id" });
 
-    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     setSaving(false);
+    if (error) {
+      toast.error("Failed to save profile. Please try again.");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     toast.success("Profile saved! 🎉", { description: `Daily goal: ${calorieGoal} kcal`, duration: 3000 });
   };
 
@@ -114,28 +118,12 @@ export default function Profile() {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      const { data: logs, error: logsError } = await supabase.from("food_logs").select("id").eq("user_id", user.id);
-      if (logsError) throw logsError;
-
-      if (logs?.length > 0) {
-        const logIds = logs.map(l => l.id);
-        const { error: e1 } = await supabase.from("food_entries").delete().in("foodlog_id", logIds);
-        if (e1) throw e1;
-        const { error: e2 } = await supabase.from("messages").delete().in("foodlog_id", logIds);
-        if (e2) throw e2;
-        const { error: e3 } = await supabase.from("exercise_logs").delete().eq("user_id", user.id);
-        if (e3) throw e3;
-        const { error: e4 } = await supabase.from("food_logs").delete().eq("user_id", user.id);
-        if (e4) throw e4;
-      }
-
-      const { error: e5 } = await supabase.from("diary_entries").delete().eq("user_id", user.id);
-      if (e5) throw e5;
-      const { error: e6 } = await supabase.from("rate_limits").delete().eq("user_id", user.id);
-      if (e6) throw e6;
-      const { error: e7 } = await supabase.from("user_profiles").delete().eq("user_id", user.id);
-      if (e7) throw e7;
-
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/delete-account", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error("Server error");
       await supabase.auth.signOut();
     } catch (err) {
       console.error("Delete account error:", err);

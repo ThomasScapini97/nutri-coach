@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Save, Loader2, Minus, Plus } from "lucide-re
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
-const TODAY = format(new Date(), "yyyy-MM-dd");
+const getToday = () => format(new Date(), "yyyy-MM-dd");
 
 const MOODS = [
   { value: 1, emoji: "😔", label: "Bad" },
@@ -39,7 +39,7 @@ export default function Diary() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = format(selectedDate, "yyyy-MM-dd");
-  const isToday = dateStr === TODAY;
+  const isToday = dateStr === getToday();
   const isPast = !isToday;
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -92,7 +92,7 @@ export default function Diary() {
     if (!user?.id) return;
     const from = format(subDays(new Date(), chartRange), "yyyy-MM-dd");
     supabase.from("diary_entries").select("date, weight").eq("user_id", user.id)
-      .gte("date", from).lte("date", TODAY).not("weight", "is", null).order("date")
+      .gte("date", from).lte("date", getToday()).not("weight", "is", null).order("date")
       .then(({ data }) => {
         setChartData((data || []).map(d => ({
           date: format(new Date(d.date + "T12:00:00"), chartRange <= 7 ? "EEE" : chartRange <= 30 ? "d MMM" : "MMM yy"),
