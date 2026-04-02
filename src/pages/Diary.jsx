@@ -3,7 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { format, subDays } from "date-fns";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Save, Loader2, Minus, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, Minus, Plus } from "lucide-react";
+import Spinner from "@/components/ui/Spinner";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
@@ -372,7 +373,7 @@ export default function Diary() {
               disabled={saving}
               className="w-full bg-green-600 text-white border-none rounded-[14px] py-[13px] text-[14px] font-medium cursor-pointer font-[inherit] flex items-center justify-center gap-2"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? <Spinner size="sm" /> : <Save className="w-4 h-4" />}
               {saving ? "Saving..." : "Save today's entry"}
             </motion.button>
           )}

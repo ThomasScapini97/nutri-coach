@@ -147,22 +147,27 @@ export default function Exercise() {
 
   const handleDelete = async (exercise) => {
     if (isPast) return;
-    await supabase.from("exercise_logs").delete().eq("id", exercise.id);
-    const newTotal = Math.max(0, totalBurnedToday - exercise.calories_burned);
-    if (dayLog?.id) {
-      await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", dayLog.id);
-      await supabase.from("messages").insert({
-        foodlog_id: dayLog.id,
-        role: "system",
-        content: `🗑️ **${exercise.exercise_name}** rimosso (${exercise.calories_burned} kcal)`,
-        timestamp: new Date().toISOString(),
-      });
-      queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
+    try {
+      const { error } = await supabase.from("exercise_logs").delete().eq("id", exercise.id);
+      if (error) throw error;
+      const newTotal = Math.max(0, totalBurnedToday - exercise.calories_burned);
+      if (dayLog?.id) {
+        await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", dayLog.id);
+        await supabase.from("messages").insert({
+          foodlog_id: dayLog.id,
+          role: "system",
+          content: `🗑️ **${exercise.exercise_name}** rimosso (${exercise.calories_burned} kcal)`,
+          timestamp: new Date().toISOString(),
+        });
+        queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
+      queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
+      queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+      toast.success("Exercise removed");
+    } catch {
+      toast.error("Failed to remove exercise. Please try again.");
     }
-    queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
-    queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
-    queryClient.invalidateQueries({ queryKey: ["foodlog"] });
-    toast.success("Exercise removed");
   };
 
   return (

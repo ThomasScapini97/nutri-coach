@@ -11,7 +11,7 @@ import DailyNotificationPopup from "../components/notifications/DailyNotificatio
 import { evaluateDailyNutrition } from "../components/notifications/DailyEvaluation";
 import { useMealReminderCheck } from "../components/notifications/MealReminderToast";
 import { toast } from "sonner";
-import { recalculateTotals } from "@/lib/nutritionUtils";
+import { recalculateTotals, FIBER_GOAL } from "@/lib/nutritionUtils";
 import BarcodeScanner from "../components/chat/BarcodeScanner";
 
 const getToday = () => format(new Date(), "yyyy-MM-dd");
@@ -36,7 +36,7 @@ function buildSystemPrompt(profile, todayLog, entries = []) {
   const proteinGoal = profile?.protein_goal || 120;
   const carbsGoal = profile?.carbs_goal || 250;
   const fatsGoal = profile?.fats_goal || 65;
-  const fiberGoal = 30;
+  const fiberGoal = FIBER_GOAL;
 
   const remaining = {
     calories: Math.max(calorieGoal - totals.calories, 0),
@@ -396,7 +396,7 @@ export default function Chat() {
         </div>
       </div>
 
-      <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={30} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
+      <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={FIBER_GOAL} userId={user?.id} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
       <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40 md:pb-6 bg-mint">
         <div className="max-w-4xl mx-auto space-y-5 px-4">
           {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}

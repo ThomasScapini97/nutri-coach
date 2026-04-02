@@ -4,7 +4,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Loader2, LogOut, Trash2 } from "lucide-react";
+import { Save, LogOut, Trash2 } from "lucide-react";
+import Spinner from "@/components/ui/Spinner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -149,7 +150,7 @@ export default function Profile() {
 
   if (isLoading) return (
     <div className="flex-1 flex items-center justify-center bg-mint">
-      <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+      <Spinner size="lg" />
     </div>
   );
 
@@ -339,7 +340,7 @@ export default function Profile() {
             className="w-full bg-green-600 text-white rounded-[14px] py-[13px] text-[14px] font-medium border-none flex items-center justify-center gap-[7px]"
             style={{ opacity: (!formValid || saving) ? 0.6 : 1 }}
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? <Spinner size="sm" /> : <Save className="w-4 h-4" />}
             Save profile
           </Button>
           <Button variant="outline" onClick={handleLogout}
@@ -361,7 +362,7 @@ export default function Profile() {
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDeleteAccount} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
-                  {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  {deleting ? <Spinner size="sm" className="mr-2" /> : null}
                   Delete account
                 </AlertDialogAction>
               </AlertDialogFooter>

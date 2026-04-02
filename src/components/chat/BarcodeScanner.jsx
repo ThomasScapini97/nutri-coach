@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Camera, Search, Loader2, AlertCircle } from "lucide-react";
+import { X, Camera, Search, AlertCircle } from "lucide-react";
+import Spinner from "@/components/ui/Spinner";
 
 export default function BarcodeScanner({ onProductFound, onClose }) {
   const [mode, setMode] = useState(null);
@@ -217,7 +218,7 @@ const startCamera = async () => {
                 </div>
               ) : searching ? (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "24px 0" }}>
-                  <Loader2 style={{ width: "28px", height: "28px", color: "#16a34a", animation: "spin 1s linear infinite" }} />
+                  <Spinner size="lg" />
                   <p style={{ fontSize: "13px", color: "#9ca3af" }}>Looking up product...</p>
                 </div>
               ) : (
@@ -255,7 +256,7 @@ const startCamera = async () => {
                   style={{ flex: 1, background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a3a22", outline: "none", fontFamily: "inherit" }}
                 />
                 <button onClick={searchByName} disabled={searching || !searchQuery.trim()} style={{ background: "#16a34a", color: "white", border: "none", borderRadius: "10px", padding: "10px 16px", fontSize: "13px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit", opacity: searching || !searchQuery.trim() ? 0.6 : 1, display: "flex", alignItems: "center", gap: "6px" }}>
-                  {searching ? <Loader2 style={{ width: "14px", height: "14px", animation: "spin 1s linear infinite" }} /> : <Search style={{ width: "14px", height: "14px" }} />}
+                  {searching ? <Spinner size="sm" /> : <Search style={{ width: "14px", height: "14px" }} />}
                   Search
                 </button>
               </div>
@@ -341,7 +342,6 @@ const startCamera = async () => {
         </div>
       )}
 
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

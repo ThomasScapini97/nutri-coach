@@ -43,11 +43,7 @@ function calculateCalorieGoal(profile) {
   return Math.round(tdee);
 }
 
-const inputStyle = {
-  background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "12px",
-  padding: "12px 16px", fontSize: "16px", color: "#1a3a22",
-  width: "100%", outline: "none", fontFamily: "inherit",
-};
+const inputCls = "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-base text-forest outline-none font-[inherit]";
 
 const slideVariants = {
   enter: (dir) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
@@ -132,7 +128,7 @@ export default function Onboarding({ onComplete }) {
         onChange={e => setForm({ ...form, display_name: e.target.value })}
         onKeyDown={e => e.key === "Enter" && canNext() && goNext()}
         autoFocus
-        style={{ ...inputStyle, fontSize: "20px", textAlign: "center", padding: "16px" }}
+        className={`${inputCls} text-xl text-center py-4`}
       />
     </div>,
 
@@ -146,7 +142,7 @@ export default function Onboarding({ onComplete }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
         <div>
           <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Età</label>
-          <input type="number" placeholder="25" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} style={inputStyle} />
+          <input type="number" placeholder="25" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} className={inputCls} />
         </div>
         <div>
           <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Sesso biologico</label>
@@ -164,15 +160,15 @@ export default function Onboarding({ onComplete }) {
         </div>
         <div>
           <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Peso attuale (kg)</label>
-          <input type="number" placeholder="70" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} style={inputStyle} />
+          <input type="number" placeholder="70" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} className={inputCls} />
         </div>
         <div>
           <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Altezza (cm)</label>
-          <input type="number" placeholder="175" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} style={inputStyle} />
+          <input type="number" placeholder="175" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} className={inputCls} />
         </div>
         <div style={{ gridColumn: "span 2" }}>
           <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Peso obiettivo (kg) — opzionale</label>
-          <input type="number" placeholder="65" value={form.weight_goal} onChange={e => setForm({ ...form, weight_goal: e.target.value })} style={inputStyle} />
+          <input type="number" placeholder="65" value={form.weight_goal} onChange={e => setForm({ ...form, weight_goal: e.target.value })} className={inputCls} />
         </div>
       </div>
     </div>,
@@ -287,7 +283,7 @@ export default function Onboarding({ onComplete }) {
           type="number" placeholder="Kcal personalizzate..."
           value={form.burn_goal}
           onChange={e => setForm({ ...form, burn_goal: Number(e.target.value) })}
-          style={inputStyle}
+          className={inputCls}
         />
       </div>
     </div>,
@@ -363,12 +359,11 @@ export default function Onboarding({ onComplete }) {
               border: "none", fontSize: "15px", fontWeight: 500, cursor: "pointer",
               fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
             }}>
-              {saving ? <Loader2 style={{ width: "18px", height: "18px", animation: "spin 1s linear infinite" }} /> : null}
+              {saving ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : null}
               {saving ? "Salvataggio..." : "Inizia ora 🚀"}
             </button>
           )}
         </div>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Send, Loader2, ScanLine } from "lucide-react";
+import { Send, ScanLine } from "lucide-react";
+import Spinner from "@/components/ui/Spinner";
 
 export default function ChatInput({ onSend, isLoading, onScannerOpen }) {
   const [message, setMessage] = useState("");
@@ -38,7 +39,7 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen }) {
           style={{ fontSize: "16px" }}
         />
         <Button type="submit" size="icon" disabled={!message.trim() || isLoading} className="h-[52px] w-[52px] rounded-2xl shrink-0 bg-primary hover:bg-primary/90 shadow-md">
-          {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+          {isLoading ? <Spinner size="md" /> : <Send className="w-5 h-5" />}
         </Button>
       </div>
     </form>

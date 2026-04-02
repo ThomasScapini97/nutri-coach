@@ -29,7 +29,7 @@ const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "prima
   );
 };
 
-export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, carbsGoal, fatsGoal, fiberGoal, onWaterUpdate }) {
+export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, carbsGoal, fatsGoal, fiberGoal, userId, onWaterUpdate }) {
   const [expanded, setExpanded] = useState(false);
   const [waterLoading, setWaterLoading] = useState(false);
 
@@ -55,7 +55,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
         .from("food_logs")
         .insert({
           date: format(new Date(), "yyyy-MM-dd"),
-          user_id: (await supabase.auth.getUser()).data.user.id,
+          user_id: userId,
           total_calories: 0, total_carbs: 0, total_protein: 0,
           total_fats: 0, total_fiber: 0, total_burned_calories: 0,
           water_glasses: newCount,

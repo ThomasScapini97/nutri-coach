@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { recalculateTotals } from "@/lib/nutritionUtils";
+import { recalculateTotals, FIBER_GOAL } from "@/lib/nutritionUtils";
 import { format } from "date-fns";
 import { ChevronLeft, ChevronRight, Flame, TrendingUp } from "lucide-react";
 import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
@@ -30,7 +30,7 @@ export default function Summary() {
   const proteinGoal = profile?.protein_goal || 120;
   const carbsGoal = profile?.carbs_goal || 250;
   const fatsGoal = profile?.fats_goal || 65;
-  const fiberGoal = 30;
+  const fiberGoal = FIBER_GOAL;
 
   const { data: dayLogs } = useQuery({
     queryKey: ["foodlog", dateStr, user?.id],
@@ -73,50 +73,60 @@ export default function Summary() {
 
   const handleAddEntry = async (group) => {
     if (!dayLog || isPast) return;
-    await supabase.from("food_entries").insert({
-      foodlog_id: dayLog.id,
-      food_name: group.food_name,
-      food_key: group.food_key || group.food_name.toLowerCase().trim().replace(/\s+/g, "_"),
-      meal_type: group.meal_type,
-      grams: group.total_grams ? Math.round(group.total_grams / group.quantity) : null,
-      calories: Math.round(group.total_calories / group.quantity),
-      carbs: Math.round((group.total_carbs / group.quantity) * 10) / 10,
-      protein: Math.round((group.total_protein / group.quantity) * 10) / 10,
-      fats: Math.round((group.total_fats / group.quantity) * 10) / 10,
-      fiber: Math.round((group.total_fiber / group.quantity) * 10) / 10,
-      timestamp: new Date().toISOString(),
-    });
-    await recalculateTotals(dayLog.id);
-    await supabase.from("messages").insert({
-      foodlog_id: dayLog.id,
-      role: "system",
-      content: `➕ **${group.food_name}** aggiunto (x${group.quantity + 1})`,
-      timestamp: new Date().toISOString(),
-    });
-    queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
-    queryClient.invalidateQueries({ queryKey: ["foodlog"] });
-    queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
-    toast.success(`Added ${group.food_name} ➕`);
+    try {
+      const { error } = await supabase.from("food_entries").insert({
+        foodlog_id: dayLog.id,
+        food_name: group.food_name,
+        food_key: group.food_key || group.food_name.toLowerCase().trim().replace(/\s+/g, "_"),
+        meal_type: group.meal_type,
+        grams: group.total_grams ? Math.round(group.total_grams / group.quantity) : null,
+        calories: Math.round(group.total_calories / group.quantity),
+        carbs: Math.round((group.total_carbs / group.quantity) * 10) / 10,
+        protein: Math.round((group.total_protein / group.quantity) * 10) / 10,
+        fats: Math.round((group.total_fats / group.quantity) * 10) / 10,
+        fiber: Math.round((group.total_fiber / group.quantity) * 10) / 10,
+        timestamp: new Date().toISOString(),
+      });
+      if (error) throw error;
+      await recalculateTotals(dayLog.id);
+      await supabase.from("messages").insert({
+        foodlog_id: dayLog.id,
+        role: "system",
+        content: `➕ **${group.food_name}** aggiunto (x${group.quantity + 1})`,
+        timestamp: new Date().toISOString(),
+      });
+      queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
+      queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+      queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
+      toast.success(`Added ${group.food_name} ➕`);
+    } catch {
+      toast.error("Failed to add entry. Please try again.");
+    }
   };
 
   const handleRemoveEntry = async (group) => {
     if (!dayLog || isPast) return;
-    const idToDelete = group.ids[group.ids.length - 1];
-    await supabase.from("food_entries").delete().eq("id", idToDelete);
-    await recalculateTotals(dayLog.id);
-    const isDeleted = group.quantity === 1;
-    await supabase.from("messages").insert({
-      foodlog_id: dayLog.id,
-      role: "system",
-      content: isDeleted
-        ? `🗑️ **${group.food_name}** eliminato`
-        : `➖ **${group.food_name}** rimosso (x${group.quantity - 1})`,
-      timestamp: new Date().toISOString(),
-    });
-    queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
-    queryClient.invalidateQueries({ queryKey: ["foodlog"] });
-    queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
-    toast.success(`Removed ${group.food_name} ➖`);
+    try {
+      const idToDelete = group.ids[group.ids.length - 1];
+      const { error } = await supabase.from("food_entries").delete().eq("id", idToDelete);
+      if (error) throw error;
+      await recalculateTotals(dayLog.id);
+      const isDeleted = group.quantity === 1;
+      await supabase.from("messages").insert({
+        foodlog_id: dayLog.id,
+        role: "system",
+        content: isDeleted
+          ? `🗑️ **${group.food_name}** eliminato`
+          : `➖ **${group.food_name}** rimosso (x${group.quantity - 1})`,
+        timestamp: new Date().toISOString(),
+      });
+      queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
+      queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+      queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
+      toast.success(`Removed ${group.food_name} ➖`);
+    } catch {
+      toast.error("Failed to remove entry. Please try again.");
+    }
   };
 
   // Modifica grammi con ricalcolo proporzionale
