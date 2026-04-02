@@ -38,7 +38,10 @@ function calculateCalorieGoal(profile) {
   }
   const multipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
   let tdee = bmr * (multipliers[profile.activity_level] || 1.2);
-  if (profile.goal === "lose_weight") tdee -= 400;
+  if (profile.goal === "lose_weight") {
+    const minSafe = profile.gender === "male" ? 1500 : 1200;
+    tdee = Math.max(tdee * 0.80, minSafe);
+  }
   if (profile.goal === "gain_muscle") tdee += 300;
   return Math.round(tdee);
 }
