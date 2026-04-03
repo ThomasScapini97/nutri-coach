@@ -175,7 +175,6 @@ export default function Exercise() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === getToday();
-  const isPast = !isToday;
 
   // Sheet state
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -314,7 +313,7 @@ export default function Exercise() {
   const ensureFoodLog = async () => {
     if (dayLog?.id) return dayLog.id;
     const { data: created } = await supabase.from("food_logs").insert({
-      date: getToday(), user_id: user.id,
+      date: dateStr, user_id: user.id,
       total_calories: 0, total_carbs: 0, total_protein: 0,
       total_fats: 0, total_fiber: 0, total_burned_calories: 0,
     }).select().single();
@@ -322,7 +321,7 @@ export default function Exercise() {
   };
 
   const handleSave = async () => {
-    if (!canSave() || isPast) return;
+    if (!canSave()) return;
     setSaving(true);
     try {
       const calories = previewCalories;
@@ -331,7 +330,7 @@ export default function Exercise() {
       const entry = {
         user_id: user.id,
         foodlog_id: logId,
-        date: getToday(),
+        date: dateStr,
         exercise_name: selectedExercise.name,
         calories_burned: calories,
         exercise_type: exerciseType,
@@ -379,7 +378,6 @@ export default function Exercise() {
   };
 
   const handleDelete = async (exercise) => {
-    if (isPast) return;
     try {
       await supabase.from("exercise_logs").delete().eq("id", exercise.id);
       const newTotal = Math.max(0, totalBurnedToday - exercise.calories_burned);
@@ -403,7 +401,6 @@ export default function Exercise() {
   };
 
   const handleLogPreset = async (preset) => {
-    if (isPast) return;
     setSaving(true);
     try {
       const logId = await ensureFoodLog();
@@ -413,7 +410,7 @@ export default function Exercise() {
         await supabase.from("exercise_logs").insert({
           user_id: user.id,
           foodlog_id: logId,
-          date: getToday(),
+          date: dateStr,
           exercise_name: ex.exercise_name,
           duration_minutes: ex.duration_minutes || null,
           calories_burned: ex.calories_burned || 0,
@@ -520,7 +517,7 @@ export default function Exercise() {
             {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
           </h2>
           <p className="text-[11px] text-gray-400 m-0">
-            {isToday ? `${totalBurnedToday} kcal burned today` : isPast ? "Past day — read only" : ""}
+            {`${totalBurnedToday} kcal burned`}
           </p>
         </div>
         <button onClick={() => navigateDay(1)} disabled={isToday} className={`absolute right-4 bg-transparent border-none flex items-center justify-center p-0 ${isToday ? "opacity-30 cursor-default" : "cursor-pointer"}`}>
@@ -625,7 +622,7 @@ export default function Exercise() {
                 {workoutPresets.map(preset => (
                   <button
                     key={preset.id}
-                    disabled={isPast || saving}
+                    disabled={saving}
                     onClick={() => handleLogPreset(preset)}
                     onTouchStart={() => handlePresetLongPress(preset)}
                     onTouchEnd={handlePresetPressEnd}
@@ -633,7 +630,7 @@ export default function Exercise() {
                     onMouseLeave={handlePresetPressEnd}
                     className="shrink-0 text-left bg-white rounded-[14px] border border-black/[0.06] px-3 py-[10px] min-w-[130px] max-w-[160px] relative cursor-pointer font-[inherit]"
                     style={{
-                      opacity: isPast || saving ? 0.5 : 1,
+                      opacity: saving ? 0.5 : 1,
                       boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                     }}
                   >
@@ -647,12 +644,10 @@ export default function Exercise() {
                       </button>
                     </div>
                     <p className="text-[10px] text-gray-400 m-0 mt-[4px]">{getPresetSummary(preset)}</p>
-                    {!isPast && (
-                      <div className="mt-[8px] bg-red-50 rounded-[8px] py-[4px] px-2 flex items-center justify-center gap-1">
-                        <Plus className="w-[10px] h-[10px] text-red-600" />
-                        <span className="text-[10px] text-red-600 font-medium">Log all</span>
-                      </div>
-                    )}
+                    <div className="mt-[8px] bg-red-50 rounded-[8px] py-[4px] px-2 flex items-center justify-center gap-1">
+                      <Plus className="w-[10px] h-[10px] text-red-600" />
+                      <span className="text-[10px] text-red-600 font-medium">Log all</span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -660,23 +655,21 @@ export default function Exercise() {
           )}
 
           {/* Log exercise button */}
-          {!isPast && (
-            <motion.button
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              onClick={() => setShowAddSheet(true)}
-              className="w-full bg-red-600 text-white border-none rounded-[14px] py-[13px] text-[14px] font-medium cursor-pointer font-[inherit] flex items-center justify-center gap-2"
-            >
-              <Plus className="w-[18px] h-[18px]" />
-              Log exercise
-            </motion.button>
-          )}
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            onClick={() => setShowAddSheet(true)}
+            className="w-full bg-red-600 text-white border-none rounded-[14px] py-[13px] text-[14px] font-medium cursor-pointer font-[inherit] flex items-center justify-center gap-2"
+          >
+            <Plus className="w-[18px] h-[18px]" />
+            Log exercise
+          </motion.button>
 
           {/* Exercise list */}
           {dayExercises.length > 0 ? (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-              className={isPast ? "opacity-70" : ""}
+              className=""
             >
               <p className="text-[13px] font-medium text-forest mb-2 px-[2px] m-0">
                 🏃 {isToday ? "Today's exercises" : "Exercises logged"}
@@ -698,11 +691,9 @@ export default function Exercise() {
                           <Flame className="w-3 h-3 text-red-600" />
                           <span className="text-xs font-semibold text-red-600">{exercise.calories_burned}</span>
                         </div>
-                        {!isPast && (
-                          <button onClick={() => handleDelete(exercise)} className="w-[26px] h-[26px] rounded-full bg-gray-50 border border-gray-200 cursor-pointer flex items-center justify-center p-0">
-                            <Trash2 className="w-3 h-3 text-gray-400" />
-                          </button>
-                        )}
+                        <button onClick={() => handleDelete(exercise)} className="w-[26px] h-[26px] rounded-full bg-gray-50 border border-gray-200 cursor-pointer flex items-center justify-center p-0">
+                          <Trash2 className="w-3 h-3 text-gray-400" />
+                        </button>
                       </div>
                     </motion.div>
                   );
@@ -725,10 +716,10 @@ export default function Exercise() {
             <div className="text-center p-6 bg-white rounded-2xl border border-black/[0.06]">
               <p className="text-[32px] mb-2">🏃</p>
               <p className="text-[13px] font-medium text-forest mb-1 m-0">
-                {isPast ? "No exercises logged this day" : "No exercises logged yet"}
+                No exercises logged yet
               </p>
               <p className="text-xs text-gray-400 m-0">
-                {isPast ? "" : "Tap \"Log exercise\" to get started!"}
+                Tap "Log exercise" to get started!
               </p>
             </div>
           )}

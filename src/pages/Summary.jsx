@@ -64,15 +64,14 @@ export default function Summary() {
   };
 
   const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
-  const isPast = !isToday;
-  const caloriesConsumed = dayLog?.total_calories || 0;
+const caloriesConsumed = dayLog?.total_calories || 0;
   const burnedCalories = dayLog?.total_burned_calories || 0;
   const netCalories = Math.max(caloriesConsumed - burnedCalories, 0);
   const caloriesRemaining = Math.max(calorieGoal - netCalories, 0);
   const caloriePercentage = calorieGoal > 0 ? Math.min((netCalories / calorieGoal) * 100, 100) : 0;
 
   const handleAddEntry = async (group) => {
-    if (!dayLog || isPast) return;
+    if (!dayLog) return;
     try {
       const { error } = await supabase.from("food_entries").insert({
         foodlog_id: dayLog.id,
@@ -105,7 +104,7 @@ export default function Summary() {
   };
 
   const handleRemoveEntry = async (group) => {
-    if (!dayLog || isPast) return;
+    if (!dayLog) return;
     try {
       const idToDelete = group.ids[group.ids.length - 1];
       const { error } = await supabase.from("food_entries").delete().eq("id", idToDelete);
@@ -190,10 +189,8 @@ export default function Summary() {
           <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">
             {isToday ? "Today" : format(selectedDate, "EEEE, MMM d")}
           </h2>
-          <p className={`text-[11px] m-0 ${isPast ? "text-amber-500" : "text-gray-400"}`}>
-            {isPast
-              ? `📅 ${format(selectedDate, "yyyy")} · past day`
-              : dayLog ? `${netCalories} kcal logged` : "Start tracking your meals"}
+          <p className="text-[11px] m-0 text-gray-400">
+            {dayLog ? `${netCalories} kcal logged` : "No meals logged"}
           </p>
         </div>
         <button
@@ -215,9 +212,7 @@ export default function Summary() {
             transition={{ delay: 0.05 }}
             className="rounded-[20px] p-[18px] text-white relative overflow-hidden"
             style={{
-              background: isPast
-                ? "linear-gradient(135deg, #4b7c5a 0%, #3a6348 100%)"
-                : "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+              background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
             }}
           >
             <div className="absolute -top-[30px] -right-[30px] w-[120px] h-[120px] rounded-full bg-white/[0.07]" />
@@ -279,13 +274,6 @@ export default function Summary() {
             transition={{ delay: 0.15 }}
             className="relative"
           >
-            {isPast && (
-              <div className="absolute inset-0 z-10 bg-mint/30 rounded-2xl flex items-start justify-end p-2 pointer-events-auto">
-                <span className="text-[11px] text-gray-400 bg-white px-3 py-1 rounded-full border border-gray-200">
-                  🔒 read only
-                </span>
-              </div>
-            )}
             <div className="flex items-center justify-between mb-[10px] px-[2px]">
               <span className="text-[13px] font-medium text-forest">🍽 What you ate</span>
               {dayEntries?.length > 0 && (
@@ -335,7 +323,7 @@ export default function Summary() {
                     quantity={group.quantity}
                     onAdd={() => handleAddEntry(group)}
                     onRemove={() => handleRemoveEntry(group)}
-                    onUpdateGrams={!isPast ? (_entry, newGrams) => handleUpdateGrams({ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber, grams: group.total_grams }, newGrams) : undefined}
+                    onUpdateGrams={(_entry, newGrams) => handleUpdateGrams({ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber, grams: group.total_grams }, newGrams)}
                   />
                 ));
               })() : (
