@@ -401,7 +401,7 @@ export default function Exercise() {
   };
 
   const handleLogPreset = async (preset) => {
-    setSaving(true);
+    setSavingPreset(preset.id);
     try {
       const logId = await ensureFoodLog();
       let totalCals = 0;
@@ -442,7 +442,7 @@ export default function Exercise() {
     } catch {
       toast.error("Failed to log preset. Please try again.");
     }
-    setSaving(false);
+    setSavingPreset(null);
   };
 
   const handleDeletePreset = async (preset) => {
@@ -473,6 +473,11 @@ export default function Exercise() {
 
   const handleSavePreset = async () => {
     if (!presetName.trim() || dayExercises.length === 0) return;
+    const duplicate = workoutPresets?.some(p => p.name.toLowerCase().trim() === presetName.toLowerCase().trim());
+    if (duplicate) {
+      toast.error(`A preset named "${presetName.trim()}" already exists.`);
+      return;
+    }
     setSavingPreset(true);
     try {
       const exercises = dayExercises.map(e => ({
@@ -622,7 +627,7 @@ export default function Exercise() {
                 {workoutPresets.map(preset => (
                   <button
                     key={preset.id}
-                    disabled={saving}
+                    disabled={savingPreset === preset.id}
                     onClick={() => handleLogPreset(preset)}
                     onTouchStart={() => handlePresetLongPress(preset)}
                     onTouchEnd={handlePresetPressEnd}
@@ -630,7 +635,7 @@ export default function Exercise() {
                     onMouseLeave={handlePresetPressEnd}
                     className="shrink-0 text-left bg-white rounded-[14px] border border-black/[0.06] px-3 py-[10px] min-w-[130px] max-w-[160px] relative cursor-pointer font-[inherit]"
                     style={{
-                      opacity: saving ? 0.5 : 1,
+                      opacity: savingPreset === preset.id ? 0.5 : 1,
                       boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                     }}
                   >
