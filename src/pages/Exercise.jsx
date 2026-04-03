@@ -473,9 +473,30 @@ export default function Exercise() {
 
   const handleSavePreset = async () => {
     if (!presetName.trim() || dayExercises.length === 0) return;
-    const duplicate = workoutPresets?.some(p => p.name.toLowerCase().trim() === presetName.toLowerCase().trim());
+    const newExercises = dayExercises.map(e => ({
+      exercise_name: e.exercise_name,
+      duration_minutes: e.duration_minutes || null,
+      calories_burned: e.calories_burned || 0,
+      exercise_type: e.exercise_type || "other",
+      speed_kmh: e.speed_kmh || null,
+      sets: e.sets || null,
+      reps: e.reps || null,
+      weight_kg: e.weight_kg || null,
+    }));
+    const duplicate = workoutPresets?.find(p => {
+      if (p.exercises?.length !== newExercises.length) return false;
+      return p.exercises.every((ex, i) => {
+        const n = newExercises[i];
+        return ex.exercise_name === n.exercise_name
+          && ex.duration_minutes === n.duration_minutes
+          && ex.sets === n.sets
+          && ex.reps === n.reps
+          && ex.weight_kg === n.weight_kg
+          && ex.speed_kmh === n.speed_kmh;
+      });
+    });
     if (duplicate) {
-      toast.error(`A preset named "${presetName.trim()}" already exists.`);
+      toast.error("There's already a saved workout with the same exercises.");
       return;
     }
     setSavingPreset(true);
