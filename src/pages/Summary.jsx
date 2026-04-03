@@ -297,7 +297,7 @@ export default function Summary() {
                 const validEntries = dayEntries.filter(e => e && e.id && e.food_name);
                 const grouped = validEntries.reduce((acc, entry) => {
                   const mealType = entry.meal_type?.toLowerCase().trim() || "other";
-                  const foodKey = (entry.food_key || entry.food_name).toLowerCase().trim();
+                  const foodKey = (entry.food_name || entry.food_key || "").toLowerCase().trim().replace(/\s+/g, "_");
                   const key = `${foodKey}_${mealType}`;
                   if (!acc[key]) {
                     acc[key] = {
