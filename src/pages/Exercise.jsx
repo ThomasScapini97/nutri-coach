@@ -473,28 +473,18 @@ export default function Exercise() {
 
   const handleSavePreset = async () => {
     if (!presetName.trim() || dayExercises.length === 0) return;
-    const newExercises = dayExercises.map(e => ({
-      exercise_name: e.exercise_name,
-      duration_minutes: e.duration_minutes || null,
-      calories_burned: e.calories_burned || 0,
-      exercise_type: e.exercise_type || "other",
-      speed_kmh: e.speed_kmh || null,
-      sets: e.sets || null,
-      reps: e.reps || null,
-      weight_kg: e.weight_kg || null,
-    }));
-    const duplicate = workoutPresets?.find(p => {
-      if (p.exercises?.length !== newExercises.length) return false;
-      return p.exercises.every((ex, i) => {
-        const n = newExercises[i];
-        return ex.exercise_name === n.exercise_name
-          && ex.duration_minutes === n.duration_minutes
-          && ex.sets === n.sets
-          && ex.reps === n.reps
-          && ex.weight_kg === n.weight_kg
-          && ex.speed_kmh === n.speed_kmh;
-      });
-    });
+    const canonicalize = (ex) => [
+      ex.exercise_name || "",
+      Number(ex.duration_minutes) || 0,
+      Number(ex.sets) || 0,
+      Number(ex.reps) || 0,
+      Number(ex.weight_kg) || 0,
+      Number(ex.speed_kmh) || 0,
+    ].join("|");
+    const newSig = dayExercises.map(canonicalize).sort().join(";;");
+    const duplicate = workoutPresets?.find(p =>
+      p.exercises?.map(canonicalize).sort().join(";;") === newSig
+    );
     if (duplicate) {
       toast.error("There's already a saved workout with the same exercises.");
       return;
