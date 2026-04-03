@@ -219,8 +219,19 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
                 <div style={{ textAlign: "center", padding: "24px", color: "#9ca3af", fontSize: "13px" }}>Loading...</div>
               ) : dayEntries.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {dayEntries.map((entry, i) => {
-                    const style = mealColors[entry.meal_type?.toLowerCase()] || { bg: "#f3f4f6", color: "#6b7280" };
+                  {Object.values(dayEntries.reduce((acc, entry) => {
+                    const mealType = entry.meal_type?.toLowerCase().trim() || "other";
+                    const foodKey = (entry.food_name || "").toLowerCase().trim().replace(/\s+/g, "_");
+                    const key = `${foodKey}_${mealType}`;
+                    if (!acc[key]) {
+                      acc[key] = { ...entry, meal_type: mealType, quantity: 1, totalCalories: entry.calories || 0 };
+                    } else {
+                      acc[key].quantity += 1;
+                      acc[key].totalCalories += entry.calories || 0;
+                    }
+                    return acc;
+                  }, {})).map((group, i) => {
+                    const style = mealColors[group.meal_type] || { bg: "#f3f4f6", color: "#6b7280" };
                     return (
                       <div key={i} style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -229,11 +240,14 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
                       }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: style.bg, color: style.color, fontWeight: 500 }}>
-                            {entry.meal_type || "other"}
+                            {group.meal_type}
                           </span>
-                          <span style={{ fontSize: "13px", color: "#1a3a22" }}>{entry.food_name}</span>
+                          <span style={{ fontSize: "13px", color: "#1a3a22" }}>{group.food_name}</span>
+                          {group.quantity > 1 && (
+                            <span style={{ fontSize: "11px", color: "#6b7280" }}>x{group.quantity}</span>
+                          )}
                         </div>
-                        <span style={{ fontSize: "12px", fontWeight: 500, color: "#dc2626" }}>{entry.calories} kcal</span>
+                        <span style={{ fontSize: "12px", fontWeight: 500, color: "#dc2626" }}>{group.totalCalories} kcal</span>
                       </div>
                     );
                   })}
