@@ -482,7 +482,9 @@ export default function Exercise() {
       Number(ex.speed_kmh) || 0,
     ].join("|");
     const newSig = dayExercises.map(canonicalize).sort().join(";;");
-    const duplicate = workoutPresets?.find(p =>
+    const { data: freshPresets } = await supabase
+      .from("workout_presets").select("exercises").eq("user_id", user.id);
+    const duplicate = freshPresets?.find(p =>
       p.exercises?.map(canonicalize).sort().join(";;") === newSig
     );
     if (duplicate) {
