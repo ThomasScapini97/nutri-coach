@@ -14,7 +14,7 @@ async function searchOpenFoodFacts(foodName) {
     const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1&page_size=3&lc=it&cc=it`;
     const res = await fetch(url, { 
       headers: { "User-Agent": "NutriCoach/1.0 (contact@nutricoach.app)" },
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(1500),
     });
     if (!res.ok) return null;
     const data = await res.json();

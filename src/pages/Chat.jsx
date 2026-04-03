@@ -131,8 +131,8 @@ Example: "2 fette di pane tostato" → TWO entries each: food_name="pane tostato
 Example: "pasta e insalata" → ONE entry "pasta" + ONE entry "insalata"
 
 **CRITICAL: Food vs Question vs Exercise**
-1. User ATE something → LOG IT (foods array)
-2. User ASKING about food → DO NOT LOG, simulate (is_simulation: true)
+1. User ATE something → LOG IT (foods array). When in doubt, ALWAYS log it.
+2. User ASKING hypothetically → DO NOT LOG, simulate (is_simulation: true). Only skip logging if user explicitly uses words like: "what if", "would", "se mangiassi", "quante calorie ha", "cosa ha", "how many", "hypothetically"
 3. User mentions exercise → foods: [], set burned_calories
 
 **Response Format (JSON only, no markdown code blocks):**
@@ -301,12 +301,21 @@ export default function Chat() {
         result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
         if (!result || !result.message) throw new Error("Invalid");
       } catch {
-        // Try to salvage just the message field from malformed JSON
-        const msgMatch = rawText.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-        const fallbackMsg = msgMatch
-          ? msgMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"')
-          : rawText.replace(/```json|```/g, "").trim() || "Sorry, something went wrong.";
-        result = { message: fallbackMsg, foods: [], burned_calories: 0 };
+        // Try to repair truncated JSON (e.g. max_tokens hit mid-response)
+        try {
+          const cleaned = rawText.replace(/```json|```/g, "").trim();
+          const partial = cleaned.replace(/,?\s*"foods"[\s\S]*$/, "");
+          const repaired = partial + ',"foods":[],"burned_calories":0}';
+          result = JSON.parse(repaired);
+          if (!result?.message) throw new Error("Repair failed");
+        } catch {
+          // Final fallback: extract message text only
+          const msgMatch = rawText.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+          const fallbackMsg = msgMatch
+            ? msgMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"')
+            : rawText.replace(/```json|```/g, "").trim() || "Sorry, something went wrong.";
+          result = { message: fallbackMsg, foods: [], burned_calories: 0 };
+        }
       }
 
       const foods = Array.isArray(result.foods) ? result.foods : [];

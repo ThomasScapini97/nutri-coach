@@ -47,13 +47,15 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
     const to = format(getToday(), "yyyy-MM-dd");
     supabase
       .from("food_logs")
-      .select("date, total_calories")
+      .select("date, total_calories, total_burned_calories")
       .eq("user_id", user.id)
       .gte("date", from)
       .lte("date", to)
       .then(({ data }) => {
         const map = {};
-        (data || []).forEach(l => { map[l.date] = l.total_calories; });
+        (data || []).forEach(l => {
+          map[l.date] = Math.max((l.total_calories || 0) - (l.total_burned_calories || 0), 0);
+        });
         setLogs(map);
       });
   }, [user?.id]);
