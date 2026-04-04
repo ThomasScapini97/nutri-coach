@@ -610,12 +610,12 @@ export default function Exercise() {
           </motion.div>
 
           {/* Workout Presets */}
-          {workoutPresets.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-              <div className="flex items-center gap-[6px] mb-2 px-[2px]">
-                <Bookmark className="w-[13px] h-[13px] text-red-600" />
-                <p className="text-[13px] font-medium text-forest m-0">Saved Workouts</p>
-              </div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+            <div className="flex items-center gap-[6px] mb-2 px-[2px]">
+              <Bookmark className="w-[13px] h-[13px] text-red-600" />
+              <p className="text-[13px] font-medium text-forest m-0">Saved Workouts</p>
+            </div>
+            {workoutPresets.length > 0 ? (
               <div className="flex gap-[8px] overflow-x-auto pb-[4px] scrollbar-hide" style={{ scrollbarWidth: "none" }}>
                 {workoutPresets.map(preset => (
                   <button
@@ -649,8 +649,13 @@ export default function Exercise() {
                   </button>
                 ))}
               </div>
-            </motion.div>
-          )}
+            ) : (
+              <div className="bg-white rounded-[14px] border border-black/[0.06] px-4 py-5 text-center">
+                <p className="text-[13px] text-gray-400 font-medium m-0 mb-1">No saved workouts yet</p>
+                <p className="text-[11px] text-gray-400 m-0">Log some exercises and tap "Save as preset" to create one</p>
+              </div>
+            )}
+          </motion.div>
 
           {/* Log exercise button */}
           <motion.button
