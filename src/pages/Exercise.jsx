@@ -256,9 +256,7 @@ export default function Exercise() {
   // ─── Derived values ──────────────────────────────────────────────────────────
 
   const totalBurnedToday = dayLog?.total_burned_calories || 0;
-  const totalMinutesToday = dayExercises.reduce((sum, e) => sum + (e.duration_minutes || 0), 0);
   const activeDaysThisWeek = new Set(weekExercises.map(e => e.date)).size;
-  const kcalPerMin = totalMinutesToday > 0 ? (totalBurnedToday / totalMinutesToday).toFixed(1) : "—";
 
   const previewCalories = selectedExercise
     ? computeCalories({
@@ -607,24 +605,6 @@ export default function Exercise() {
             <div className="flex gap-1">
               {Array.from({ length: activeDaysGoal }).map((_, i) => (
                 <div key={i} className={`w-2 h-2 rounded-full ${i < activeDaysThisWeek ? "bg-green-600" : "bg-gray-200"}`} />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Stats grid */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { emoji: "⏱️", value: `${totalMinutesToday}`, label: "Total minutes" },
-                { emoji: "💪", value: `${dayExercises.length}`, label: "Exercises done" },
-                { emoji: "⚡", value: `${kcalPerMin}`, label: "kcal / min avg" },
-                { emoji: "📅", value: `${activeDaysThisWeek}/${activeDaysGoal}`, label: "Active days this week" },
-              ].map((s, i) => (
-                <div key={i} className="bg-white rounded-[14px] p-3 border border-black/[0.06]">
-                  <div className="text-[20px] mb-[6px]">{s.emoji}</div>
-                  <div className="text-[20px] font-medium text-forest leading-none">{s.value}</div>
-                  <div className="text-[10px] text-gray-400 mt-[3px]">{s.label}</div>
-                </div>
               ))}
             </div>
           </motion.div>
