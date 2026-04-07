@@ -64,7 +64,7 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
   return (
     <form
       onSubmit={handleSubmit}
-      className="px-5 pt-3 pb-4 bg-white border-t border-gray-200 fixed bottom-20 left-0 right-0 z-40 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto"
+      className="px-4 pt-2 pb-3 bg-white border-t border-gray-200 fixed bottom-20 left-0 right-0 z-40 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto"
     >
       {/* Hidden camera input */}
       <input
@@ -76,23 +76,23 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
         onChange={handleFileChange}
       />
 
-      <div className="max-w-4xl mx-auto flex items-end gap-2">
+      <div className="max-w-4xl mx-auto flex items-center gap-2">
         {/* + button with popup menu */}
         <div className="relative shrink-0" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen(v => !v)}
             style={{
-              width: "52px", height: "52px", borderRadius: "16px",
-              background: menuOpen ? "#e5e7eb" : "#f3f4f6",
-              border: "1px solid #e5e7eb",
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: "transparent",
+              border: "none",
               display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", transition: "background 0.15s",
+              cursor: "pointer",
             }}
           >
             {compressing
               ? <Spinner size="sm" />
-              : <Plus style={{ width: "22px", height: "22px", color: "#6b7280", transition: "transform 0.2s", transform: menuOpen ? "rotate(45deg)" : "rotate(0deg)" }} />
+              : <Plus style={{ width: "24px", height: "24px", color: "#9ca3af", transition: "transform 0.2s", transform: menuOpen ? "rotate(45deg)" : "rotate(0deg)" }} />
             }
           </button>
 
@@ -151,19 +151,19 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(e); } }}
-          placeholder="Tell me what you ate today... 🥗"
+          placeholder=""
           rows={1}
-          className="flex-1 resize-none rounded-2xl border border-gray-200 bg-white px-5 py-3.5 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all min-h-[52px] max-h-32 shadow-sm"
-          style={{ fontSize: "16px" }}
+          className="flex-1 resize-none rounded-full border border-gray-200 bg-white px-4 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all min-h-[38px] max-h-32 shadow-sm"
+          style={{ fontSize: "15px", lineHeight: "1.5" }}
         />
 
         <Button
           type="submit"
           size="icon"
           disabled={!message.trim() || isLoading}
-          className="h-[52px] w-[52px] rounded-2xl shrink-0 bg-primary hover:bg-primary/90 shadow-md"
+          className="h-[38px] w-[38px] rounded-full shrink-0 bg-primary hover:bg-primary/90 shadow-md"
         >
-          {isLoading ? <Spinner size="md" /> : <Send className="w-5 h-5" />}
+          {isLoading ? <Spinner size="sm" /> : <Send className="w-4 h-4" />}
         </Button>
       </div>
     </form>
