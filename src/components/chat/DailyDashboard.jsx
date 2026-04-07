@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wheat, Drumstick, Droplets, Salad, ChevronDown, GlassWater } from "lucide-react";
+import { Wheat, Drumstick, Droplets, Salad, ChevronDown, GlassWater, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
@@ -83,6 +83,12 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
               <p className="text-[10px] text-muted-foreground">
                 {caloriesRemaining > 0 ? `${caloriesRemaining} kcal left` : "Goal reached! 🎉"}
               </p>
+              {burnedCalories > 0 && (
+                <p className="flex items-center gap-[3px] text-[10px] text-orange-500 mt-[1px]">
+                  <Flame className="w-[10px] h-[10px]" />
+                  {burnedCalories} kcal burned
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
