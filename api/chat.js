@@ -124,32 +124,35 @@ export default async function handler(req, res) {
     const safeModel = ALLOWED_MODELS.includes(model) ? model : "claude-haiku-4-5-20251001";
     const safeMaxTokens = Math.min(Math.max(Number(max_tokens) || 1500, 100), 2000);
 
-    // Ottieni l'ultimo messaggio utente
-    const lastUserMessage = [...messages].reverse().find(m => m.role === "user")?.content || "";
+    // Detect if last user message is a vision message (photo)
+    const lastUserContent = [...messages].reverse().find(m => m.role === "user")?.content;
+    const isVisionMessage = Array.isArray(lastUserContent);
 
-    // Estrai alimenti e cerca su Open Food Facts in parallelo
-    const foodNames = await extractFoodsFromMessage(lastUserMessage, process.env.ANTHROPIC_API_KEY);
-    
     let nutritionContext = "";
-    if (foodNames.length > 0) {
-      const results = await Promise.all(foodNames.map(async (food) => {
-        const data = await searchOpenFoodFacts(food);
-        return { food, data };
-      }));
+    if (!isVisionMessage) {
+      // Text message: extract foods and look up on Open Food Facts
+      const lastUserMessage = typeof lastUserContent === "string" ? lastUserContent : "";
+      const foodNames = await extractFoodsFromMessage(lastUserMessage, process.env.ANTHROPIC_API_KEY);
 
-      const found = results.filter(r => r.data);
-      if (found.length > 0) {
-        nutritionContext = "\n\n**REAL NUTRITION DATA from Open Food Facts database (use these exact values per 100g):**\n";
-        found.forEach(({ food, data }) => {
-          nutritionContext += `- ${food}: ${data.per100.calories} kcal, ${data.per100.protein}g protein, ${data.per100.carbs}g carbs, ${data.per100.fats}g fat, ${data.per100.fiber}g fiber\n`;
-        });
-        nutritionContext += "**IMPORTANT: Use ONLY these values for calculation. Ignore any hardcoded values in your instructions.**";
+      if (foodNames.length > 0) {
+        const results = await Promise.all(foodNames.map(async (food) => {
+          const data = await searchOpenFoodFacts(food);
+          return { food, data };
+        }));
+        const found = results.filter(r => r.data);
+        if (found.length > 0) {
+          nutritionContext = "\n\n**REAL NUTRITION DATA from Open Food Facts database (use these exact values per 100g):**\n";
+          found.forEach(({ food, data }) => {
+            nutritionContext += `- ${food}: ${data.per100.calories} kcal, ${data.per100.protein}g protein, ${data.per100.carbs}g carbs, ${data.per100.fats}g fat, ${data.per100.fiber}g fiber\n`;
+          });
+          nutritionContext += "**IMPORTANT: Use ONLY these values for calculation. Ignore any hardcoded values in your instructions.**";
+        }
       }
     }
 
     // Aggiungi il contesto nutrizionale al system prompt
-    const enhancedSystem = nutritionContext 
-      ? system + nutritionContext 
+    const enhancedSystem = nutritionContext
+      ? system + nutritionContext
       : system;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {

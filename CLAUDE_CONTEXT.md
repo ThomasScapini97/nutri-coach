@@ -188,7 +188,7 @@ api/
 - [ ] Push notifications (after Capacitor)
 - [ ] User-configurable evening notification time
 - [ ] CSV data export
-- [ ] System messages (grey pill) for +/- quantity and delete actions in Summary
+- [x] System messages (grey pill) for +/- quantity and delete actions in Summary
 
 ## Scores
 - Pre-pubblicazione: 75/100

@@ -326,7 +326,11 @@ export default function Chat() {
   const lastLogTime = chatMessages?.length ? chatMessages[chatMessages.length - 1].timestamp : null;
   useMealReminderCheck(lastLogTime);
 
-  const handleSend = async (text) => {
+  const handlePhotoSend = async (imageBase64) => {
+    await handleSend("📷 Foto", imageBase64);
+  };
+
+  const handleSend = async (text, imageBase64 = null) => {
     const userMessage = { id: crypto.randomUUID(), role: "user", content: text, timestamp: new Date().toISOString() };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
@@ -337,7 +341,15 @@ export default function Chat() {
         .filter(m => m.id !== "welcome_message" && (m.role === "user" || m.role === "assistant"))
         .slice(-CHAT_HISTORY_LIMIT)
         .map(m => ({ role: m.role, content: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }));
-      const recentMessages = [...history, { role: "user", content: userMessage.content }];
+      // If photo: send as vision message with image + text prompt
+      const lastUserContent = imageBase64
+        ? [
+            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: imageBase64 } },
+            { type: "text", text: "Analyze this food photo. Identify what food is visible and estimate the portion size, then log it." },
+          ]
+        : userMessage.content;
+
+      const recentMessages = [...history, { role: "user", content: lastUserContent }];
 
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -506,7 +518,7 @@ export default function Chat() {
           onClose={() => setShowScanner(false)}
         />
       )}
-      <ChatInput onSend={handleSend} isLoading={isLoading} onScannerOpen={() => setShowScanner(true)} />
+      <ChatInput onSend={handleSend} isLoading={isLoading} onScannerOpen={() => setShowScanner(true)} onPhotoSend={handlePhotoSend} />
     </div>
   );
 }
