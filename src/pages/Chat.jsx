@@ -247,7 +247,7 @@ export default function Chat() {
       // Only count days where food was logged on that same calendar day (UTC)
       // Prevents retroactive past-day logging from inflating the streak
       return (data || [])
-        .filter(r => r.created_at && r.date === r.created_at.slice(0, 10))
+        .filter(r => r.created_at && r.date === format(new Date(r.created_at), "yyyy-MM-dd"))
         .map(r => r.date);
     },
     enabled: !!user?.id,
