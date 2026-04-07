@@ -12,6 +12,7 @@ import { evaluateDailyNutrition } from "../components/notifications/DailyEvaluat
 import { useMealReminderCheck } from "../components/notifications/MealReminderToast";
 import { toast } from "sonner";
 import { recalculateTotals, FIBER_GOAL } from "@/lib/nutritionUtils";
+import { generateDailySummary, loadPastSummaries } from "@/lib/dailySummary";
 import BarcodeScanner from "../components/chat/BarcodeScanner";
 
 const getToday = () => format(new Date(), "yyyy-MM-dd");
@@ -23,7 +24,7 @@ const WELCOME_MESSAGE = {
   timestamp: new Date().toISOString(),
 };
 
-function buildSystemPrompt(profile, todayLog, entries = []) {
+function buildSystemPrompt(profile, todayLog, entries = [], pastSummaries = []) {
   const totals = todayLog ? {
     calories: todayLog.total_calories || 0,
     carbs: todayLog.total_carbs || 0,
@@ -154,6 +155,11 @@ Example: "pasta e insalata" → ONE entry "pasta" + ONE entry "insalata"
   "is_simulation": false
 }
 
+**Past 7 days memory (use this to give personalized, contextual advice):**
+${pastSummaries.length > 0
+  ? pastSummaries.map(s => `- ${s}`).join("\n")
+  : "No past data available yet — this is the user's first days using the app."}
+
 IMPORTANT: Return ONLY the JSON object, no other text.`;
 }
 
@@ -164,6 +170,7 @@ export default function Chat() {
   const [dailyEvaluation, setDailyEvaluation] = useState(null);
   const [evaluationDismissed, setEvaluationDismissed] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [pastSummaries, setPastSummaries] = useState([]);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -249,6 +256,19 @@ export default function Chat() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Load past summaries and silently generate yesterday's if missing
+  useEffect(() => {
+    if (!user?.id) return;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = format(yesterday, "yyyy-MM-dd");
+    const calorieGoal = profile?.calorie_goal || 2000;
+    generateDailySummary(user.id, yesterdayStr, calorieGoal)
+      .then(() => loadPastSummaries(user.id))
+      .then(setPastSummaries)
+      .catch(() => {});
+  }, [user?.id, profile?.calorie_goal]);
+
   const lastLogTime = chatMessages?.length ? chatMessages[chatMessages.length - 1].timestamp : null;
   useMealReminderCheck(lastLogTime);
 
@@ -258,7 +278,7 @@ export default function Chat() {
     setIsLoading(true);
 
     try {
-      const systemPrompt = buildSystemPrompt(profile, todayLog, foodEntries || []);
+      const systemPrompt = buildSystemPrompt(profile, todayLog, foodEntries || [], pastSummaries);
       const history = messages
         .filter(m => m.id !== "welcome_message" && (m.role === "user" || m.role === "assistant"))
         .slice(-10)
