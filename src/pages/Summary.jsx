@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -69,6 +69,33 @@ const caloriesConsumed = dayLog?.total_calories || 0;
   const netCalories = Math.max(caloriesConsumed - burnedCalories, 0);
   const caloriesRemaining = Math.max(calorieGoal - netCalories, 0);
   const caloriePercentage = calorieGoal > 0 ? Math.min((netCalories / calorieGoal) * 100, 100) : 0;
+
+  const groupedEntries = useMemo(() => {
+    const validEntries = (dayEntries || []).filter(e => e && e.id && e.food_name);
+    return Object.values(validEntries.reduce((acc, entry) => {
+      const mealType = entry.meal_type?.toLowerCase().trim() || "other";
+      const foodKey = (entry.food_name || entry.food_key || "").toLowerCase().trim().replace(/\s+/g, "_");
+      const key = `${foodKey}_${mealType}`;
+      if (!acc[key]) {
+        acc[key] = {
+          ...entry, meal_type: mealType, quantity: 1, ids: [entry.id],
+          total_calories: entry.calories || 0, total_carbs: entry.carbs || 0,
+          total_protein: entry.protein || 0, total_fats: entry.fats || 0,
+          total_fiber: entry.fiber || 0, total_grams: entry.grams || null,
+        };
+      } else {
+        acc[key].quantity += 1;
+        acc[key].ids.push(entry.id);
+        acc[key].total_calories += entry.calories || 0;
+        acc[key].total_carbs += entry.carbs || 0;
+        acc[key].total_protein += entry.protein || 0;
+        acc[key].total_fats += entry.fats || 0;
+        acc[key].total_fiber += entry.fiber || 0;
+        if (entry.grams) acc[key].total_grams = (acc[key].total_grams || 0) + entry.grams;
+      }
+      return acc;
+    }, {}));
+  }, [dayEntries]);
 
   const handleAddEntry = async (group) => {
     if (!dayLog) return;
@@ -283,33 +310,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
               )}
             </div>
             <div className="flex flex-col gap-[6px]">
-              {dayEntries?.length > 0 ? (() => {
-                const validEntries = dayEntries.filter(e => e && e.id && e.food_name);
-                const grouped = validEntries.reduce((acc, entry) => {
-                  const mealType = entry.meal_type?.toLowerCase().trim() || "other";
-                  const foodKey = (entry.food_name || entry.food_key || "").toLowerCase().trim().replace(/\s+/g, "_");
-                  const key = `${foodKey}_${mealType}`;
-                  if (!acc[key]) {
-                    acc[key] = {
-                      ...entry, meal_type: mealType, quantity: 1, ids: [entry.id],
-                      total_calories: entry.calories || 0, total_carbs: entry.carbs || 0,
-                      total_protein: entry.protein || 0, total_fats: entry.fats || 0,
-                      total_fiber: entry.fiber || 0,
-                      total_grams: entry.grams || null,
-                    };
-                  } else {
-                    acc[key].quantity += 1;
-                    acc[key].ids.push(entry.id);
-                    acc[key].total_calories += entry.calories || 0;
-                    acc[key].total_carbs += entry.carbs || 0;
-                    acc[key].total_protein += entry.protein || 0;
-                    acc[key].total_fats += entry.fats || 0;
-                    acc[key].total_fiber += entry.fiber || 0;
-                    if (entry.grams) acc[key].total_grams = (acc[key].total_grams || 0) + entry.grams;
-                  }
-                  return acc;
-                }, {});
-                return Object.values(grouped).map(group => (
+              {groupedEntries.length > 0 ? groupedEntries.map(group => (
                   <FoodEntryItem
                     key={group.ids[0]}
                     entry={{
@@ -327,8 +328,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                     onRemove={() => handleRemoveEntry(group)}
                     onUpdateGrams={(_entry, newGrams) => handleUpdateGrams({ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber, grams: group.total_grams }, newGrams)}
                   />
-                ));
-              })() : (
+                )) : (
                 <div className="text-center py-8 bg-white rounded-2xl border border-black/[0.06]">
                   <p className="text-[13px] text-gray-400 mb-1">No food logged yet</p>
                   <p className="text-xs text-gray-400">Head to chat to start tracking 💬</p>
