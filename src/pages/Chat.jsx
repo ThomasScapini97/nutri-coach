@@ -518,9 +518,12 @@ export default function Chat() {
         )}
       </div>
 
-      <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={FIBER_GOAL} userId={user?.id} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
-      <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-[160px] md:pb-6 bg-mint">
-        <div className="max-w-4xl mx-auto space-y-5 px-4">
+      <div className="flex-1 overflow-y-auto pb-[160px] md:pb-6 bg-mint">
+        {/* DailyDashboard sticky — messages scroll behind it */}
+        <div style={{ position: "sticky", top: 0, zIndex: 10 }}>
+          <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={FIBER_GOAL} userId={user?.id} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
+        </div>
+        <div className="max-w-4xl mx-auto space-y-5 px-4 pt-2 pb-6">
           {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
           {isLoading && <TypingIndicator />}
           <div ref={messagesEndRef} />
