@@ -142,7 +142,7 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
           >
             {compressing
               ? <Spinner size="sm" />
-              : <Plus style={{ width: "24px", height: "24px", color: "#9ca3af", transition: "transform 0.2s", transform: menuOpen ? "rotate(45deg)" : "rotate(0deg)" }} />
+              : <Plus style={{ width: "24px", height: "24px", color: "#4b5563", transition: "transform 0.2s", transform: menuOpen ? "rotate(45deg)" : "rotate(0deg)" }} />
             }
           </button>
 
@@ -259,7 +259,7 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
                 )}
                 <Mic style={{
                   width: "22px", height: "22px",
-                  color: isRecording ? "white" : "#9ca3af",
+                  color: isRecording ? "white" : "#4b5563",
                   position: "relative",
                 }} />
               </button>
