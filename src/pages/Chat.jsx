@@ -105,12 +105,18 @@ Today's total burned so far: ${burnedToday} kcal
 **CRITICAL: Nutrition Calculation Rules**
 You MUST calculate calories and macros accurately based on the EXACT quantity specified by the user.
 
-Unit conversion reference:
-- 1 tablespoon (cucchiaio) oil = 10ml = ~9g fat = ~83 kcal
-- 1 teaspoon (cucchiaino) oil = 5ml = ~4.5g fat = ~42 kcal
-- 1 slice bread (fetta di pane) = ~30g
-- 1 toast slice = ~25g
-- 1 egg (uovo) = ~55g
+Unit conversion reference — PER SINGLE UNIT (use these exact values for each individual item):
+- 1 uovo intero = 55g = 85 kcal, 7g protein, 6g fat, 0g carbs, 0g fiber
+- 1 fetta pane comune = 30g = 81 kcal, 3g protein, 16g carbs, 0.5g fat
+- 1 fetta pane tostato = 25g = 78 kcal, 2.5g protein, 15g carbs, 1g fat
+- 1 cucchiaio olio = 10g = 88 kcal, 0g protein, 0g carbs, 10g fat
+- 1 cucchiaino olio = 5g = 44 kcal, 0g protein, 0g carbs, 5g fat
+- 1 porzione pasta cruda = 80g = 280 kcal, 10g protein, 57g carbs, 1g fat
+- 1 porzione riso crudo = 80g = 286 kcal, 6g protein, 63g carbs, 0.5g fat
+- 1 banana media = 120g = 107 kcal, 1g protein, 27g carbs, 0g fat
+- 1 mela media = 150g = 78 kcal, 0.5g protein, 21g carbs, 0g fat
+- 1 bicchiere latte = 200ml = 128 kcal, 7g protein, 10g carbs, 7g fat
+- 1 vasetto yogurt greco = 150g = 150 kcal, 15g protein, 6g carbs, 7g fat
 - 1 cup = ~240ml
 
 Nutrition values per 100g (use these as reference, apply to actual quantity):
@@ -124,7 +130,7 @@ Nutrition values per 100g (use these as reference, apply to actual quantity):
 - Pane comune: 270 kcal, 9g protein, 53g carbs, 1g fat, 3g fiber
 - Pane tostato: 310 kcal, 10g protein, 60g carbs, 3g fat, 3g fiber
 - Mozzarella: 280 kcal, 18g protein, 2g carbs, 22g fat, 0g fiber
-- Uovo intero: 155 kcal, 13g protein, 1g carbs, 11g fat, 0g fiber
+- Uovo intero: 155 kcal per 100g — 1 egg = 55g = 85 kcal, 13g protein, 1g carbs, 11g fat, 0g fiber
 - Latte intero: 64 kcal, 3g protein, 5g carbs, 4g fat, 0g fiber
 - Yogurt greco: 100 kcal, 10g protein, 4g carbs, 5g fat, 0g fiber
 - Banana: 89 kcal, 1g protein, 23g carbs, 0g fat, 3g fiber
@@ -133,10 +139,11 @@ Nutrition values per 100g (use these as reference, apply to actual quantity):
 - Tonno in scatola: 116 kcal, 26g protein, 0g carbs, 1g fat, 0g fiber
 - Avocado: 160 kcal, 2g protein, 9g carbs, 15g fat, 7g fiber
 
-CALCULATION EXAMPLE:
-User says "150g bresaola" → calories = (155/100)*150 = 232 kcal, protein = (32/100)*150 = 48g
-User says "2 cucchiai olio" → grams = 18g, calories = (884/100)*18 = 159 kcal, fat = 18g
-User says "100g parmigiano" → calories = (392/100)*100 = 392 kcal, protein = 33g, fat = 28g
+CALCULATION EXAMPLES:
+"150g bresaola" → ONE entry: food_name="bresaola", grams=150, calories=232, protein=48, fats=3, carbs=0
+"due uova" → TWO entries each: food_name="uovo", grams=55, calories=85, protein=7, fats=6, carbs=0
+"3 cucchiai olio" → THREE entries each: food_name="olio d'oliva", grams=10, calories=88, protein=0, fats=10, carbs=0
+"100g parmigiano" → ONE entry: food_name="parmigiano reggiano", grams=100, calories=392, protein=33, fats=28, carbs=0
 
 **CRITICAL: food_name must be CLEAN**
 - food_name: only the food name, NO quantities, NO descriptions (e.g. "bresaola", "olio d'oliva", "parmigiano reggiano", "pane tostato")
@@ -145,10 +152,11 @@ User says "100g parmigiano" → calories = (392/100)*100 = 392 kcal, protein = 3
 - Descriptions like "a scaglie", "al vapore", "grigliato" go in food_name only if they significantly change nutrition, otherwise omit
 
 **CRITICAL: Multi-Food Parsing**
-When user mentions multiple units of the same food, create ONE entry PER UNIT in the "foods" array, each with PER-UNIT grams and calories.
+When user mentions multiple units of the SAME food, create SEPARATE entries for each unit (so the Summary can show "uovo x2" with +/- controls).
 When user mentions multiple DIFFERENT foods, create one entry per food type.
-Example: "2 uova" → TWO entries each: food_name="uova", grams=55, calories=85, protein=7, carbs=1, fats=6, fiber=0
-Example: "2 fette di pane tostato" → TWO entries each: food_name="pane tostato", grams=25, calories=78, protein=3, carbs=15, fats=1, fiber=1
+The grams field = weight of ONE single unit, not the total.
+Example: "due uova" → TWO entries each: food_name="uovo", grams=55, calories=85, protein=7, fats=6, carbs=0
+Example: "3 cucchiai olio" → THREE entries each: food_name="olio d'oliva", grams=10, calories=88, fats=10
 Example: "pasta e insalata" → ONE entry "pasta" + ONE entry "insalata"
 
 **CRITICAL: Food vs Question vs Exercise**
