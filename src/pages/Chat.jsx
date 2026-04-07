@@ -11,12 +11,10 @@ import DailyNotificationPopup from "../components/notifications/DailyNotificatio
 import { evaluateDailyNutrition } from "../components/notifications/DailyEvaluation";
 import { useMealReminderCheck } from "../components/notifications/MealReminderToast";
 import { toast } from "sonner";
-import { recalculateTotals, FIBER_GOAL } from "@/lib/nutritionUtils";
+import { recalculateTotals, FIBER_GOAL, getToday } from "@/lib/nutritionUtils";
 import { generateDailySummary, loadPastSummaries } from "@/lib/dailySummary";
 import { AI_MAX_TOKENS, STREAK_LOOKBACK_DAYS, CHAT_HISTORY_LIMIT } from "@/lib/constants";
 import BarcodeScanner from "../components/chat/BarcodeScanner";
-
-const getToday = () => format(new Date(), "yyyy-MM-dd");
 
 function calculateStreak(foodLogDates) {
   if (!foodLogDates || foodLogDates.length === 0) return 0;

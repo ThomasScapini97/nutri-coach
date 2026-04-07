@@ -1,6 +1,9 @@
 import { supabase } from './supabase';
+import { format } from 'date-fns';
 
 export const FIBER_GOAL = 30;
+
+export const getToday = () => format(new Date(), "yyyy-MM-dd");
 
 export async function recalculateTotals(foodlogId) {
   const { data: entries } = await supabase

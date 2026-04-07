@@ -7,8 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Plus, X, Clock, Trash2, TrendingUp, ChevronLeft, ChevronRight, Bookmark, Save } from "lucide-react";
 import { toast } from "sonner";
 import ScrollableExerciseChart from "../components/summary/ScrollableExerciseChart";
-
-const getToday = () => format(new Date(), "yyyy-MM-dd");
+import { getToday } from "@/lib/nutritionUtils";
 
 const EXERCISES = [
   // Cardio con velocità

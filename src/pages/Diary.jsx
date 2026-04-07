@@ -7,8 +7,7 @@ import { ChevronLeft, ChevronRight, Save, Minus, Plus } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-
-const getToday = () => format(new Date(), "yyyy-MM-dd");
+import { getToday } from "@/lib/nutritionUtils";
 
 const MOODS = [
   { value: 1, emoji: "😔", label: "Bad" },
