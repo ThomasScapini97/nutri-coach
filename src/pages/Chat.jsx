@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -319,6 +319,11 @@ export default function Chat() {
       .catch(() => {});
   }, [user?.id, profile?.calorie_goal]);
 
+  const systemPrompt = useMemo(
+    () => buildSystemPrompt(profile, todayLog, foodEntries || [], pastSummaries),
+    [profile, todayLog, foodEntries, pastSummaries]
+  );
+
   const lastLogTime = chatMessages?.length ? chatMessages[chatMessages.length - 1].timestamp : null;
   useMealReminderCheck(lastLogTime);
 
@@ -328,7 +333,7 @@ export default function Chat() {
     setIsLoading(true);
 
     try {
-      const systemPrompt = buildSystemPrompt(profile, todayLog, foodEntries || [], pastSummaries);
+      // systemPrompt is memoized at component level
       const history = messages
         .filter(m => m.id !== "welcome_message" && (m.role === "user" || m.role === "assistant"))
         .slice(-10)
