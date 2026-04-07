@@ -68,26 +68,23 @@ export default function MobileNav() {
     );
   }
 
-  // ── Other pages: compact floating pill ──────────────────────────────────────
+  // ── Other pages: same edge-to-edge style, only icons ───────────────────────
   return (
     <nav
-      className="md:hidden fixed z-50"
+      className="md:hidden fixed z-50 bottom-0 left-0 right-0"
       style={{
-        bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
-        left: "16px",
-        right: "16px",
-        height: "56px",
-        background: "rgba(255,255,255,0.92)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderRadius: "999px",
-        border: "0.5px solid rgba(0,0,0,0.08)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+        background: "white",
+        borderRadius: "24px 24px 0 0",
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
         display: "flex",
-        alignItems: "center",
+        height: "calc(56px + env(safe-area-inset-bottom, 0px))",
+        alignItems: "flex-start",
       }}
     >
-      <TabIcons location={location} />
+      <div style={{ display: "flex", width: "100%", height: "56px" }}>
+        <TabIcons location={location} />
+      </div>
     </nav>
   );
 }
