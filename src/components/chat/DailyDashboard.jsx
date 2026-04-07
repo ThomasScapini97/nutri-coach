@@ -70,7 +70,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-4 mb-3">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-4 mt-4 mb-3">
       <div className="rounded-3xl transition-all pb-px" style={{
         background: "rgba(255,255,255,0.78)",
         backdropFilter: "blur(20px) saturate(180%)",
