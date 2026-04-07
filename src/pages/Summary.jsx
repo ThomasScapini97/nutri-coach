@@ -259,7 +259,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             <div className="flex items-center gap-[6px] mb-[10px] px-[2px]">
               <span className="text-[13px] font-medium text-forest">🏅 Nutrition</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
               <AnimatedProgressBar label="Carbs" value={dayLog?.total_carbs || 0} max={carbsGoal} unit="g" color="chart-3" />
               <AnimatedProgressBar label="Protein" value={dayLog?.total_protein || 0} max={proteinGoal} unit="g" color="chart-4" />
               <AnimatedProgressBar label="Fats" value={dayLog?.total_fats || 0} max={fatsGoal} unit="g" color="blue-500" />

@@ -1,64 +1,54 @@
 import { motion } from "framer-motion";
+import { Drumstick, Wheat, Droplets, Salad } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const iconMap = {
+  "chart-4": Drumstick,
+  "chart-3": Wheat,
+  "blue-500": Droplets,
+  "primary": Salad,
+};
+
+const barColorMap = {
+  "chart-4": "bg-red-400",
+  "chart-3": "bg-amber-400",
+  "blue-500": "bg-blue-500",
+  "primary": "bg-emerald-500",
+};
+
+const iconColorMap = {
+  "chart-4": "text-red-400",
+  "chart-3": "text-amber-400",
+  "blue-500": "text-blue-500",
+  "primary": "text-emerald-500",
+};
 
 export default function AnimatedProgressBar({ label, value, max, unit, color = "primary" }) {
   const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   const isDanger = percentage >= 100;
   const isWarning = percentage >= 85 && !isDanger;
 
-  const barColor = isDanger
-    ? "#ef4444"
-    : isWarning
-    ? "#f97316"
-    : color === "chart-4" ? "#ef4444"
-    : color === "chart-3" ? "#f59e0b"
-    : color === "blue-500" ? "#3b82f6"
-    : "#10b981";
-
-  const bgColor = isDanger
-    ? "#fee2e2"
-    : isWarning
-    ? "#ffedd5"
-    : color === "chart-4" ? "#fee2e2"
-    : color === "chart-3" ? "#fef3c7"
-    : color === "blue-500" ? "#dbeafe"
-    : "#dcfce7";
+  const Icon = iconMap[color] || Salad;
+  const barColor = isDanger ? "bg-red-500" : isWarning ? "bg-rose-400" : (barColorMap[color] || "bg-emerald-500");
+  const iconColor = isDanger ? "text-destructive" : isWarning ? "text-accent" : (iconColorMap[color] || "text-emerald-500");
 
   return (
-    <div
-      style={{
-        background: "white",
-        borderRadius: "14px",
-        padding: "12px",
-        border: "0.5px solid rgba(0,0,0,0.06)",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-        <div
-          style={{
-            width: "8px",
-            height: "8px",
-            borderRadius: "50%",
-            background: barColor,
-            flexShrink: 0,
-          }}
-        />
-        <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: 400 }}>{label}</span>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <Icon className={cn("w-3.5 h-3.5", iconColor)} />
+          <span className="text-xs font-medium text-foreground">{label}</span>
+        </div>
+        <div className="text-xs font-semibold text-foreground">
+          {Math.round(value)}<span className="text-muted-foreground font-normal">/{max}</span>{unit}
+        </div>
       </div>
-
-      <div style={{ display: "flex", alignItems: "baseline", gap: "2px", marginBottom: "6px" }}>
-        <span style={{ fontSize: "18px", fontWeight: 500, color: "#1a3a22", lineHeight: 1 }}>
-          {Math.round(value)}
-        </span>
-        <span style={{ fontSize: "11px", color: "#9ca3af" }}>{unit}</span>
-        <span style={{ fontSize: "11px", color: "#9ca3af", marginLeft: "2px" }}>/ {max}{unit}</span>
-      </div>
-
-      <div style={{ background: "#f3f4f6", height: "4px", borderRadius: "99px", overflow: "hidden" }}>
+      <div className="relative h-1.5 bg-gray-200 rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          style={{ height: "100%", borderRadius: "99px", background: barColor }}
+          transition={{ duration: 0.6 }}
+          className={cn("h-full rounded-full", barColor)}
         />
       </div>
     </div>
