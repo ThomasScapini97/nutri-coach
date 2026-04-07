@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { format, subDays } from "date-fns";
-import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Save, Minus, Plus } from "lucide-react";
-import Spinner from "@/components/ui/Spinner";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { getToday } from "@/lib/nutritionUtils";
@@ -43,8 +42,10 @@ export default function Diary() {
   const isToday = dateStr === getToday();
   const isPast = !isToday;
   const [form, setForm] = useState(emptyForm);
-  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [chartRange, setChartRange] = useState(30);
+  const isLoadingRef = useRef(true);
+  const debounceRef = useRef(null);
   const [chartData, setChartData] = useState([]);
   const [lastWeight, setLastWeight] = useState(null);
   const [weightGoal, setWeightGoal] = useState(null);
@@ -86,8 +87,29 @@ export default function Diary() {
       }
     };
 
-    loadData();
+    isLoadingRef.current = true;
+    loadData().then(() => { isLoadingRef.current = false; });
   }, [dateStr, user?.id]);
+
+  // Auto-save with 800ms debounce
+  useEffect(() => {
+    if (isPast || isLoadingRef.current || !user?.id) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const payload = {
+        user_id: user.id, date: dateStr,
+        mood: form.mood, energy: form.energy,
+        sleep_quality: form.sleep_quality, stress: form.stress,
+        notes: form.notes || null,
+        weight: form.weight ? Number(form.weight) : null,
+        waist: null, hips: null, chest: null, arm: null, thigh: null,
+      };
+      const { error } = await supabase.from("diary_entries").upsert(payload, { onConflict: "user_id,date" });
+      if (error) { toast.error("Error saving entry"); }
+      else { setSaved(true); setTimeout(() => setSaved(false), 2000); }
+    }, 800);
+    return () => clearTimeout(debounceRef.current);
+  }, [form, isPast, user?.id, dateStr]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -117,21 +139,6 @@ export default function Diary() {
     setForm(f => ({ ...f, weight: String(newVal) }));
   };
 
-  const handleSave = async () => {
-    if (isPast) return;
-    setSaving(true);
-    const payload = {
-      user_id: user.id, date: dateStr,
-      mood: form.mood, energy: form.energy,
-      sleep_quality: form.sleep_quality, stress: form.stress,
-      notes: form.notes || null,
-      weight: form.weight ? Number(form.weight) : null,
-      waist: null, hips: null, chest: null, arm: null, thigh: null,
-    };
-    const { error } = await supabase.from("diary_entries").upsert(payload, { onConflict: "user_id,date" });
-    if (error) { toast.error("Error saving entry"); } else { toast.success("Entry saved! 📔"); }
-    setSaving(false);
-  };
 
   const weightDiff = form.weight && lastWeight
     ? (Number(form.weight) - Number(lastWeight)).toFixed(1)
@@ -173,9 +180,17 @@ export default function Diary() {
           <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">
             {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
           </h2>
-          <p className="text-[11px] text-gray-400 m-0">
-            {isToday ? "Log your wellness" : "Past entry"}
-          </p>
+          <AnimatePresence mode="wait">
+            {saved ? (
+              <motion.p key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[11px] m-0" style={{ color: "#16a34a" }}>
+                ✓ Saved
+              </motion.p>
+            ) : (
+              <motion.p key="subtitle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[11px] text-gray-400 m-0">
+                {isToday ? "Auto-saved" : "Past entry"}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
         <button onClick={() => navigateDay(1)} disabled={isToday} className={`absolute right-4 bg-transparent border-none flex items-center justify-center p-0 ${isToday ? "opacity-30 cursor-default" : "cursor-pointer"}`}>
           <ChevronRight className="w-5 h-5 text-gray-500" />
@@ -366,20 +381,6 @@ export default function Diary() {
           {/* Weekly challenges */}
           <WeeklyChallenges />
 
-          {/* Save button */}
-          {!isPast && (
-            <motion.button
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full bg-green-600 text-white border-none rounded-[14px] py-[13px] text-[14px] font-medium cursor-pointer font-[inherit] flex items-center justify-center gap-2"
-            >
-              {saving ? <Spinner size="sm" /> : <Save className="w-4 h-4" />}
-              {saving ? "Saving..." : "Save today's entry"}
-            </motion.button>
-          )}
 
         </div>
       </div>
