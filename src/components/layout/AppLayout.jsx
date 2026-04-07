@@ -44,6 +44,8 @@ export default function AppLayout() {
             )}
           </div>
           <Outlet />
+          {/* White base under floating nav */}
+          <div className="md:hidden" style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: "80px", background: "white", zIndex: 39 }} />
         </main>
         {!isProfile && <MobileNav />}
       </div>
