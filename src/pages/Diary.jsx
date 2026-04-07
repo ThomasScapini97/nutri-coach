@@ -8,6 +8,7 @@ import Spinner from "@/components/ui/Spinner";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { getToday } from "@/lib/nutritionUtils";
+import WeeklyChallenges from "@/components/diary/WeeklyChallenges";
 
 const MOODS = [
   { value: 1, emoji: "😔", label: "Bad" },
@@ -361,6 +362,9 @@ export default function Diary() {
               />
             </div>
           </motion.div>
+
+          {/* Weekly challenges */}
+          <WeeklyChallenges />
 
           {/* Save button */}
           {!isPast && (
