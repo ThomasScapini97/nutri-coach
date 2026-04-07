@@ -184,6 +184,8 @@ export default function Chat() {
   const queryClient = useQueryClient();
   const handleSendRef = useRef(null);
   const handlePhotoSendRef = useRef(null);
+  const lastScrollTop = useRef(0);
+  const [dashboardTop, setDashboardTop] = useState(0);
 
   const { data: profile } = useQuery({
     queryKey: ["userProfile", user?.id],
@@ -481,8 +483,15 @@ export default function Chat() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-[160px] md:pb-6 bg-mint">
-        <div style={{ position: "sticky", top: 0, zIndex: 10 }}>
+      <div
+        className="flex-1 overflow-y-auto pb-[160px] md:pb-6 bg-mint"
+        onScroll={(e) => {
+          const current = e.currentTarget.scrollTop;
+          setDashboardTop(current < lastScrollTop.current ? 16 : 0);
+          lastScrollTop.current = current;
+        }}
+      >
+        <div style={{ position: "sticky", top: dashboardTop, zIndex: 10, transition: "top 0.3s ease" }}>
           <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={FIBER_GOAL} userId={user?.id} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
         </div>
         <div className="max-w-4xl mx-auto space-y-5 px-4 pt-2 pb-6">
