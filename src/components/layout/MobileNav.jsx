@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
 import { MessageCircle, BarChart3, Dumbbell, BookOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const navItems = [
   { path: "/Chat", label: "Chat", icon: MessageCircle },
@@ -12,18 +11,49 @@ const navItems = [
 export default function MobileNav() {
   const location = useLocation();
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 pt-3 shadow-sm" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
-      <div className="flex items-center justify-around">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link key={item.path} to={item.path} className={cn("flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-medium transition-all duration-200", isActive ? "text-primary bg-primary/10" : "text-muted-foreground")}>
-              <item.icon className={cn("w-5 h-5", isActive && "stroke-[2.5]")} />
-              {item.label}
-            </Link>
-          );
-        })}
-      </div>
+    <nav
+      className="md:hidden fixed z-50"
+      style={{
+        bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+        left: "16px",
+        right: "16px",
+        height: "56px",
+        background: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderRadius: "999px",
+        border: "0.5px solid rgba(0,0,0,0.08)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      {navItems.map((item) => {
+        const isActive = location.pathname === item.path;
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            className="flex flex-col items-center justify-center gap-1 flex-1 h-full"
+            style={{
+              color: isActive ? "#16a34a" : "#9ca3af",
+              textDecoration: "none",
+              fontSize: "10px",
+              fontWeight: 500,
+              transition: "color 0.15s",
+            }}
+          >
+            <item.icon
+              style={{
+                width: "20px",
+                height: "20px",
+                strokeWidth: isActive ? 2.5 : 2,
+              }}
+            />
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }

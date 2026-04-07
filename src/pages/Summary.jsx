@@ -229,7 +229,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-2">
+      <div className="flex-1 overflow-y-auto pb-[90px]">
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
 
           {/* Hero calorie card */}
