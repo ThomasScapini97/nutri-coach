@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Send, ScanLine, Camera, Plus } from "lucide-react";
+import { Send, ScanLine, Camera, Plus, Mic } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import { motion, AnimatePresence } from "framer-motion";
 import { compressImage } from "@/lib/imageUtils";
@@ -9,8 +9,11 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
   const [message, setMessage] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [compressing, setCompressing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const fileInputRef = useRef(null);
   const menuRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const finalTranscriptRef = useRef("");
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -23,6 +26,13 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
+  // Cleanup recognition on unmount
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+    };
+  }, []);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!message.trim() || isLoading) return;
@@ -33,17 +43,56 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    e.target.value = ""; // reset so same file can be selected again
+    e.target.value = "";
     setMenuOpen(false);
     setCompressing(true);
     try {
       const base64 = await compressImage(file);
       onPhotoSend(base64);
     } catch {
-      // silent fail — user just won't get photo logging
+      // silent fail
     } finally {
       setCompressing(false);
     }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return; // browser not supported — button simply won't work
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || "it-IT";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognitionRef.current = recognition;
+    finalTranscriptRef.current = message; // preserve existing text
+
+    recognition.onstart = () => setIsRecording(true);
+
+    recognition.onresult = (e) => {
+      let interim = "";
+      let final = finalTranscriptRef.current;
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          final += (final ? " " : "") + t;
+          finalTranscriptRef.current = final;
+        } else {
+          interim = t;
+        }
+      }
+      setMessage(final + (interim ? " " + interim : ""));
+    };
+
+    recognition.onerror = () => setIsRecording(false);
+    recognition.onend = () => setIsRecording(false);
+
+    recognition.start();
   };
 
   const menuItems = [
@@ -60,6 +109,8 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
       action: () => { setMenuOpen(false); onScannerOpen(); },
     },
   ];
+
+  const showSend = message.trim().length > 0;
 
   return (
     <form
@@ -157,15 +208,69 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
           style={{ fontSize: "15px", lineHeight: "1.5" }}
         />
 
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!message.trim() || isLoading}
-          className="h-[38px] w-[38px] rounded-full shrink-0 bg-primary hover:bg-primary/90 shadow-md"
-        >
-          {isLoading ? <Spinner size="sm" /> : <Send className="w-4 h-4" />}
-        </Button>
+        <AnimatePresence mode="wait" initial={false}>
+          {showSend ? (
+            <motion.div
+              key="send"
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Button
+                type="submit"
+                size="icon"
+                disabled={isLoading}
+                className="h-[38px] w-[38px] rounded-full shrink-0 bg-primary hover:bg-primary/90 shadow-md"
+              >
+                {isLoading ? <Spinner size="sm" /> : <Send className="w-4 h-4 text-white" />}
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="mic"
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <button
+                type="button"
+                onClick={toggleRecording}
+                disabled={isLoading}
+                style={{
+                  width: "38px", height: "38px", borderRadius: "50%",
+                  border: "none", cursor: isLoading ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: isRecording ? "#ef4444" : "transparent",
+                  transition: "background 0.2s",
+                  flexShrink: 0,
+                  position: "relative",
+                }}
+              >
+                {isRecording && (
+                  <span style={{
+                    position: "absolute", inset: 0, borderRadius: "50%",
+                    background: "#ef4444", opacity: 0.35,
+                    animation: "ping 1s cubic-bezier(0,0,0.2,1) infinite",
+                  }} />
+                )}
+                <Mic style={{
+                  width: "22px", height: "22px",
+                  color: isRecording ? "white" : "#9ca3af",
+                  position: "relative",
+                }} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      <style>{`
+        @keyframes ping {
+          75%, 100% { transform: scale(1.6); opacity: 0; }
+        }
+      `}</style>
     </form>
   );
 }
