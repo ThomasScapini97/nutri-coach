@@ -44,7 +44,9 @@ export default function NutritionCard({ nutrition, foodEntries }) {
         fiber: 0,
       };
     }
-    acc[meal].foods.push(entry.food_name);
+    acc[meal].foodCounts = acc[meal].foodCounts || {};
+    const name = entry.food_name || "?";
+    acc[meal].foodCounts[name] = (acc[meal].foodCounts[name] || 0) + 1;
     acc[meal].calories += entry.calories || 0;
     acc[meal].carbs += entry.carbs || 0;
     acc[meal].protein += entry.protein || 0;
@@ -61,7 +63,9 @@ export default function NutritionCard({ nutrition, foodEntries }) {
             <span className="text-2xl">{mealEmojis[group.meal_type] || "🍽️"}</span>
             <div>
               <p className="text-sm font-semibold text-foreground">{mealLabels[group.meal_type] || group.meal_type}</p>
-              <p className="text-xs text-muted-foreground">{group.foods.join(", ")}</p>
+              <p className="text-xs text-muted-foreground">
+                {Object.entries(group.foodCounts || {}).map(([name, count]) => count > 1 ? `${name} x${count}` : name).join(", ")}
+              </p>
             </div>
           </div>
           <div className="grid grid-cols-5 gap-2 mt-2">

@@ -23,7 +23,7 @@ const ChatBubble = memo(function ChatBubble({ message, foodEntries }) {
           padding: "5px 14px", maxWidth: "90%",
         }}>
           <span style={{ fontSize: "10px", color: "#6b7280", textAlign: "center", lineHeight: 1.4 }}>
-            {message.content}
+            <ReactMarkdown className="[&>p]:inline [&>p]:m-0">{message.content}</ReactMarkdown>
           </span>
         </div>
       </motion.div>
