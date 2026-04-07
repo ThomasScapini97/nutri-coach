@@ -13,28 +13,9 @@ import { useMealReminderCheck } from "../components/notifications/MealReminderTo
 import { toast } from "sonner";
 import { recalculateTotals, FIBER_GOAL, getToday } from "@/lib/nutritionUtils";
 import { generateDailySummary, loadPastSummaries } from "@/lib/dailySummary";
-import { AI_MAX_TOKENS, STREAK_LOOKBACK_DAYS, CHAT_HISTORY_LIMIT } from "@/lib/constants";
+import { AI_MAX_TOKENS, CHAT_HISTORY_LIMIT } from "@/lib/constants";
+import { updateStreak } from "@/lib/streakUtils";
 import BarcodeScanner from "../components/chat/BarcodeScanner";
-
-function calculateStreak(foodLogDates) {
-  if (!foodLogDates || foodLogDates.length === 0) return 0;
-  const dateSet = new Set(foodLogDates);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  let streak = 0;
-  let cursor = new Date(today);
-  // If today is not logged, start checking from yesterday
-  if (!dateSet.has(format(cursor, "yyyy-MM-dd"))) {
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  while (true) {
-    const key = format(cursor, "yyyy-MM-dd");
-    if (!dateSet.has(key)) break;
-    streak++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
-}
 
 const WELCOME_MESSAGE = {
   id: "welcome_message",
@@ -236,27 +217,7 @@ export default function Chat() {
     initialData: [],
   });
 
-  const { data: streakDates } = useQuery({
-    queryKey: ["streakDates", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("food_logs")
-        .select("date, created_at")
-        .eq("user_id", user.id)
-        .gt("total_calories", 0)
-        .order("date", { ascending: false })
-        .limit(STREAK_LOOKBACK_DAYS);
-      // Only count days where food was logged on that same calendar day (UTC)
-      // Prevents retroactive past-day logging from inflating the streak
-      return (data || [])
-        .filter(r => r.created_at && r.date === format(new Date(r.created_at), "yyyy-MM-dd"))
-        .map(r => r.date);
-    },
-    enabled: !!user?.id,
-    initialData: [],
-  });
-
-  const streak = calculateStreak(streakDates);
+  const streak = profile?.current_streak || 0;
 
   const { data: chatMessages } = useQuery({
     queryKey: ["messages", todayLog?.id],
@@ -464,10 +425,12 @@ export default function Chat() {
         { foodlog_id: currentLogId, role: assistantMessage.role, content: assistantMessage.content, timestamp: assistantMessage.timestamp, nutrition: assistantMessage.nutrition || null },
       ]);
 
+      if (foods.length > 0) updateStreak(supabase, user.id, getToday());
+
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       queryClient.invalidateQueries({ queryKey: ["foodEntries", currentLogId] });
       queryClient.invalidateQueries({ queryKey: ["messages", currentLogId] });
-      if (foods.length > 0) queryClient.invalidateQueries({ queryKey: ["streakDates", user?.id] });
+      if (foods.length > 0) queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
 
       if (foods.length > 0) toast.success("Meal logged! 🎉", { description: "Your nutrition has been updated." });
       if (burnedCalories > 0) toast.success("Exercise logged! 🔥", { description: `${burnedCalories} kcal burned.` });

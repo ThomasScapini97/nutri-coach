@@ -172,6 +172,20 @@ export default function Profile() {
           >✨</div>
           <p className="text-[17px] font-medium text-forest mt-[2px] m-0">{userName}</p>
           <p className="text-[11px] text-gray-400 m-0">{user?.email}</p>
+          {(profile?.current_streak > 0 || profile?.longest_streak > 0) && (
+            <div className="flex gap-2 mt-[6px]">
+              {profile?.current_streak > 0 && (
+                <span className="text-[11px] px-3 py-[3px] rounded-full font-medium" style={{ background: "#fff7ed", border: "0.5px solid #fed7aa", color: "#ea580c" }}>
+                  🔥 {profile.current_streak} day streak
+                </span>
+              )}
+              {profile?.longest_streak > 0 && (
+                <span className="text-[11px] px-3 py-[3px] rounded-full font-medium" style={{ background: "#fefce8", border: "0.5px solid #fde68a", color: "#b45309" }}>
+                  🏆 Best: {profile.longest_streak} days
+                </span>
+              )}
+            </div>
+          )}
         </motion.div>
 
         {/* Goal card */}
