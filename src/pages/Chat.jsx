@@ -487,7 +487,7 @@ export default function Chat() {
         className="flex-1 overflow-y-auto pb-[160px] md:pb-6 bg-mint"
         onScroll={(e) => {
           const current = e.currentTarget.scrollTop;
-          setDashboardTop(current < lastScrollTop.current ? 0 : 16);
+          setDashboardTop(current < 60 || current < lastScrollTop.current ? 0 : 16);
           lastScrollTop.current = current;
         }}
       >
