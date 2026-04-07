@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
+import { MEMORY_DAYS } from "@/lib/constants";
 
 export async function generateDailySummary(userId, date, calorieGoal) {
   try {
@@ -94,7 +95,7 @@ export async function loadPastSummaries(userId) {
       .select("summary_text")
       .eq("user_id", userId)
       .order("date", { ascending: false })
-      .limit(7);
+      .limit(MEMORY_DAYS);
 
     return (data || []).map(r => r.summary_text).filter(Boolean);
   } catch {

@@ -4,8 +4,7 @@ import { Wheat, Drumstick, Droplets, Salad, ChevronDown, GlassWater, Flame } fro
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
-
-const WATER_GOAL = 8;
+import { WATER_GOAL } from "@/lib/constants";
 
 const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "primary" }) => {
   const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;

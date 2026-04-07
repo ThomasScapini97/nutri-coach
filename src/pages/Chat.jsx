@@ -13,6 +13,7 @@ import { useMealReminderCheck } from "../components/notifications/MealReminderTo
 import { toast } from "sonner";
 import { recalculateTotals, FIBER_GOAL } from "@/lib/nutritionUtils";
 import { generateDailySummary, loadPastSummaries } from "@/lib/dailySummary";
+import { AI_MAX_TOKENS, STREAK_LOOKBACK_DAYS, CHAT_HISTORY_LIMIT } from "@/lib/constants";
 import BarcodeScanner from "../components/chat/BarcodeScanner";
 
 const getToday = () => format(new Date(), "yyyy-MM-dd");
@@ -243,7 +244,7 @@ export default function Chat() {
         .eq("user_id", user.id)
         .gt("total_calories", 0)
         .order("date", { ascending: false })
-        .limit(60);
+        .limit(STREAK_LOOKBACK_DAYS);
       // Only count days where food was logged on that same calendar day (UTC)
       // Prevents retroactive past-day logging from inflating the streak
       return (data || [])
@@ -336,7 +337,7 @@ export default function Chat() {
       // systemPrompt is memoized at component level
       const history = messages
         .filter(m => m.id !== "welcome_message" && (m.role === "user" || m.role === "assistant"))
-        .slice(-10)
+        .slice(-CHAT_HISTORY_LIMIT)
         .map(m => ({ role: m.role, content: typeof m.content === "string" ? m.content : JSON.stringify(m.content) }));
       const recentMessages = [...history, { role: "user", content: userMessage.content }];
 
@@ -350,7 +351,7 @@ export default function Chat() {
         },
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
-          max_tokens: 1500,
+          max_tokens: AI_MAX_TOKENS,
           system: systemPrompt,
           messages: recentMessages,
         }),
