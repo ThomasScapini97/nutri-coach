@@ -231,12 +231,16 @@ export default function Chat() {
     queryFn: async () => {
       const { data } = await supabase
         .from("food_logs")
-        .select("date")
+        .select("date, created_at")
         .eq("user_id", user.id)
         .gt("total_calories", 0)
         .order("date", { ascending: false })
         .limit(60);
-      return (data || []).map(r => r.date);
+      // Only count days where food was logged on that same calendar day (UTC)
+      // Prevents retroactive past-day logging from inflating the streak
+      return (data || [])
+        .filter(r => r.created_at && r.date === r.created_at.slice(0, 10))
+        .map(r => r.date);
     },
     enabled: !!user?.id,
     initialData: [],
