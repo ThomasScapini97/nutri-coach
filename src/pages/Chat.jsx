@@ -205,7 +205,7 @@ export default function Chat() {
   const { data: profile } = useQuery({
     queryKey: ["userProfile", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('user_profiles').select('*').eq('user_id', user.id).single();
+      const { data } = await supabase.from('user_profiles').select('*').eq('user_id', user.id).maybeSingle();
       return data;
     },
     enabled: !!user?.id,
@@ -401,7 +401,7 @@ export default function Chat() {
         if (insertError) {
           // Race condition: another request already created the log — re-fetch it
           const { data: existing } = await supabase.from('food_logs')
-            .select('id').eq('date', getToday()).eq('user_id', user.id).single();
+            .select('id').eq('date', getToday()).eq('user_id', user.id).maybeSingle();
           currentLogId = existing?.id;
         } else {
           currentLogId = created?.id;

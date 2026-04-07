@@ -61,7 +61,7 @@ export default function Profile() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ["userProfile", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("user_profiles").select("*").eq("user_id", user.id).single();
+      const { data } = await supabase.from("user_profiles").select("*").eq("user_id", user.id).maybeSingle();
       return data;
     },
     enabled: !!user?.id,

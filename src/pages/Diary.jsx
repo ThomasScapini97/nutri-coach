@@ -58,7 +58,7 @@ export default function Diary() {
         .from("user_profiles")
         .select("weight_goal, weight")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       setWeightGoal(profileData?.weight_goal || null);
       setStartWeight(profileData?.weight || null);
 
@@ -70,7 +70,7 @@ export default function Diary() {
       setLastWeight(prevWeight);
 
       const { data } = await supabase
-        .from("diary_entries").select("*").eq("user_id", user.id).eq("date", dateStr).single();
+        .from("diary_entries").select("*").eq("user_id", user.id).eq("date", dateStr).maybeSingle();
 
       if (data) {
         setForm({

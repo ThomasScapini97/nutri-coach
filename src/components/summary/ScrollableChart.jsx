@@ -76,7 +76,7 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
       .select("id, total_calories, total_protein, total_carbs, total_fats")
       .eq("user_id", user.id)
       .eq("date", dateStr)
-      .single();
+      .maybeSingle();
     if (logData?.id) {
       const { data: entries } = await supabase
         .from("food_entries")

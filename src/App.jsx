@@ -30,7 +30,7 @@ const AuthenticatedApp = () => {
 
   useEffect(() => {
     if (user) {
-      supabase.from('user_profiles').select('*').eq('user_id', user.id).single().then(({ data }) => {
+      supabase.from('user_profiles').select('*').eq('user_id', user.id).maybeSingle().then(({ data }) => {
         setProfile(data);
         setLoadingProfile(false);
       });
@@ -57,7 +57,7 @@ const AuthenticatedApp = () => {
 
   if (needsOnboarding) {
     return <Onboarding onComplete={() => {
-      supabase.from('user_profiles').select('*').eq('user_id', user.id).single().then(({ data }) => setProfile(data));
+      supabase.from('user_profiles').select('*').eq('user_id', user.id).maybeSingle().then(({ data }) => setProfile(data));
     }} />;
   }
 
