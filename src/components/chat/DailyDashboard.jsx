@@ -164,10 +164,8 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
                 onClick={(e) => { e.stopPropagation(); updateWater(i < glasses ? i : i + 1); }}
                 animate={{ opacity: i < glasses ? 1 : 0.3 }}
                 transition={{ duration: 0.15 }}
-                className={`flex-1 h-5 rounded-[4px] border-none cursor-pointer flex items-center justify-center text-[9px] ${i < glasses ? "bg-blue-500" : "bg-blue-200"}`}
-              >
-                {i < glasses ? "💧" : ""}
-              </motion.button>
+                className={`flex-1 h-[6px] rounded-[3px] border-none cursor-pointer ${i < glasses ? "bg-blue-500" : "bg-blue-200"}`}
+              />
             ))}
           </div>
 
