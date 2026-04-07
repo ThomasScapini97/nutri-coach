@@ -185,7 +185,7 @@ export default function Chat() {
   const handleSendRef = useRef(null);
   const handlePhotoSendRef = useRef(null);
   const lastScrollTop = useRef(0);
-  const [dashboardTop, setDashboardTop] = useState(0);
+  const [dashboardTop, setDashboardTop] = useState(16);
 
   const { data: profile } = useQuery({
     queryKey: ["userProfile", user?.id],
