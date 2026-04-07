@@ -77,15 +77,14 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
         {/* Header — sempre visibile */}
         <div className="flex items-center justify-between p-4 pb-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
           <div className="flex items-center gap-2">
-            <span className="text-xl">🔥</span>
+            <Flame className="w-5 h-5 text-orange-500" />
             <div>
               <h3 className="text-sm font-bold text-foreground">Today's Progress</h3>
               <p className="text-[10px] text-muted-foreground">
                 {caloriesRemaining > 0 ? `${caloriesRemaining} kcal left` : "Goal reached! 🎉"}
               </p>
               {burnedCalories > 0 && (
-                <p className="flex items-center gap-[3px] text-[10px] text-orange-500 mt-[1px]">
-                  <Flame className="w-[10px] h-[10px]" />
+                <p className="text-[10px] text-orange-500 mt-[1px]">
                   {burnedCalories} kcal burned
                 </p>
               )}
