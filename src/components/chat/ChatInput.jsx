@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Send, ScanLine, Camera, Plus, Mic } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -210,22 +209,25 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
 
         <AnimatePresence mode="wait" initial={false}>
           {showSend ? (
-            <motion.div
+            <motion.button
               key="send"
+              type="submit"
+              disabled={isLoading}
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.7, opacity: 0 }}
               transition={{ duration: 0.15 }}
+              style={{
+                width: "38px", height: "38px", borderRadius: "50%",
+                background: "#16a34a", border: "none",
+                cursor: isLoading ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+                boxShadow: "0 2px 6px rgba(22,163,74,0.35)",
+              }}
             >
-              <Button
-                type="submit"
-                size="icon"
-                disabled={isLoading}
-                className="h-[38px] w-[38px] rounded-full shrink-0 bg-primary hover:bg-primary/90 shadow-md"
-              >
-                {isLoading ? <Spinner size="sm" /> : <Send className="w-4 h-4 text-white" />}
-              </Button>
-            </motion.div>
+              {isLoading ? <Spinner size="sm" /> : <Send style={{ width: "16px", height: "16px", color: "white" }} />}
+            </motion.button>
           ) : (
             <motion.div
               key="mic"
