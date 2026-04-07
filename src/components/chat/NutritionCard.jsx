@@ -24,10 +24,20 @@ const mealLabels = {
 };
 
 export default function NutritionCard({ nutrition, foodEntries }) {
-  if (!nutrition?.foods?.length || !foodEntries?.length) return null;
+  if (!nutrition?.foods?.length) return null;
 
-  const entryIds = nutrition.foods.map(f => f.entry_id).filter(Boolean);
-  const rawEntries = entryIds.map(id => foodEntries.find(e => e.id === id)).filter(Boolean);
+  // Try to resolve entries from foodEntries via entry_id (accurate, real-time data).
+  // Fall back to the data embedded in nutrition.foods for old messages where entry_id is missing.
+  const rawEntries = nutrition.foods.map(f => {
+    if (f.entry_id && foodEntries?.length) {
+      const match = foodEntries.find(e => e.id === f.entry_id);
+      if (match) return match;
+    }
+    // Fallback: use data stored directly in the nutrition object
+    if (f.food_name || f.calories) return f;
+    return null;
+  }).filter(Boolean);
+
   if (rawEntries.length === 0) return null;
 
   // Raggruppa per meal_type
