@@ -4,8 +4,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import ChatBubble from "../components/chat/ChatBubble";
-import ChatInput from "../components/chat/ChatInput";
 import TypingIndicator from "../components/chat/TypingIndicator";
+import { useChatContext } from "@/lib/ChatContext";
 import DailyDashboard from "../components/chat/DailyDashboard";
 import DailyNotificationPopup from "../components/notifications/DailyNotificationPopup";
 import { evaluateDailyNutrition } from "../components/notifications/DailyEvaluation";
@@ -192,6 +192,7 @@ IMPORTANT: Return ONLY the JSON object, no other text.`;
 
 export default function Chat() {
   const { user } = useAuth();
+  const { setChatInputProps } = useChatContext();
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
   const [dailyEvaluation, setDailyEvaluation] = useState(null);
@@ -200,6 +201,8 @@ export default function Chat() {
   const [pastSummaries, setPastSummaries] = useState([]);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
+  const handleSendRef = useRef(null);
+  const handlePhotoSendRef = useRef(null);
 
   const { data: profile } = useQuery({
     queryKey: ["userProfile", user?.id],
@@ -327,7 +330,7 @@ export default function Chat() {
   useMealReminderCheck(lastLogTime);
 
   const handlePhotoSend = async (imageBase64) => {
-    await handleSend("📷 Foto", imageBase64);
+    await handleSendRef.current?.("📷 Foto", imageBase64);
   };
 
   const handleSend = async (text, imageBase64 = null) => {
@@ -476,6 +479,22 @@ export default function Chat() {
     }
   };
 
+  // Keep refs current so MobileNav always calls the latest version
+  handleSendRef.current = handleSend;
+  handlePhotoSendRef.current = handlePhotoSend;
+
+  // Register chat input props in context so MobileNav can render ChatInput
+  useEffect(() => {
+    setChatInputProps({
+      onSend: (...args) => handleSendRef.current(...args),
+      isLoading,
+      onScannerOpen: () => setShowScanner(true),
+      onPhotoSend: (...args) => handlePhotoSendRef.current(...args),
+    });
+  }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => () => setChatInputProps(null), []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="flex flex-col overflow-hidden h-[100dvh] pb-[env(safe-area-inset-bottom)] rounded-[20px] bg-mint">
       <DailyNotificationPopup
@@ -500,7 +519,7 @@ export default function Chat() {
       </div>
 
       <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={FIBER_GOAL} userId={user?.id} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
-      <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-40 md:pb-6 bg-mint">
+      <div className="flex-1 overflow-y-auto py-6 space-y-5 pb-[160px] md:pb-6 bg-mint">
         <div className="max-w-4xl mx-auto space-y-5 px-4">
           {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
           {isLoading && <TypingIndicator />}
@@ -518,7 +537,6 @@ export default function Chat() {
           onClose={() => setShowScanner(false)}
         />
       )}
-      <ChatInput onSend={handleSend} isLoading={isLoading} onScannerOpen={() => setShowScanner(true)} onPhotoSend={handlePhotoSend} />
     </div>
   );
 }

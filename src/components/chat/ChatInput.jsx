@@ -4,7 +4,7 @@ import Spinner from "@/components/ui/Spinner";
 import { motion, AnimatePresence } from "framer-motion";
 import { compressImage } from "@/lib/imageUtils";
 
-export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSend }) {
+export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSend, embedded = false }) {
   const [message, setMessage] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [compressing, setCompressing] = useState(false);
@@ -114,7 +114,10 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
   return (
     <form
       onSubmit={handleSubmit}
-      className="px-4 pt-2 pb-3 bg-white border-t border-gray-200 fixed bottom-20 left-0 right-0 z-40 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto"
+      className={embedded
+        ? "px-3 pt-2 pb-2"
+        : "px-4 pt-2 pb-3 bg-white border-t border-gray-200 fixed bottom-20 left-0 right-0 z-40 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto"
+      }
     >
       {/* Hidden camera input */}
       <input
