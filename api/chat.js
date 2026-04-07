@@ -170,7 +170,8 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json({ error: data });
+      console.error("Anthropic API error:", response.status, JSON.stringify(data));
+      return res.status(response.status).json({ error: "AI service error. Please try again." });
     }
 
     res.setHeader("X-RateLimit-Limit", DAILY_LIMIT);
