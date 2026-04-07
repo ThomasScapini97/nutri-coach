@@ -17,6 +17,26 @@ import BarcodeScanner from "../components/chat/BarcodeScanner";
 
 const getToday = () => format(new Date(), "yyyy-MM-dd");
 
+function calculateStreak(foodLogDates) {
+  if (!foodLogDates || foodLogDates.length === 0) return 0;
+  const dateSet = new Set(foodLogDates);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let streak = 0;
+  let cursor = new Date(today);
+  // If today is not logged, start checking from yesterday
+  if (!dateSet.has(format(cursor, "yyyy-MM-dd"))) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  while (true) {
+    const key = format(cursor, "yyyy-MM-dd");
+    if (!dateSet.has(key)) break;
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
 const WELCOME_MESSAGE = {
   id: "welcome_message",
   role: "assistant",
@@ -205,6 +225,24 @@ export default function Chat() {
     enabled: !!todayLog?.id,
     initialData: [],
   });
+
+  const { data: streakDates } = useQuery({
+    queryKey: ["streakDates", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("food_logs")
+        .select("date")
+        .eq("user_id", user.id)
+        .gt("total_calories", 0)
+        .order("date", { ascending: false })
+        .limit(60);
+      return (data || []).map(r => r.date);
+    },
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const streak = calculateStreak(streakDates);
 
   const { data: chatMessages } = useQuery({
     queryKey: ["messages", todayLog?.id],
@@ -398,6 +436,7 @@ export default function Chat() {
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       queryClient.invalidateQueries({ queryKey: ["foodEntries", currentLogId] });
       queryClient.invalidateQueries({ queryKey: ["messages", currentLogId] });
+      if (foods.length > 0) queryClient.invalidateQueries({ queryKey: ["streakDates", user?.id] });
 
       if (foods.length > 0) toast.success("Meal logged! 🎉", { description: "Your nutrition has been updated." });
       if (burnedCalories > 0) toast.success("Exercise logged! 🔥", { description: `${burnedCalories} kcal burned.` });
@@ -420,11 +459,16 @@ export default function Chat() {
       />
 
       {/* Top bar */}
-      <div className="flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-6 py-[14px] shrink-0">
+      <div className="flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-6 py-[14px] shrink-0 relative">
         <div className="text-center">
           <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">NutriCoach</h2>
           <p className="text-[11px] text-gray-400 m-0">Your nutrition coach</p>
         </div>
+        {streak >= 1 && (
+          <div className="absolute right-4 flex items-center" style={{ background: "#fff7ed", border: "0.5px solid #fed7aa", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#ea580c" }}>
+            {streak >= 30 ? "🏆" : streak >= 7 ? "👑" : ""}🔥 {streak}
+          </div>
+        )}
       </div>
 
       <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={FIBER_GOAL} userId={user?.id} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
