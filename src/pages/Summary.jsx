@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { recalculateTotals, FIBER_GOAL } from "@/lib/nutritionUtils";
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, Flame, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, TrendingUp, Share2 } from "lucide-react";
 import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
 import FoodEntryItem from "../components/summary/FoodEntryItem";
 import ScrollableChart from "../components/summary/ScrollableChart";
@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 export default function Summary() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showShare, setShowShare] = useState(false);
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const queryClient = useQueryClient();
 
@@ -201,15 +202,45 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     });
   };
 
+  const MEAL_META = {
+    breakfast: { emoji: "🌅", label: "Breakfast" },
+    lunch:     { emoji: "☀️", label: "Lunch" },
+    dinner:    { emoji: "🌙", label: "Dinner" },
+    snack:     { emoji: "🍎", label: "Snack" },
+  };
+
+  const handleCopyText = () => {
+    const dateLabel = isToday ? "Today" : format(selectedDate, "EEEE, d MMM");
+    let text = `🥗 NutriCoach — ${dateLabel}\n`;
+    text += `━━━━━━━━━━━━━━━━━━\n`;
+    text += `🔥 ${netCalories} / ${calorieGoal} kcal\n`;
+    text += `💪 ${Math.round(dayLog?.total_protein || 0)}g prot  🌾 ${Math.round(dayLog?.total_carbs || 0)}g carbs  🫐 ${Math.round(dayLog?.total_fats || 0)}g fats\n\n`;
+    ["breakfast", "lunch", "dinner", "snack"].forEach(meal => {
+      const entries = groupedEntries.filter(e => e.meal_type === meal);
+      if (!entries.length) return;
+      const { emoji, label } = MEAL_META[meal];
+      const kcal = Math.round(entries.reduce((s, e) => s + e.total_calories, 0));
+      text += `${emoji} ${label} — ${kcal} kcal\n`;
+      entries.forEach(e => { text += `  • ${e.food_name}${e.quantity > 1 ? ` x${e.quantity}` : ""}\n`; });
+      text += "\n";
+    });
+    if (burnedCalories > 0) text += `🏃 Exercise: -${burnedCalories} kcal\n`;
+    navigator.clipboard.writeText(text).then(() => toast.success("Copied to clipboard!"));
+  };
+
+  const handleNativeShare = async () => {
+    const dateLabel = isToday ? "Today" : format(selectedDate, "EEEE, d MMM");
+    try {
+      await navigator.share({ title: `NutriCoach — ${dateLabel}`, text: `${netCalories} kcal logged on NutriCoach` });
+    } catch { /* cancelled */ }
+  };
+
   return (
     <div className="flex flex-col h-[100dvh] bg-mint overflow-hidden">
 
       {/* Date navigator */}
-      <div className="flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-6 py-[14px] relative shrink-0">
-        <button
-          onClick={() => navigateDay(-1)}
-          className="absolute left-[60px] bg-transparent border-none flex items-center justify-center cursor-pointer p-0"
-        >
+      <div className="flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-4 py-[14px] relative shrink-0">
+        <button onClick={() => navigateDay(-1)} className="absolute left-4 bg-transparent border-none flex items-center justify-center cursor-pointer p-0">
           <ChevronLeft className="w-5 h-5 text-gray-500" />
         </button>
         <div className="text-center">
@@ -220,13 +251,20 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             {dayLog ? `${netCalories} kcal logged` : "No meals logged"}
           </p>
         </div>
-        <button
-          onClick={() => navigateDay(1)}
-          disabled={isToday}
-          className={`absolute right-4 bg-transparent border-none flex items-center justify-center p-0 ${isToday ? "opacity-30 cursor-default" : "cursor-pointer"}`}
-        >
-          <ChevronRight className="w-5 h-5 text-gray-500" />
-        </button>
+        <div className="absolute right-4 flex items-center gap-3">
+          <button
+            disabled={isToday}
+            onClick={() => navigateDay(1)}
+            className={`bg-transparent border-none flex items-center justify-center p-0 ${isToday ? "opacity-30 cursor-default" : "cursor-pointer"}`}
+          >
+            <ChevronRight className="w-5 h-5 text-gray-500" />
+          </button>
+          {dayLog && (
+            <button onClick={() => setShowShare(true)} className="bg-transparent border-none flex items-center justify-center cursor-pointer p-0">
+              <Share2 className="w-[18px] h-[18px] text-gray-400" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-[72px]">
@@ -365,6 +403,105 @@ const caloriesConsumed = dayLog?.total_calories || 0;
           <ScrollableChart calorieGoal={calorieGoal} />
         </div>
       </div>
+
+      {/* Share modal */}
+      {showShare && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-end justify-center" onClick={() => setShowShare(false)}>
+          <div className="w-full max-w-[480px] bg-white rounded-t-[28px] px-4 pb-10 pt-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
+
+            {/* Card preview */}
+            <div className="rounded-[20px] p-4 space-y-3" style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>
+              {/* Header */}
+              <div className="flex items-center gap-3 pb-1">
+                <span className="text-2xl">🥗</span>
+                <div>
+                  <p className="font-semibold text-forest text-sm m-0">NutriCoach</p>
+                  <p className="text-[11px] text-gray-400 m-0">{isToday ? "Today" : format(selectedDate, "EEEE, d MMM yyyy")}</p>
+                </div>
+              </div>
+
+              {/* Total calories */}
+              <div className="bg-white rounded-[14px] px-4 py-3 flex items-center justify-between">
+                <span className="text-sm font-semibold text-forest">🔥 Total</span>
+                <div className="text-right">
+                  <span className="text-lg font-bold text-forest">{netCalories}</span>
+                  <span className="text-xs text-gray-400"> / {calorieGoal} kcal</span>
+                </div>
+              </div>
+
+              {/* Macros */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Protein", value: Math.round(dayLog?.total_protein || 0), color: "#ec4899" },
+                  { label: "Carbs",   value: Math.round(dayLog?.total_carbs   || 0), color: "#f59e0b" },
+                  { label: "Fats",    value: Math.round(dayLog?.total_fats    || 0), color: "#3b82f6" },
+                ].map(m => (
+                  <div key={m.label} className="bg-white rounded-[12px] py-2 text-center">
+                    <p className="text-[10px] text-gray-400 m-0">{m.label}</p>
+                    <p className="text-sm font-bold m-0" style={{ color: m.color }}>{m.value}g</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Per-meal cards */}
+              {["breakfast", "lunch", "dinner", "snack"].map(meal => {
+                const entries = groupedEntries.filter(e => e.meal_type === meal);
+                if (!entries.length) return null;
+                const { emoji, label } = MEAL_META[meal];
+                const kcal  = Math.round(entries.reduce((s, e) => s + e.total_calories, 0));
+                const prot  = Math.round(entries.reduce((s, e) => s + e.total_protein,  0));
+                const carbs = Math.round(entries.reduce((s, e) => s + e.total_carbs,    0));
+                const fats  = Math.round(entries.reduce((s, e) => s + e.total_fats,     0));
+                return (
+                  <div key={meal} className="bg-white rounded-[14px] px-4 py-3">
+                    <div className="flex items-center justify-between mb-[6px]">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{emoji}</span>
+                        <span className="font-semibold text-sm text-forest">{label}</span>
+                      </div>
+                      <span className="text-sm font-bold text-forest">{kcal} kcal</span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 m-0 mb-2 leading-relaxed">
+                      {entries.map(e => `${e.food_name}${e.quantity > 1 ? ` x${e.quantity}` : ""}`).join(" · ")}
+                    </p>
+                    <div className="flex gap-3">
+                      <span className="text-[10px] font-medium" style={{ color: "#ec4899" }}>{prot}g prot</span>
+                      <span className="text-[10px] font-medium" style={{ color: "#f59e0b" }}>{carbs}g carbs</span>
+                      <span className="text-[10px] font-medium" style={{ color: "#3b82f6" }}>{fats}g fats</span>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Burned calories */}
+              {burnedCalories > 0 && (
+                <div className="bg-white rounded-[14px] px-4 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span>🏃</span>
+                    <span className="text-sm font-medium text-forest">Exercise</span>
+                  </div>
+                  <span className="text-sm font-bold text-red-500">−{burnedCalories} kcal</span>
+                </div>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-3 mt-4">
+              <button onClick={handleCopyText}
+                className="flex-1 bg-gray-100 border-none rounded-[14px] py-[13px] text-sm font-medium text-forest cursor-pointer font-[inherit]">
+                📋 Copy text
+              </button>
+              {typeof navigator.share === "function" && (
+                <button onClick={handleNativeShare}
+                  className="flex-1 bg-green-600 border-none rounded-[14px] py-[13px] text-sm font-medium text-white cursor-pointer font-[inherit]">
+                  Share ↗
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -173,7 +173,7 @@ export default function Diary() {
 
       {/* Date navigator */}
       <div className="flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-6 py-[14px] relative shrink-0">
-        <button onClick={() => navigateDay(-1)} className="absolute left-[60px] bg-transparent border-none flex items-center justify-center cursor-pointer p-0">
+        <button onClick={() => navigateDay(-1)} className="absolute left-4 bg-transparent border-none flex items-center justify-center cursor-pointer p-0">
           <ChevronLeft className="w-5 h-5 text-gray-500" />
         </button>
         <div className="text-center">
