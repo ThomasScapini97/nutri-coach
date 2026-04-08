@@ -3,7 +3,7 @@ import { X, Camera, Search, AlertCircle } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 
 export default function BarcodeScanner({ onProductFound, onClose }) {
-  const [mode, setMode] = useState(null);
+  const [mode, setMode] = useState("camera");
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState([]);
@@ -16,6 +16,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
   const readerRef = useRef(null);
 
   useEffect(() => {
+    startCamera();
     return () => stopCamera();
   }, []);
 
@@ -237,8 +238,8 @@ const startCamera = async () => {
                   {error && <p style={{ fontSize: "12px", color: "#ef4444", marginTop: "10px", textAlign: "center" }}>{error}</p>}
                 </div>
               )}
-              <button onClick={() => { stopCamera(); setMode(null); setError(null); }} style={{ marginTop: "12px", fontSize: "12px", color: "#9ca3af", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", width: "100%", textAlign: "center" }}>
-                ← Back
+              <button onClick={() => { stopCamera(); setMode("search"); setError(null); }} style={{ marginTop: "12px", fontSize: "12px", color: "#9ca3af", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", width: "100%", textAlign: "center" }}>
+                Search by name instead →
               </button>
             </div>
           )}
