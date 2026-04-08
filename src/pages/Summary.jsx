@@ -209,25 +209,6 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     snack:     { emoji: "🍎", label: "Snack" },
   };
 
-  const handleCopyText = () => {
-    const dateLabel = isToday ? "Today" : format(selectedDate, "EEEE, d MMM");
-    let text = `🥗 NutriCoach — ${dateLabel}\n`;
-    text += `━━━━━━━━━━━━━━━━━━\n`;
-    text += `🔥 ${netCalories} / ${calorieGoal} kcal\n`;
-    text += `💪 ${Math.round(dayLog?.total_protein || 0)}g prot  🌾 ${Math.round(dayLog?.total_carbs || 0)}g carbs  🫐 ${Math.round(dayLog?.total_fats || 0)}g fats\n\n`;
-    ["breakfast", "lunch", "dinner", "snack"].forEach(meal => {
-      const entries = groupedEntries.filter(e => e.meal_type === meal);
-      if (!entries.length) return;
-      const { emoji, label } = MEAL_META[meal];
-      const kcal = Math.round(entries.reduce((s, e) => s + e.total_calories, 0));
-      text += `${emoji} ${label} — ${kcal} kcal\n`;
-      entries.forEach(e => { text += `  • ${e.food_name}${e.quantity > 1 ? ` x${e.quantity}` : ""}\n`; });
-      text += "\n";
-    });
-    if (burnedCalories > 0) text += `🏃 Exercise: -${burnedCalories} kcal\n`;
-    navigator.clipboard.writeText(text).then(() => toast.success("Copied to clipboard!"));
-  };
-
   const handleNativeShare = async () => {
     const dateLabel = isToday ? "Today" : format(selectedDate, "EEEE, d MMM");
     try {
@@ -455,6 +436,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                 const prot  = Math.round(entries.reduce((s, e) => s + e.total_protein,  0));
                 const carbs = Math.round(entries.reduce((s, e) => s + e.total_carbs,    0));
                 const fats  = Math.round(entries.reduce((s, e) => s + e.total_fats,     0));
+                const fiber = Math.round(entries.reduce((s, e) => s + e.total_fiber,    0));
                 return (
                   <div key={meal} className="bg-white rounded-[14px] px-4 py-3">
                     <div className="flex items-center justify-between mb-[6px]">
@@ -471,6 +453,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                       <span className="text-[10px] font-medium" style={{ color: "#ec4899" }}>{prot}g prot</span>
                       <span className="text-[10px] font-medium" style={{ color: "#f59e0b" }}>{carbs}g carbs</span>
                       <span className="text-[10px] font-medium" style={{ color: "#3b82f6" }}>{fats}g fats</span>
+                      <span className="text-[10px] font-medium" style={{ color: "#22c55e" }}>{fiber}g fiber</span>
                     </div>
                   </div>
                 );
@@ -489,18 +472,12 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             </div>
 
             {/* Action buttons */}
-            <div className="flex gap-3 mt-4">
-              <button onClick={handleCopyText}
-                className="flex-1 bg-gray-100 border-none rounded-[14px] py-[13px] text-sm font-medium text-forest cursor-pointer font-[inherit]">
-                📋 Copy text
+            {typeof navigator.share === "function" && (
+              <button onClick={handleNativeShare}
+                className="w-full mt-4 bg-green-600 border-none rounded-[14px] py-[13px] text-sm font-medium text-white cursor-pointer font-[inherit]">
+                Share ↗
               </button>
-              {typeof navigator.share === "function" && (
-                <button onClick={handleNativeShare}
-                  className="flex-1 bg-green-600 border-none rounded-[14px] py-[13px] text-sm font-medium text-white cursor-pointer font-[inherit]">
-                  Share ↗
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </div>
       )}
