@@ -14,7 +14,7 @@ async function searchOpenFoodFacts(foodName) {
     const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1&page_size=3&lc=it&cc=it`;
     const res = await fetch(url, { 
       headers: { "User-Agent": "NutriCoach/1.0 (contact@nutricoach.app)" },
-      signal: AbortSignal.timeout(1500),
+      signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -141,7 +141,7 @@ export default async function handler(req, res) {
         }));
         const found = results.filter(r => r.data);
         if (found.length > 0) {
-          nutritionContext = "\n\n**REAL NUTRITION DATA from Open Food Facts database (use these exact values per 100g):**\n";
+          nutritionContext = "\n\n**VERIFIED NUTRITION DATA (use these exact values per 100g):**\n";
           found.forEach(({ food, data }) => {
             nutritionContext += `- ${food}: ${data.per100.calories} kcal, ${data.per100.protein}g protein, ${data.per100.carbs}g carbs, ${data.per100.fats}g fat, ${data.per100.fiber}g fiber\n`;
           });
