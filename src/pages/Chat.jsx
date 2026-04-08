@@ -427,7 +427,7 @@ export default function Chat() {
         { foodlog_id: currentLogId, role: assistantMessage.role, content: assistantMessage.content, timestamp: assistantMessage.timestamp, nutrition: assistantMessage.nutrition || null },
       ]);
 
-      if (foods.length > 0) updateStreak(supabase, user.id, getToday());
+      if (foods.length > 0) await updateStreak(supabase, user.id, getToday());
 
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       queryClient.invalidateQueries({ queryKey: ["foodEntries", currentLogId] });
