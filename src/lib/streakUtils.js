@@ -1,4 +1,4 @@
-import { format, subDays, parseISO } from "date-fns";
+import { format, subDays } from "date-fns";
 
 export async function updateStreak(supabase, userId, todayStr) {
   try {
@@ -13,7 +13,7 @@ export async function updateStreak(supabase, userId, todayStr) {
     const lastDate = profile.last_streak_date;
     if (lastDate === todayStr) return; // already updated today
 
-    const yesterdayStr = format(subDays(parseISO(todayStr), 1), "yyyy-MM-dd");
+    const yesterdayStr = format(subDays(new Date(todayStr), 1), "yyyy-MM-dd");
     const newStreak = lastDate === yesterdayStr
       ? (profile.current_streak || 0) + 1
       : 1;

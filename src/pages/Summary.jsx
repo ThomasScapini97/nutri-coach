@@ -172,21 +172,16 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     const perEntryCalories = Math.round(newCalories / idsToUpdate.length);
     const perEntryGrams = Math.round(newGrams / idsToUpdate.length);
 
-    try {
-      await Promise.all(idsToUpdate.map(id =>
-        supabase.from("food_entries").update({
-          grams: perEntryGrams,
-          calories: perEntryCalories,
-          protein: Math.round(newProtein / idsToUpdate.length * 10) / 10,
-          carbs: Math.round(newCarbs / idsToUpdate.length * 10) / 10,
-          fats: Math.round(newFats / idsToUpdate.length * 10) / 10,
-          fiber: Math.round(newFiber / idsToUpdate.length * 10) / 10,
-        }).eq("id", id)
-      ));
-    } catch {
-      toast.error("Failed to update entry. Please try again.");
-      return;
-    }
+    await Promise.all(idsToUpdate.map(id =>
+      supabase.from("food_entries").update({
+        grams: perEntryGrams,
+        calories: perEntryCalories,
+        protein: Math.round(newProtein / idsToUpdate.length * 10) / 10,
+        carbs: Math.round(newCarbs / idsToUpdate.length * 10) / 10,
+        fats: Math.round(newFats / idsToUpdate.length * 10) / 10,
+        fiber: Math.round(newFiber / idsToUpdate.length * 10) / 10,
+      }).eq("id", id)
+    ));
 
     await recalculateTotals(dayLog.id);
 

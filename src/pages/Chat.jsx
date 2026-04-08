@@ -393,7 +393,7 @@ export default function Chat() {
 
       let createdEntries = [];
       if (foods.length > 0) {
-        const { data: inserted, error: entriesError } = await supabase.from('food_entries').insert(
+        const { data: inserted } = await supabase.from('food_entries').insert(
           foods.map(food => ({
             foodlog_id: currentLogId,
             food_name: food.food_name,
@@ -408,7 +408,6 @@ export default function Chat() {
             timestamp: new Date().toISOString(),
           }))
         ).select();
-        if (entriesError) throw entriesError;
         createdEntries = inserted || [];
         assistantMessage.nutrition = { foods: foods.map((food, i) => ({ ...food, entry_id: createdEntries[i]?.id })) };
       }
