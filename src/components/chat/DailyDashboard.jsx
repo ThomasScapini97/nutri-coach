@@ -46,25 +46,9 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
   const glasses = todayLog?.water_glasses || 0;
 
   const updateWater = async (newCount) => {
-    if (waterLoading) return;
+    if (waterLoading || !todayLog?.id) return;
     setWaterLoading(true);
-    let logId = todayLog?.id;
-    if (!logId) {
-      const { data: created } = await supabase
-        .from("food_logs")
-        .insert({
-          date: format(new Date(), "yyyy-MM-dd"),
-          user_id: userId,
-          total_calories: 0, total_carbs: 0, total_protein: 0,
-          total_fats: 0, total_fiber: 0, total_burned_calories: 0,
-          water_glasses: newCount,
-        })
-        .select()
-        .single();
-      logId = created?.id;
-    } else {
-      await supabase.from("food_logs").update({ water_glasses: newCount }).eq("id", logId);
-    }
+    await supabase.from("food_logs").update({ water_glasses: newCount }).eq("id", todayLog.id);
     onWaterUpdate?.();
     setWaterLoading(false);
   };
