@@ -73,9 +73,6 @@ export default function NutritionCard({ nutrition, foodEntries }) {
             <span className="text-2xl">{mealEmojis[group.meal_type] || "🍽️"}</span>
             <div>
               <p className="text-sm font-semibold text-foreground">{mealLabels[group.meal_type] || group.meal_type}</p>
-              <p className="text-xs text-muted-foreground">
-                {Object.entries(group.foodCounts || {}).map(([name, count]) => count > 1 ? `${name} x${count}` : name).join(", ")}
-              </p>
             </div>
           </div>
           <div className="grid grid-cols-5 gap-2 mt-2">
