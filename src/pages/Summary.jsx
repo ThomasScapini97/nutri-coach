@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { recalculateTotals, FIBER_GOAL } from "@/lib/nutritionUtils";
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, Flame, TrendingUp, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, TrendingUp, Share2, Wheat, Drumstick, Droplets, Salad } from "lucide-react";
 import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
 import FoodEntryItem from "../components/summary/FoodEntryItem";
 import ScrollableChart from "../components/summary/ScrollableChart";
@@ -412,11 +412,12 @@ const caloriesConsumed = dayLog?.total_calories || 0;
               </div>
 
               {/* Macros */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {[
                   { label: "Protein", value: Math.round(dayLog?.total_protein || 0), color: "#ec4899" },
                   { label: "Carbs",   value: Math.round(dayLog?.total_carbs   || 0), color: "#f59e0b" },
                   { label: "Fats",    value: Math.round(dayLog?.total_fats    || 0), color: "#3b82f6" },
+                  { label: "Fiber",   value: Math.round(dayLog?.total_fiber   || 0), color: "#22c55e" },
                 ].map(m => (
                   <div key={m.label} className="bg-white rounded-[12px] py-2 text-center">
                     <p className="text-[10px] text-gray-400 m-0">{m.label}</p>
@@ -425,33 +426,34 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                 ))}
               </div>
 
-              {/* Per-meal cards */}
+              {/* Per-meal cards — same style as NutritionCard in chat */}
               {["breakfast", "lunch", "dinner", "snack"].map(meal => {
                 const entries = groupedEntries.filter(e => e.meal_type === meal);
                 if (!entries.length) return null;
                 const { emoji, label } = MEAL_META[meal];
-                const kcal  = Math.round(entries.reduce((s, e) => s + e.total_calories, 0));
-                const prot  = Math.round(entries.reduce((s, e) => s + e.total_protein,  0));
-                const carbs = Math.round(entries.reduce((s, e) => s + e.total_carbs,    0));
-                const fats  = Math.round(entries.reduce((s, e) => s + e.total_fats,     0));
-                const fiber = Math.round(entries.reduce((s, e) => s + e.total_fiber,    0));
+                const mealMacros = [
+                  { key: "calories", label: "Calories", unit: "kcal", Icon: Flame,     bg: "bg-orange-100",  color: "text-orange-500", value: Math.round(entries.reduce((s, e) => s + e.total_calories, 0)) },
+                  { key: "carbs",    label: "Carbs",    unit: "g",    Icon: Wheat,     bg: "bg-amber-100",   color: "text-amber-400",  value: Math.round(entries.reduce((s, e) => s + e.total_carbs,    0)) },
+                  { key: "protein",  label: "Protein",  unit: "g",    Icon: Drumstick, bg: "bg-red-100",     color: "text-red-400",    value: Math.round(entries.reduce((s, e) => s + e.total_protein,  0)) },
+                  { key: "fats",     label: "Fats",     unit: "g",    Icon: Droplets,  bg: "bg-blue-100",    color: "text-blue-500",   value: Math.round(entries.reduce((s, e) => s + e.total_fats,     0)) },
+                  { key: "fiber",    label: "Fiber",    unit: "g",    Icon: Salad,     bg: "bg-emerald-100", color: "text-emerald-500", value: Math.round(entries.reduce((s, e) => s + e.total_fiber,    0)) },
+                ];
                 return (
-                  <div key={meal} className="bg-white rounded-[14px] px-4 py-3">
-                    <div className="flex items-center justify-between mb-[6px]">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">{emoji}</span>
-                        <span className="font-semibold text-sm text-forest">{label}</span>
-                      </div>
-                      <span className="text-sm font-bold text-forest">{kcal} kcal</span>
+                  <div key={meal} className="bg-white rounded-2xl p-4 shadow-md border border-black/[0.08]">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-2xl">{emoji}</span>
+                      <p className="text-sm font-semibold text-forest m-0">{label}</p>
                     </div>
-                    <p className="text-[11px] text-gray-500 m-0 mb-2 leading-relaxed">
-                      {entries.map(e => `${e.food_name}${e.quantity > 1 ? ` x${e.quantity}` : ""}`).join(" · ")}
-                    </p>
-                    <div className="flex gap-3">
-                      <span className="text-[10px] font-medium" style={{ color: "#ec4899" }}>{prot}g prot</span>
-                      <span className="text-[10px] font-medium" style={{ color: "#f59e0b" }}>{carbs}g carbs</span>
-                      <span className="text-[10px] font-medium" style={{ color: "#3b82f6" }}>{fats}g fats</span>
-                      <span className="text-[10px] font-medium" style={{ color: "#22c55e" }}>{fiber}g fiber</span>
+                    <div className="grid grid-cols-5 gap-2">
+                      {mealMacros.map(({ key, label: ml, unit, Icon, bg, color, value }) => (
+                        <div key={key} className="flex flex-col items-center text-center gap-1">
+                          <div className={`w-9 h-9 rounded-full ${bg} flex items-center justify-center`}>
+                            <Icon className={`w-4 h-4 ${color}`} />
+                          </div>
+                          <span className="text-[10px] text-gray-400 leading-tight">{ml}</span>
+                          <span className="text-xs font-bold text-gray-800">{value}<span className="text-[10px] font-normal text-gray-400">{unit}</span></span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );
@@ -469,11 +471,16 @@ const caloriesConsumed = dayLog?.total_calories || 0;
               )}
             </div>
 
-            {/* Action buttons */}
+            {/* Share button — iOS style */}
             {typeof navigator.share === "function" && (
               <button onClick={handleNativeShare}
-                className="w-full mt-4 bg-green-600 border-none rounded-[14px] py-[13px] text-sm font-medium text-white cursor-pointer font-[inherit]">
-                Share ↗
+                className="w-full mt-4 bg-green-600 border-none rounded-[14px] py-[13px] flex items-center justify-center gap-2 cursor-pointer font-[inherit]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="8 7 12 3 16 7"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                  <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-2"/>
+                </svg>
+                <span className="text-sm font-medium text-white">Share</span>
               </button>
             )}
           </div>
