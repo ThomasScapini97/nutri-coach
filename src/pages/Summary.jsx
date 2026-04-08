@@ -220,13 +220,11 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     <div className="flex flex-col h-[100dvh] bg-mint overflow-hidden">
 
       {/* Date navigator */}
-      <div className="flex items-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-4 py-[14px] shrink-0">
-        <div className="w-16 flex items-center justify-start">
-          <button onClick={() => navigateDay(-1)} className="bg-transparent border-none flex items-center justify-center cursor-pointer p-1">
-            <ChevronLeft className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-        <div className="flex-1 text-center">
+      <div className="relative flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-4 py-[14px] shrink-0">
+        <button onClick={() => navigateDay(-1)} className="absolute left-[56px] bg-transparent border-none flex items-center justify-center cursor-pointer p-1">
+          <ChevronLeft className="w-5 h-5 text-gray-500" />
+        </button>
+        <div className="text-center">
           <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">
             {isToday ? "Today" : format(selectedDate, "EEEE, MMM d")}
           </h2>
@@ -234,7 +232,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             {dayLog ? `${netCalories} kcal logged` : "No meals logged"}
           </p>
         </div>
-        <div className="w-16 flex items-center justify-end gap-3">
+        <div className="absolute right-4 flex items-center gap-3">
           <button
             disabled={isToday}
             onClick={() => navigateDay(1)}
