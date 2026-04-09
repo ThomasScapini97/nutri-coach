@@ -563,10 +563,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                         </div>
                       ))}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px', marginTop: '12px' }}>
-                      <span style={{ fontSize: '13px' }}>🥗</span>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', letterSpacing: '0.2px' }}>@nutricoach.app</span>
-                    </div>
+                    <p style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', letterSpacing: '0.2px', textAlign: 'right', marginTop: '12px', marginBottom: 0 }}>@nutricoach.app</p>
                   </div>
                 );
               })}
