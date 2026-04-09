@@ -230,29 +230,27 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         logging: false,
       });
 
-      // Draw with rounded corners + padding on a transparent canvas
-      const pad = 24;
-      const radius = 32;
-      const w = raw.width + pad * 2;
-      const h = raw.height + pad * 2;
+      // Apply rounded corners (rounded-2xl = 16px, ×2 for scale)
+      const radius = 16 * 2;
+      const w = raw.width;
+      const h = raw.height;
       const canvas = document.createElement('canvas');
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext('2d');
-      // Rounded clip
       ctx.beginPath();
-      ctx.moveTo(pad + radius, pad);
-      ctx.lineTo(w - pad - radius, pad);
-      ctx.quadraticCurveTo(w - pad, pad, w - pad, pad + radius);
-      ctx.lineTo(w - pad, h - pad - radius);
-      ctx.quadraticCurveTo(w - pad, h - pad, w - pad - radius, h - pad);
-      ctx.lineTo(pad + radius, h - pad);
-      ctx.quadraticCurveTo(pad, h - pad, pad, h - pad - radius);
-      ctx.lineTo(pad, pad + radius);
-      ctx.quadraticCurveTo(pad, pad, pad + radius, pad);
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(w - radius, 0);
+      ctx.quadraticCurveTo(w, 0, w, radius);
+      ctx.lineTo(w, h - radius);
+      ctx.quadraticCurveTo(w, h, w - radius, h);
+      ctx.lineTo(radius, h);
+      ctx.quadraticCurveTo(0, h, 0, h - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
       ctx.closePath();
       ctx.clip();
-      ctx.drawImage(raw, pad, pad);
+      ctx.drawImage(raw, 0, 0);
 
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const file = new File([blob], `nutricoach-${meal}.png`, { type: 'image/png' });
