@@ -224,7 +224,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     await new Promise(r => setTimeout(r, 60));
     try {
       const raw = await html2canvas(cardEl, {
-        backgroundColor: '#ffffff',
+        backgroundColor: null,
         scale: 2,
         useCORS: true,
         logging: false,
