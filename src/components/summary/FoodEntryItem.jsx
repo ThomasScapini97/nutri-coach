@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Flame, Coffee, Utensils, Moon, Cookie, Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -19,6 +20,7 @@ function getFoodEmoji(foodName) {
 }
 
 export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove, onUpdateGrams }) {
+  const { t } = useTranslation();
   const MealIcon = mealIcons[entry.meal_type] || Utensils;
   const mealStyle = mealStyles[entry.meal_type] || { bg: "#f3f4f6", color: "#6b7280" };
   const [editingGrams, setEditingGrams] = useState(false);
@@ -87,7 +89,7 @@ export default function FoodEntryItem({ entry, quantity = 1, onAdd, onRemove, on
                 onClick={handleGramsClick}
                 className="text-[10px] text-gray-400 cursor-pointer bg-white border border-gray-200 rounded-full px-2 py-[2px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
               >
-                + add g
+                {t("common.addG")}
               </span>
             ) : null}
           </div>

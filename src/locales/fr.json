@@ -1,0 +1,314 @@
+{
+  "nav": {
+    "chat": "Chat",
+    "summary": "Résumé",
+    "exercise": "Exercice",
+    "diary": "Journal"
+  },
+  "dashboard": {
+    "todayProgress": "Progrès du jour",
+    "kcalLeft": "{{value}} kcal restantes",
+    "goalReached": "Objectif atteint ! 🎉",
+    "burned": "{{value}} kcal brûlées",
+    "water": "Eau",
+    "waterGoalReached": "Objectif hydratation atteint ! 🎉",
+    "protein": "Protéines",
+    "carbs": "Glucides",
+    "fats": "Lipides",
+    "fiber": "Fibres"
+  },
+  "summary": {
+    "today": "Aujourd'hui",
+    "netCalories": "Calories nettes",
+    "caloriesToday": "Calories aujourd'hui",
+    "kcalGoal": "sur {{value}} kcal objectif",
+    "kcalRemaining": "{{value}} kcal restantes",
+    "goalReached": "Objectif atteint ! 🎉",
+    "eaten": "consommées",
+    "burned": "brûlées",
+    "nutrition": "🏅 Nutrition",
+    "whatYouAte": "🍽 Ce que vous avez mangé",
+    "items": "{{count}} éléments",
+    "noFoodLogged": "Aucun aliment enregistré",
+    "headToChat": "Allez au chat pour commencer 💬",
+    "trend": "Tendance",
+    "onTrack": "Dans la cible",
+    "close": "Proche",
+    "offTrack": "Hors cible",
+    "noData": "Aucune donnée",
+    "noMealsLogged": "Aucun repas enregistré"
+  },
+  "exercise": {
+    "title": "Exercice",
+    "logExercise": "+ Enregistrer un exercice",
+    "savedWorkouts": "Séances sauvegardées",
+    "noSavedWorkouts": "Aucune séance sauvegardée",
+    "noSavedWorkoutsDesc": "Enregistrez des exercices et appuyez sur 'Sauvegarder comme preset'",
+    "logAll": "Tout enregistrer",
+    "weeklyBurned": "Brûlé cette semaine",
+    "duration": "Durée (min)",
+    "speed": "Vitesse (km/h)",
+    "sets": "Séries",
+    "reps": "Répétitions",
+    "weightKg": "Poids (kg)",
+    "caloriesBurned": "Calories brûlées",
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "savePreset": "Sauvegarder comme preset",
+    "presetName": "Nom du preset...",
+    "today": "Aujourd'hui",
+    "readOnly": "Jour passé — lecture seule",
+    "kcalBurned": "kcal brûlées",
+    "noExercise": "Aucun exercice enregistré",
+    "noExerciseDesc": "Appuyez sur '+ Enregistrer un exercice' pour commencer",
+    "selectExercise": "Sélectionner un exercice",
+    "searchExercise": "Rechercher un exercice...",
+    "cardio": "Cardio",
+    "strength": "Force",
+    "flexibility": "Flexibilité",
+    "other": "Autre",
+    "burnedToday": "Brûlé aujourd'hui",
+    "kcalGoal": "sur {{value}} kcal objectif",
+    "weeklyGoalReached": "Objectif hebdomadaire atteint !",
+    "weeklyActivityGoal": "Objectif d'activité hebdomadaire",
+    "activeDaysInfo": "{{active}}/{{goal}} jours actifs · {{burnGoal}} kcal objectif/jour",
+    "todayExercises": "Exercices d'aujourd'hui",
+    "exercisesLogged": "Exercices enregistrés",
+    "saveSessionPreset": "Sauvegarder la séance comme preset",
+    "noExerciseYet": "Aucun exercice enregistré",
+    "noExerciseYetDesc": "Appuyez sur \"Enregistrer exercice\" pour commencer !",
+    "chooseExercise": "Choisir exercice",
+    "speedOptional": "Vitesse (km/h) — optionnel",
+    "durationLabel": "Durée",
+    "kgOptional": "kg (opt.)",
+    "bodweightEstimate": "(estimation poids corporel)",
+    "logKcalBurned": "Enregistrer {{value}} kcal brûlées",
+    "selectDetails": "Sélectionner exercice et détails",
+    "saveWorkoutPreset": "Sauvegarder preset entraînement",
+    "exercisesWillBeSaved": "{{count}} exercice(s) sera/seront sauvegardé(s)",
+    "presetNameLabel": "Nom du preset",
+    "savePresetBtn": "Sauvegarder Preset",
+    "saving": "Sauvegarde...",
+    "onTrack": "Dans la cible",
+    "chartClose": "Proche",
+    "offTrack": "Hors cible",
+    "rest": "Repos",
+    "speedTab": "Vitesse",
+    "cardioTab": "Cardio",
+    "weightsTab": "Poids",
+    "flexTab": "Flex",
+    "yourWeight": "Votre poids : {{value}}kg",
+    "customMinutes": "Minutes personnalisées...",
+    "customKmh": "km/h personnalisé...",
+    "logExerciseSheet": "Enregistrer exercice",
+    "weeklyBurnedTitle": "Brûlé cette semaine"
+  },
+  "diary": {
+    "today": "Aujourd'hui",
+    "pastEntry": "Jour passé",
+    "autoSaved": "Sauvegarde auto",
+    "saved": "✓ Sauvegardé",
+    "weightProgress": "Progression du poids",
+    "goalReached": "🎉 Objectif atteint !",
+    "kgToGo": "{{value}} kg restants",
+    "startWeight": "Début : {{value}} kg",
+    "goalWeight": "Objectif : {{value}} kg",
+    "vsYesterday": "vs hier",
+    "logWeightHint": "Enregistrez le poids 2+ jours pour voir la tendance",
+    "howFeeling": "Comment vous sentez-vous ?",
+    "readOnly": "🔒 Lecture seule",
+    "notesPlaceholder": "Comment s'est passée votre journée ? Notes...",
+    "weeklyChallenges": "Défis hebdomadaires",
+    "todayLabel": "Aujourd'hui",
+    "thisWeek": "Cette semaine",
+    "done": "faits",
+    "dailyChallenge": "Défi du jour",
+    "dailyChallengeDone": "✓ Fait ! Revenez demain 🎉",
+    "dailyChallengeLog": "0/1 · Enregistrez un repas dans le Chat",
+    "goToChat": "Aller au Chat",
+    "leaderboard": "🏆 Voir le classement",
+    "weeklyLeaderboard": "🏆 Classement hebdomadaire",
+    "weekOf": "Semaine du {{date}} · se réinitialise chaque lundi",
+    "noScores": "Aucun score cette semaine — soyez le premier ! 🚀",
+    "you": "vous",
+    "challenges": {
+      "log": {
+        "title": "Suivre chaque jour",
+        "desc": "Enregistrez vos repas 5 jours"
+      },
+      "hydration": {
+        "title": "Rester hydraté",
+        "desc": "{{goal}} verres/jour pendant 5 jours"
+      },
+      "protein": {
+        "title": "Atteindre les protéines",
+        "desc": "{{goal}}g de protéines 4 jours"
+      },
+      "calories": {
+        "title": "Rester dans la cible",
+        "desc": "Dans ±150 kcal de l'objectif 4 jours"
+      },
+      "exercise": {
+        "title": "Bouger",
+        "desc": "Faire de l'exercice 3 fois cette semaine"
+      },
+      "wellness": {
+        "title": "Bilan bien-être",
+        "desc": "Remplir le journal 4 jours"
+      }
+    }
+  },
+  "profile": {
+    "personalInfo": "Données personnelles",
+    "age": "Âge",
+    "gender": "Sexe",
+    "male": "Masculin",
+    "female": "Féminin",
+    "weight": "Poids (kg)",
+    "height": "Taille (cm)",
+    "weightGoal": "Poids cible (kg)",
+    "activityGoal": "Activité et objectif",
+    "activityLevel": "Niveau d'activité",
+    "wellnessGoal": "Objectif",
+    "fitnessGoals": "Objectifs fitness",
+    "activeDays": "Jours actifs / semaine",
+    "burnGoal": "Objectif de dépense (kcal/jour)",
+    "chatStyle": "Style de réponses du coach",
+    "concise": "Concis",
+    "conciseDesc": "Court et direct",
+    "detailed": "Détaillé",
+    "detailedDesc": "Conseils approfondis",
+    "saveProfile": "Sauvegarder le profil",
+    "logout": "Se déconnecter",
+    "deleteAccount": "Supprimer le compte",
+    "deleteConfirm": "Supprimer votre compte ?",
+    "deleteDesc": "Cela supprimera définitivement toutes vos données. Cette action est irréversible.",
+    "cancel": "Annuler",
+    "currentStreak": "{{value}} jours de suite",
+    "bestStreak": "Record : {{value}} jours",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "version": "NutriCoach v1.0.0",
+    "language": "Langue",
+    "dailyGoal": "OBJECTIF CALORIQUE JOURNALIER",
+    "caloriesPerDay": "calories par jour",
+    "savedSuccess": "Profil sauvegardé ! 🎉",
+    "savedDesc": "Objectif quotidien : {{value}} kcal",
+    "select": "Sélectionner",
+    "selectActivity": "Sélectionner le niveau d'activité"
+  },
+  "onboarding": {
+    "continue": "Continuer",
+    "saving": "Sauvegarde...",
+    "startNow": "Commencer 🚀",
+    "privacyAccept": "J'ai lu et j'accepte la",
+    "privacyAnd": "et les Conditions d'utilisation",
+    "privacyRequired": "Vous devez accepter la politique de confidentialité pour continuer",
+    "step0": {
+      "title": "Bonjour ! Quel est votre prénom ?",
+      "subtitle": "Nous utiliserons votre prénom pour personnaliser votre expérience",
+      "placeholder": "Votre prénom ou surnom..."
+    },
+    "step1": {
+      "title": "Vos données",
+      "subtitle": "Nécessaires pour calculer vos besoins caloriques précis",
+      "age": "Âge",
+      "sex": "Sexe biologique",
+      "weight": "Poids actuel (kg)",
+      "height": "Taille (cm)",
+      "weightGoal": "Poids cible (kg) — optionnel"
+    },
+    "step2": {
+      "title": "Quelle est votre activité ?",
+      "subtitle": "Considérez votre routine hebdomadaire moyenne"
+    },
+    "step3": {
+      "title": "Votre objectif",
+      "subtitle": "Choisissez aussi comment vous préférez que le coach réponde",
+      "chatStyle": "Style de réponses"
+    },
+    "step4": {
+      "title": "Objectifs fitness",
+      "subtitle": "Combien de jours voulez-vous vous entraîner ?",
+      "activeDays": "Jours actifs par semaine",
+      "burnGoal": "Calories à brûler les jours actifs",
+      "customKcal": "kcal personnalisé...",
+      "day": "jour",
+      "days": "jours",
+      "perWeek": "par semaine"
+    },
+    "step5": {
+      "title": "Avant de commencer",
+      "subtitle": "Lisez ces informations importantes",
+      "d1title": "Pas un dispositif médical",
+      "d1text": "NutriCoach est un outil de soutien au bien-être personnel, pas un service médical.",
+      "d2title": "Non adapté aux troubles alimentaires",
+      "d2text": "Si vous souffrez de troubles alimentaires graves, consultez un spécialiste avant d'utiliser cette app.",
+      "d3title": "Entrez des données précises",
+      "d3text": "Les calculs caloriques dépendent des données que vous entrez. Plus elles sont précises, plus votre plan sera exact.",
+      "d4title": "L'IA peut se tromper",
+      "d4text": "Les estimations caloriques de l'IA sont approximatives. Utilisez-les comme référence."
+    },
+    "errorSaving": "Erreur lors de la sauvegarde",
+    "activityLevels": {
+      "sedentary": {
+        "label": "Sédentaire",
+        "sub": "Peu ou pas d'exercice"
+      },
+      "light": {
+        "label": "Léger",
+        "sub": "1-3 jours par semaine"
+      },
+      "moderate": {
+        "label": "Modéré",
+        "sub": "3-5 jours par semaine"
+      },
+      "active": {
+        "label": "Actif",
+        "sub": "6-7 jours par semaine"
+      },
+      "very_active": {
+        "label": "Très actif",
+        "sub": "Entraînement intensif quotidien"
+      }
+    },
+    "goals": {
+      "lose_weight": {
+        "label": "Perdre du poids",
+        "sub": "Déficit calorique contrôlé"
+      },
+      "maintain": {
+        "label": "Maintenir le poids",
+        "sub": "Équilibre calorique stable"
+      },
+      "gain_muscle": {
+        "label": "Prendre du muscle",
+        "sub": "Surplus calorique + protéines"
+      }
+    },
+    "chatStyles": {
+      "concise": {
+        "label": "Concis",
+        "sub": "Court et précis"
+      },
+      "detailed": {
+        "label": "Détaillé",
+        "sub": "Conseils approfondis et explications"
+      }
+    }
+  },
+  "common": {
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "close": "Fermer",
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "retry": "Réessayer",
+    "kg": "kg",
+    "kcal": "kcal",
+    "min": "min",
+    "g": "g",
+    "addG": "+ ajouter g"
+  }
+}

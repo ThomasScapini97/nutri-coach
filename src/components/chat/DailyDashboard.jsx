@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wheat, Drumstick, Droplets, Salad, ChevronDown, GlassWater, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "prima
 };
 
 export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, carbsGoal, fatsGoal, fiberGoal, userId, onWaterUpdate }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [waterLoading, setWaterLoading] = useState(false);
 
@@ -84,13 +86,13 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-orange-500" />
             <div>
-              <h3 className="text-sm font-bold text-foreground">Today's Progress</h3>
+              <h3 className="text-sm font-bold text-foreground">{t("dashboard.todayProgress")}</h3>
               <p className="text-[10px] text-muted-foreground">
-                {caloriesRemaining > 0 ? `${caloriesRemaining} kcal left` : "Goal reached! 🎉"}
+                {caloriesRemaining > 0 ? t("dashboard.kcalLeft", { value: caloriesRemaining }) : t("dashboard.goalReached")}
               </p>
               {burnedCalories > 0 && (
                 <p className="text-[10px] text-orange-500 mt-[1px]">
-                  {burnedCalories} kcal burned
+                  {t("dashboard.burned", { value: burnedCalories })}
                 </p>
               )}
             </div>
@@ -127,10 +129,10 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
               className="overflow-hidden"
             >
               <div className="px-4 pb-3 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-gray-100 pt-3">
-                <MacroProgressMini label="Protein" value={protein} max={proteinGoal} unit="g" icon={Drumstick} color="chart-4" />
-                <MacroProgressMini label="Carbs" value={carbs} max={carbsGoal} unit="g" icon={Wheat} color="chart-3" />
-                <MacroProgressMini label="Fats" value={fats} max={fatsGoal} unit="g" icon={Droplets} color="blue-500" />
-                <MacroProgressMini label="Fiber" value={fiber} max={fiberGoal} unit="g" icon={Salad} color="primary" />
+                <MacroProgressMini label={t("dashboard.protein")} value={protein} max={proteinGoal} unit="g" icon={Drumstick} color="chart-4" />
+                <MacroProgressMini label={t("dashboard.carbs")} value={carbs} max={carbsGoal} unit="g" icon={Wheat} color="chart-3" />
+                <MacroProgressMini label={t("dashboard.fats")} value={fats} max={fatsGoal} unit="g" icon={Droplets} color="blue-500" />
+                <MacroProgressMini label={t("dashboard.fiber")} value={fiber} max={fiberGoal} unit="g" icon={Salad} color="primary" />
               </div>
             </motion.div>
           )}
@@ -141,7 +143,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
           <div className="flex items-center justify-between mb-[6px]">
             <div className="flex items-center gap-[6px]">
               <GlassWater className="w-[14px] h-[14px] text-blue-500" />
-              <span className="text-[11px] font-medium text-blue-800">Water</span>
+              <span className="text-[11px] font-medium text-blue-800">{t("dashboard.water")}</span>
               <span className="text-[10px] text-blue-300">{glasses * 250}ml / 2000ml</span>
             </div>
             <div className="flex items-center gap-[6px]">
@@ -176,7 +178,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
 
           {glasses === WATER_GOAL && (
             <p className="text-[10px] text-blue-700 text-center mt-[5px] font-medium m-0">
-              Daily water goal reached! 🎉
+              {t("dashboard.waterGoalReached")}
             </p>
           )}
         </div>

@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -169,6 +170,7 @@ function ExerciseDetails({ exercise }) {
 }
 
 export default function Exercise() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -529,10 +531,10 @@ export default function Exercise() {
         </button>
         <div className="text-center">
           <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">
-            {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
+            {isToday ? t("exercise.today") : format(selectedDate, "MMM d, yyyy")}
           </h2>
           <p className="text-[11px] text-gray-400 m-0">
-            {`${totalBurnedToday} kcal burned`}
+            {totalBurnedToday} {t("exercise.kcalBurned")}
           </p>
         </div>
         <button onClick={() => navigateDay(1)} disabled={isToday} className={`absolute right-4 bg-transparent border-none flex items-center justify-center p-1 ${isToday ? "opacity-30 cursor-default" : "cursor-pointer"}`}>
@@ -557,7 +559,7 @@ export default function Exercise() {
               <div>
                 <p className="text-[11px] text-white/75 mb-[2px] m-0">Burned today</p>
                 <p className="text-[42px] font-medium leading-none tracking-[-1px] m-0">{totalBurnedToday.toLocaleString()}</p>
-                <p className="text-[11px] text-white/65 mt-[2px] m-0">of {burnGoal} kcal goal</p>
+                <p className="text-[11px] text-white/65 mt-[2px] m-0">{t("exercise.kcalGoal", { value: burnGoal })}</p>
               </div>
               <div className="w-11 h-11 rounded-[14px] bg-white/[0.18] flex items-center justify-center">
                 <Flame className="w-5 h-5 text-white" />
@@ -594,10 +596,10 @@ export default function Exercise() {
               <span className="text-[20px]">{activeDaysThisWeek >= activeDaysGoal ? "🎉" : "🎯"}</span>
               <div>
                 <p className="text-[13px] font-medium text-forest m-0">
-                  {activeDaysThisWeek >= activeDaysGoal ? "Weekly goal reached!" : "Weekly activity goal"}
+                  {activeDaysThisWeek >= activeDaysGoal ? t("exercise.weeklyGoalReached") : t("exercise.weeklyActivityGoal")}
                 </p>
                 <p className="text-[11px] text-gray-400 m-0">
-                  {activeDaysThisWeek}/{activeDaysGoal} active days · {burnGoal} kcal target/day
+                  {t("exercise.activeDaysInfo", { active: activeDaysThisWeek, goal: activeDaysGoal, burnGoal })}
                 </p>
               </div>
             </div>
@@ -612,7 +614,7 @@ export default function Exercise() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
             <div className="flex items-center gap-[6px] mb-2 px-[2px]">
               <Bookmark className="w-[13px] h-[13px] text-red-600" />
-              <p className="text-[13px] font-medium text-forest m-0">Saved Workouts</p>
+              <p className="text-[13px] font-medium text-forest m-0">{t("exercise.savedWorkouts")}</p>
             </div>
             {workoutPresets.length > 0 ? (
               <div className="flex gap-[8px] overflow-x-auto pb-[4px] scrollbar-hide" style={{ scrollbarWidth: "none" }}>
@@ -643,15 +645,15 @@ export default function Exercise() {
                     <p className="text-[10px] text-gray-400 m-0 mt-[4px]">{getPresetSummary(preset)}</p>
                     <div className="mt-[8px] bg-red-50 rounded-[8px] py-[4px] px-2 flex items-center justify-center gap-1">
                       <Plus className="w-[10px] h-[10px] text-red-600" />
-                      <span className="text-[10px] text-red-600 font-medium">Log all</span>
+                      <span className="text-[10px] text-red-600 font-medium">{t("exercise.logAll")}</span>
                     </div>
                   </button>
                 ))}
               </div>
             ) : (
               <div className="bg-white rounded-[14px] border border-black/[0.06] px-4 py-5 text-center">
-                <p className="text-[13px] text-gray-400 font-medium m-0 mb-1">No saved workouts yet</p>
-                <p className="text-[11px] text-gray-400 m-0">Log some exercises and tap "Save as preset" to create one</p>
+                <p className="text-[13px] text-gray-400 font-medium m-0 mb-1">{t("exercise.noSavedWorkouts")}</p>
+                <p className="text-[11px] text-gray-400 m-0">{t("exercise.noSavedWorkoutsDesc")}</p>
               </div>
             )}
           </motion.div>
@@ -665,7 +667,7 @@ export default function Exercise() {
             className="w-full bg-red-600 text-white border-none rounded-[14px] py-[13px] text-[14px] font-medium cursor-pointer font-[inherit] flex items-center justify-center gap-2"
           >
             <Plus className="w-[18px] h-[18px]" />
-            Log exercise
+            {t("exercise.logExercise")}
           </motion.button>
 
           {/* Exercise list */}
@@ -674,7 +676,7 @@ export default function Exercise() {
               className=""
             >
               <p className="text-[13px] font-medium text-forest mb-2 px-[2px] m-0">
-                🏃 {isToday ? "Today's exercises" : "Exercises logged"}
+                🏃 {isToday ? t("exercise.todayExercises") : t("exercise.exercisesLogged")}
               </p>
               <div className="flex flex-col gap-[6px]">
                 {dayExercises.map((exercise) => {
@@ -710,7 +712,7 @@ export default function Exercise() {
                   style={{ borderColor: "rgba(0,0,0,0.08)", background: "white", color: "#6b7280" }}
                 >
                   <Save className="w-[14px] h-[14px]" />
-                  Save session as preset
+                  {t("exercise.saveSessionPreset")}
                 </button>
               )}
             </motion.div>
@@ -718,10 +720,10 @@ export default function Exercise() {
             <div className="text-center p-6 bg-white rounded-2xl border border-black/[0.06]">
               <p className="text-[32px] mb-2">🏃</p>
               <p className="text-[13px] font-medium text-forest mb-1 m-0">
-                No exercises logged yet
+                {t("exercise.noExerciseYet")}
               </p>
               <p className="text-xs text-gray-400 m-0">
-                Tap "Log exercise" to get started!
+                {t("exercise.noExerciseYetDesc")}
               </p>
             </div>
           )}
@@ -735,14 +737,14 @@ export default function Exercise() {
           <div className="flex items-center justify-between mb-[10px]">
             <div className="flex items-center gap-[6px]">
               <TrendingUp className="w-[14px] h-[14px] text-red-600" />
-              <span className="text-[13px] font-medium text-forest">Weekly burned</span>
+              <span className="text-[13px] font-medium text-forest">{t("exercise.weeklyBurnedTitle")}</span>
             </div>
             <div className="flex gap-2">
               {[
-                { color: "#16a34a", label: "On track" },
-                { color: "#f59e0b", label: "Close" },
-                { color: "#ef4444", label: "Off track" },
-                { color: "#e5e7eb", label: "Rest" },
+                { color: "#16a34a", label: t("exercise.onTrack") },
+                { color: "#f59e0b", label: t("exercise.chartClose") },
+                { color: "#ef4444", label: t("exercise.offTrack") },
+                { color: "#e5e7eb", label: t("exercise.rest") },
               ].map(({ color, label }) => (
                 <div key={label} className="flex items-center gap-[3px]">
                   <div className="w-[6px] h-[6px] rounded-[2px] shrink-0" style={{ background: color }} />
@@ -771,8 +773,8 @@ export default function Exercise() {
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-[15px] font-medium text-forest m-0">Log exercise</p>
-                  <p className="text-[11px] text-gray-400 m-0">Your weight: {weight}kg</p>
+                  <p className="text-[15px] font-medium text-forest m-0">{t("exercise.logExerciseSheet")}</p>
+                  <p className="text-[11px] text-gray-400 m-0">{t("exercise.yourWeight", { value: weight })}</p>
                 </div>
                 <button onClick={() => { setShowAddSheet(false); resetForm(); }} className="bg-gray-100 border-none rounded-full w-7 h-7 cursor-pointer flex items-center justify-center p-0">
                   <X className="w-[14px] h-[14px] text-gray-500" />
@@ -782,10 +784,10 @@ export default function Exercise() {
               {/* Type selector */}
               <div className="flex gap-[4px] mb-4 bg-gray-100 rounded-[12px] p-[3px]">
                 {[
-                  { id: "cardio-speed", label: "Speed", emoji: "🏃" },
-                  { id: "cardio", label: "Cardio", emoji: "⚡" },
-                  { id: "strength", label: "Weights", emoji: "🏋️" },
-                  { id: "flexibility", label: "Flex", emoji: "🧘" },
+                  { id: "cardio-speed", label: t("exercise.speedTab"), emoji: "🏃" },
+                  { id: "cardio", label: t("exercise.cardioTab"), emoji: "⚡" },
+                  { id: "strength", label: t("exercise.weightsTab"), emoji: "🏋️" },
+                  { id: "flexibility", label: t("exercise.flexTab"), emoji: "🧘" },
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -804,7 +806,7 @@ export default function Exercise() {
               </div>
 
               {/* Exercise grid */}
-              <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Choose exercise</p>
+              <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">{t("exercise.chooseExercise")}</p>
               <div className={`grid gap-2 mb-4 ${exerciseType === "cardio" ? "grid-cols-4" : "grid-cols-3"}`}>
                 {filteredExercises.map((ex) => (
                   <button key={ex.name} onClick={() => setSelectedExercise(ex)}
@@ -825,7 +827,7 @@ export default function Exercise() {
               {/* ── Speed field (solo cardio-speed) ── */}
               {exerciseType === "cardio-speed" && (
                 <div className="mb-3">
-                  <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Speed (km/h) — optional</p>
+                  <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">{t("exercise.speedOptional")}</p>
                   <div className="flex gap-2">
                     {[6, 8, 10, 12, 15].map(s => (
                       <button key={s} onClick={() => setSpeedKmh(String(s))}
@@ -840,7 +842,7 @@ export default function Exercise() {
                   </div>
                   <input
                     type="number" value={speedKmh} onChange={e => setSpeedKmh(e.target.value)}
-                    placeholder="Custom km/h..."
+                    placeholder={t("exercise.customKmh")}
                     className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit] mt-2"
                   />
                 </div>
@@ -849,7 +851,7 @@ export default function Exercise() {
               {/* ── Duration (cardio-speed, cardio, flexibility) ── */}
               {exerciseType !== "strength" && (
                 <>
-                  <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Duration</p>
+                  <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">{t("exercise.durationLabel")}</p>
                   <div className="flex gap-2 mb-2">
                     {[15, 30, 45, 60, 90].map(m => (
                       <button key={m} onClick={() => setMinutes(String(m))}
@@ -865,7 +867,7 @@ export default function Exercise() {
                   <div className="flex items-center gap-2 mb-4">
                     <input
                       type="number" value={minutes} onChange={e => setMinutes(e.target.value)}
-                      placeholder="Custom minutes..."
+                      placeholder={t("exercise.customMinutes")}
                       className="flex-1 bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[14px] text-[14px] text-forest outline-none font-[inherit]"
                     />
                     <div className="bg-red-50 rounded-[10px] py-[10px] px-[14px] flex items-center gap-[6px] shrink-0">
@@ -881,21 +883,21 @@ export default function Exercise() {
                 <>
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     <div>
-                      <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">Sets</p>
+                      <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">{t("exercise.sets")}</p>
                       <input
                         type="number" value={sets} onChange={e => setSets(e.target.value)}
                         className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[10px] text-[14px] text-forest outline-none font-[inherit] text-center"
                       />
                     </div>
                     <div>
-                      <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">Reps</p>
+                      <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">{t("exercise.reps")}</p>
                       <input
                         type="number" value={reps} onChange={e => setReps(e.target.value)}
                         className="w-full bg-gray-50 border border-gray-200 rounded-[10px] py-[10px] px-[10px] text-[14px] text-forest outline-none font-[inherit] text-center"
                       />
                     </div>
                     <div>
-                      <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">kg (opt.)</p>
+                      <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-[0.3px] m-0">{t("exercise.kgOptional")}</p>
                       <input
                         type="number" value={strengthWeight} onChange={e => setStrengthWeight(e.target.value)}
                         placeholder="BW"
@@ -906,7 +908,7 @@ export default function Exercise() {
                   <div className="bg-red-50 rounded-[10px] py-[10px] px-[14px] flex items-center justify-center gap-[6px] mb-4">
                     <Flame className="w-[14px] h-[14px] text-red-600" />
                     <span className="text-[14px] font-semibold text-red-600">{previewCalories} kcal</span>
-                    {!strengthWeight && <span className="text-[11px] text-red-400">(bodyweight estimate)</span>}
+                    {!strengthWeight && <span className="text-[11px] text-red-400">{t("exercise.bodweightEstimate")}</span>}
                   </div>
                 </>
               )}
@@ -921,7 +923,7 @@ export default function Exercise() {
                   cursor: canSave() ? "pointer" : "default",
                 }}
               >
-                {saving ? "Saving..." : canSave() ? `Log ${previewCalories} kcal burned` : "Select exercise and details"}
+                {saving ? t("exercise.saving") : canSave() ? t("exercise.logKcalBurned", { value: previewCalories }) : t("exercise.selectDetails")}
               </button>
             </motion.div>
           </motion.div>
@@ -944,8 +946,8 @@ export default function Exercise() {
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-[15px] font-medium text-forest m-0">Save workout preset</p>
-                  <p className="text-[11px] text-gray-400 m-0">{dayExercises.length} exercise{dayExercises.length !== 1 ? "s" : ""} will be saved</p>
+                  <p className="text-[15px] font-medium text-forest m-0">{t("exercise.saveWorkoutPreset")}</p>
+                  <p className="text-[11px] text-gray-400 m-0">{t("exercise.exercisesWillBeSaved", { count: dayExercises.length })}</p>
                 </div>
                 <button onClick={() => setShowSavePreset(false)} className="bg-gray-100 border-none rounded-full w-7 h-7 cursor-pointer flex items-center justify-center p-0">
                   <X className="w-[14px] h-[14px] text-gray-500" />
@@ -965,7 +967,7 @@ export default function Exercise() {
                 })}
               </div>
 
-              <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">Preset name</p>
+              <p className="text-[11px] text-gray-400 mb-2 uppercase tracking-[0.3px] m-0">{t("exercise.presetNameLabel")}</p>
               <input
                 type="text"
                 value={presetName}
@@ -986,7 +988,7 @@ export default function Exercise() {
                   cursor: presetName.trim() ? "pointer" : "default",
                 }}
               >
-                {savingPreset ? "Saving..." : "Save Preset"}
+                {savingPreset ? t("exercise.saving") : t("exercise.savePresetBtn")}
               </button>
             </motion.div>
           </motion.div>

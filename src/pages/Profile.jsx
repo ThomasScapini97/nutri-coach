@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, LogOut, Trash2 } from "lucide-react";
+import { Save, LogOut, Trash2, Globe } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -49,6 +51,7 @@ function calculateCalorieGoal(profile) {
 }
 
 export default function Profile() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -115,7 +118,7 @@ export default function Profile() {
       return;
     }
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-    toast.success("Profile saved! 🎉", { description: `Daily goal: ${calorieGoal} kcal`, duration: 3000 });
+    toast.success(t("profile.savedSuccess"), { description: t("profile.savedDesc", { value: calorieGoal }), duration: 3000 });
   };
 
   const handleLogout = async () => { await supabase.auth.signOut(); };
@@ -177,12 +180,12 @@ export default function Profile() {
             <div className="flex gap-2 mt-[6px]">
               {profile?.current_streak > 0 && (
                 <span className="text-[11px] px-3 py-[3px] rounded-full font-medium" style={{ background: "#fff7ed", border: "0.5px solid #fed7aa", color: "#ea580c" }}>
-                  🔥 {profile.current_streak} day streak
+                  🔥 {t("profile.currentStreak", { value: profile.current_streak })}
                 </span>
               )}
               {profile?.longest_streak > 0 && (
                 <span className="text-[11px] px-3 py-[3px] rounded-full font-medium" style={{ background: "#fefce8", border: "0.5px solid #fde68a", color: "#b45309" }}>
-                  🏆 Best: {profile.longest_streak} days
+                  🏆 {t("profile.bestStreak", { value: profile.longest_streak })}
                 </span>
               )}
             </div>
@@ -195,9 +198,9 @@ export default function Profile() {
           style={{ background: "linear-gradient(135deg, #16a34a, #15803d)" }}
         >
           <div className="flex flex-col gap-[1px]">
-            <span className="text-[10px] text-white/70 tracking-[0.3px]">DAILY CALORIE GOAL</span>
+            <span className="text-[10px] text-white/70 tracking-[0.3px]">{t("profile.dailyGoal")}</span>
             <span className="text-[30px] font-medium leading-[1.1] tracking-[-1px]">{previewGoal ? previewGoal.toLocaleString() : "—"}</span>
-            <span className="text-[10px] text-white/60">calories per day</span>
+            <span className="text-[10px] text-white/60">{t("profile.caloriesPerDay")}</span>
           </div>
           <div className="flex flex-col items-end gap-[6px]">
             <div className="w-10 h-10 rounded-xl bg-white/[0.18] flex items-center justify-center text-[18px]">🎯</div>
@@ -217,35 +220,35 @@ export default function Profile() {
         >
           <div className="flex items-center gap-2 px-[14px] py-[11px] border-b border-gray-100">
             <div className="w-[26px] h-[26px] rounded-[7px] bg-green-100 flex items-center justify-center text-[13px]">👤</div>
-            <span className="text-xs font-medium text-forest">Personal info</span>
+            <span className="text-xs font-medium text-forest">{t("profile.personalInfo")}</span>
           </div>
           <div className="grid grid-cols-2 gap-px bg-gray-100">
             <div className="bg-white p-[10px_12px]">
-              <label className={labelCls}>Age</label>
+              <label className={labelCls}>{t("profile.age")}</label>
               <input type="number" placeholder="25" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} className={inputCls} />
             </div>
             <div className="bg-white p-[10px_12px]">
-              <label className={labelCls}>Gender</label>
+              <label className={labelCls}>{t("profile.gender")}</label>
               <Select value={form.gender} onValueChange={v => setForm({ ...form, gender: v })}>
                 <SelectTrigger className={inputCls + " flex justify-between items-center cursor-pointer"}>
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder={t("profile.select")} />
                 </SelectTrigger>
                 <SelectContent position="popper" side="bottom" sideOffset={4} className="bg-white border border-gray-200 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-[9999] overflow-hidden">
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="male">{t("profile.male")}</SelectItem>
+                  <SelectItem value="female">{t("profile.female")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="bg-white p-[10px_12px]">
-              <label className={labelCls}>Weight (kg)</label>
+              <label className={labelCls}>{t("profile.weight")}</label>
               <input type="number" placeholder="70" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} className={inputCls} />
             </div>
             <div className="bg-white p-[10px_12px]">
-              <label className={labelCls}>Height (cm)</label>
+              <label className={labelCls}>{t("profile.height")}</label>
               <input type="number" placeholder="175" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} className={inputCls} />
             </div>
             <div className="bg-white p-[10px_12px] col-span-2">
-              <label className={labelCls}>Weight goal (kg)</label>
+              <label className={labelCls}>{t("profile.weightGoal")}</label>
               <input type="number" placeholder="65" value={form.weight_goal} onChange={e => setForm({ ...form, weight_goal: e.target.value })} className={inputCls} />
             </div>
           </div>
@@ -257,13 +260,13 @@ export default function Profile() {
         >
           <div className="flex items-center gap-2 px-[14px] py-[11px] border-b border-gray-100">
             <div className="w-[26px] h-[26px] rounded-[7px] bg-green-100 flex items-center justify-center text-[13px]">⚡</div>
-            <span className="text-xs font-medium text-forest">Activity & goal</span>
+            <span className="text-xs font-medium text-forest">{t("profile.activityGoal")}</span>
           </div>
           <div className="p-[10px_12px] border-b border-gray-100">
-            <label className={labelCls}>Activity level</label>
+            <label className={labelCls}>{t("profile.activityLevel")}</label>
             <Select value={form.activity_level} onValueChange={v => setForm({ ...form, activity_level: v })}>
               <SelectTrigger className={inputCls + " flex justify-between items-center cursor-pointer"}>
-                <SelectValue placeholder="Select activity level" />
+                <SelectValue placeholder={t("profile.selectActivity")} />
               </SelectTrigger>
               <SelectContent position="popper" side="bottom" sideOffset={4} className="bg-white border border-gray-200 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-[9999] overflow-hidden">
                 {ACTIVITY_LEVELS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
@@ -271,7 +274,7 @@ export default function Profile() {
             </Select>
           </div>
           <div className="p-[10px_12px_12px]">
-            <label className={labelCls}>Wellness goal</label>
+            <label className={labelCls}>{t("profile.wellnessGoal")}</label>
             <div className="flex gap-[6px] mt-1">
               {GOALS.map(g => (
                 <button key={g.value} onClick={() => setForm({ ...form, goal: g.value })}
@@ -295,11 +298,11 @@ export default function Profile() {
         >
           <div className="flex items-center gap-2 px-[14px] py-[11px] border-b border-gray-100">
             <div className="w-[26px] h-[26px] rounded-[7px] bg-red-100 flex items-center justify-center text-[13px]">🏃</div>
-            <span className="text-xs font-medium text-forest">Fitness goals</span>
+            <span className="text-xs font-medium text-forest">{t("profile.fitnessGoals")}</span>
           </div>
           <div className="grid grid-cols-2 gap-px bg-gray-100">
             <div className="bg-white p-[10px_12px]">
-              <label className={labelCls}>Active days / week</label>
+              <label className={labelCls}>{t("profile.activeDays")}</label>
               <div className="flex gap-1 mt-1">
                 {[2,3,4,5,6,7].map(d => (
                   <button key={d} onClick={() => setForm({ ...form, active_days_goal: d })}
@@ -314,7 +317,7 @@ export default function Profile() {
               </div>
             </div>
             <div className="bg-white p-[10px_12px]">
-              <label className={labelCls}>Burn goal (kcal/day)</label>
+              <label className={labelCls}>{t("profile.burnGoal")}</label>
               <input type="number" placeholder="300" value={form.burn_goal} onChange={e => setForm({ ...form, burn_goal: e.target.value })} className={inputCls} />
             </div>
           </div>
@@ -326,7 +329,7 @@ export default function Profile() {
         >
           <div className="flex items-center gap-2 px-[14px] py-[11px] border-b border-gray-100">
             <div className="w-[26px] h-[26px] rounded-[7px] bg-green-100 flex items-center justify-center text-[13px]">💬</div>
-            <span className="text-xs font-medium text-forest">Coach response style</span>
+            <span className="text-xs font-medium text-forest">{t("profile.chatStyle")}</span>
           </div>
           <div className="p-[10px_12px_12px]">
             <div className="flex gap-2">
@@ -356,33 +359,67 @@ export default function Profile() {
             style={{ opacity: (!formValid || saving) ? 0.6 : 1 }}
           >
             {saving ? <Spinner size="sm" /> : <Save className="w-4 h-4" />}
-            Save profile
+            {t("profile.saveProfile")}
           </Button>
           <Button variant="outline" onClick={handleLogout}
             className="w-full bg-white text-gray-700 rounded-[14px] py-[11px] text-[13px] font-normal border border-gray-200 flex items-center justify-center gap-[7px]"
           >
-            <LogOut className="w-4 h-4" /> Log out
+            <LogOut className="w-4 h-4" /> {t("profile.logout")}
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button className="w-full bg-transparent text-red-600 border-none rounded-[14px] py-[9px] text-xs font-normal cursor-pointer flex items-center justify-center gap-[6px] font-[inherit] opacity-80">
-                <Trash2 className="w-3.5 h-3.5" /> Delete account
+                <Trash2 className="w-3.5 h-3.5" /> {t("profile.deleteAccount")}
               </button>
             </AlertDialogTrigger>
             <AlertDialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[360px] bg-white rounded-2xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)] border border-gray-200 z-[99999]">
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                <AlertDialogDescription>This will permanently delete all your data. This action cannot be undone.</AlertDialogDescription>
+                <AlertDialogTitle>{t("profile.deleteConfirm")}</AlertDialogTitle>
+                <AlertDialogDescription>{t("profile.deleteDesc")}</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{t("profile.cancel")}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDeleteAccount} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
                   {deleting ? <Spinner size="sm" className="mr-2" /> : null}
-                  Delete account
+                  {t("profile.deleteAccount")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </motion.div>
+
+        {/* Language selector */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden"
+        >
+          <div className="flex items-center gap-2 px-[14px] py-[11px] border-b border-gray-100">
+            <div className="w-[26px] h-[26px] rounded-[7px] bg-blue-100 flex items-center justify-center text-[13px]"><Globe className="w-3.5 h-3.5 text-blue-500" /></div>
+            <span className="text-xs font-medium text-forest">{t("profile.language")}</span>
+          </div>
+          <div className="p-[10px_12px_12px] flex flex-wrap gap-2">
+            {[
+              { code: "en", flag: "🇬🇧", label: "English" },
+              { code: "it", flag: "🇮🇹", label: "Italiano" },
+              { code: "es", flag: "🇪🇸", label: "Español" },
+              { code: "fr", flag: "🇫🇷", label: "Français" },
+              { code: "de", flag: "🇩🇪", label: "Deutsch" },
+              { code: "pt", flag: "🇵🇹", label: "Português" },
+            ].map(({ code, flag, label }) => {
+              const active = i18n.language?.startsWith(code);
+              return (
+                <button key={code} onClick={() => i18n.changeLanguage(code)}
+                  className="flex items-center gap-[5px] px-3 py-[6px] rounded-full text-[12px] font-medium cursor-pointer font-[inherit]"
+                  style={{
+                    border: active ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                    background: active ? "#f0fdf4" : "#f9fafb",
+                    color: active ? "#15803d" : "#6b7280",
+                  }}
+                >
+                  <span>{flag}</span> {label}
+                </button>
+              );
+            })}
+          </div>
         </motion.div>
 
         {/* Footer links */}
@@ -391,14 +428,14 @@ export default function Profile() {
             <Link to="/privacy" style={{ color: "#9ca3af", textDecoration: "none" }}
               onMouseEnter={e => e.currentTarget.style.color = "#6b7280"}
               onMouseLeave={e => e.currentTarget.style.color = "#9ca3af"}
-            >Privacy Policy</Link>
+            >{t("profile.privacy")}</Link>
             {" · "}
             <Link to="/privacy" style={{ color: "#9ca3af", textDecoration: "none" }}
               onMouseEnter={e => e.currentTarget.style.color = "#6b7280"}
               onMouseLeave={e => e.currentTarget.style.color = "#9ca3af"}
-            >Terms of Service</Link>
+            >{t("profile.terms")}</Link>
           </p>
-          <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>NutriCoach v1.0.0</p>
+          <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>{t("profile.version")}</p>
         </div>
 
       </div>

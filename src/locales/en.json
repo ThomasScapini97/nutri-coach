@@ -1,0 +1,314 @@
+{
+  "nav": {
+    "chat": "Chat",
+    "summary": "Summary",
+    "exercise": "Exercise",
+    "diary": "Diary"
+  },
+  "dashboard": {
+    "todayProgress": "Today's Progress",
+    "kcalLeft": "{{value}} kcal left",
+    "goalReached": "Goal reached! 🎉",
+    "burned": "{{value}} kcal burned",
+    "water": "Water",
+    "waterGoalReached": "Daily water goal reached! 🎉",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fats": "Fats",
+    "fiber": "Fiber"
+  },
+  "summary": {
+    "today": "Today",
+    "netCalories": "Net calories",
+    "caloriesToday": "Calories today",
+    "kcalGoal": "of {{value}} kcal goal",
+    "kcalRemaining": "{{value}} kcal remaining",
+    "goalReached": "Goal reached! 🎉",
+    "eaten": "eaten",
+    "burned": "burned",
+    "nutrition": "🏅 Nutrition",
+    "whatYouAte": "🍽 What you ate",
+    "items": "{{count}} items",
+    "noFoodLogged": "No food logged yet",
+    "headToChat": "Head to chat to start tracking 💬",
+    "trend": "Trend",
+    "onTrack": "On track",
+    "close": "Close",
+    "offTrack": "Off track",
+    "noData": "No data",
+    "noMealsLogged": "No meals logged"
+  },
+  "exercise": {
+    "title": "Exercise",
+    "logExercise": "+ Log exercise",
+    "savedWorkouts": "Saved Workouts",
+    "noSavedWorkouts": "No saved workouts yet",
+    "noSavedWorkoutsDesc": "Log some exercises and tap 'Save as preset' to create one",
+    "logAll": "Log all",
+    "weeklyBurned": "Weekly burned",
+    "duration": "Duration (min)",
+    "speed": "Speed (km/h)",
+    "sets": "Sets",
+    "reps": "Reps",
+    "weightKg": "Weight (kg)",
+    "caloriesBurned": "Calories burned",
+    "save": "Save",
+    "cancel": "Cancel",
+    "savePreset": "Save as preset",
+    "presetName": "Preset name...",
+    "today": "Today",
+    "readOnly": "Past day — read only",
+    "kcalBurned": "kcal burned",
+    "noExercise": "No exercise logged",
+    "noExerciseDesc": "Tap '+ Log exercise' to get started",
+    "selectExercise": "Select an exercise",
+    "searchExercise": "Search exercise...",
+    "cardio": "Cardio",
+    "strength": "Strength",
+    "flexibility": "Flexibility",
+    "other": "Other",
+    "burnedToday": "Burned today",
+    "kcalGoal": "of {{value}} kcal goal",
+    "weeklyGoalReached": "Weekly goal reached!",
+    "weeklyActivityGoal": "Weekly activity goal",
+    "activeDaysInfo": "{{active}}/{{goal}} active days · {{burnGoal}} kcal target/day",
+    "todayExercises": "Today's exercises",
+    "exercisesLogged": "Exercises logged",
+    "saveSessionPreset": "Save session as preset",
+    "noExerciseYet": "No exercises logged yet",
+    "noExerciseYetDesc": "Tap \"Log exercise\" to get started!",
+    "chooseExercise": "Choose exercise",
+    "speedOptional": "Speed (km/h) — optional",
+    "durationLabel": "Duration",
+    "kgOptional": "kg (opt.)",
+    "bodweightEstimate": "(bodyweight estimate)",
+    "logKcalBurned": "Log {{value}} kcal burned",
+    "selectDetails": "Select exercise and details",
+    "saveWorkoutPreset": "Save workout preset",
+    "exercisesWillBeSaved": "{{count}} exercise(s) will be saved",
+    "presetNameLabel": "Preset name",
+    "savePresetBtn": "Save Preset",
+    "saving": "Saving...",
+    "onTrack": "On track",
+    "chartClose": "Close",
+    "offTrack": "Off track",
+    "rest": "Rest",
+    "speedTab": "Speed",
+    "cardioTab": "Cardio",
+    "weightsTab": "Weights",
+    "flexTab": "Flex",
+    "yourWeight": "Your weight: {{value}}kg",
+    "customMinutes": "Custom minutes...",
+    "customKmh": "Custom km/h...",
+    "logExerciseSheet": "Log exercise",
+    "weeklyBurnedTitle": "Weekly burned"
+  },
+  "diary": {
+    "today": "Today",
+    "pastEntry": "Past entry",
+    "autoSaved": "Auto-saved",
+    "saved": "✓ Saved",
+    "weightProgress": "Weight Progress",
+    "goalReached": "🎉 Goal reached!",
+    "kgToGo": "{{value}} kg to go",
+    "startWeight": "Start: {{value}} kg",
+    "goalWeight": "Goal: {{value}} kg",
+    "vsYesterday": "vs yesterday",
+    "logWeightHint": "Log weight for 2+ days to see trend",
+    "howFeeling": "How are you feeling?",
+    "readOnly": "🔒 Read only",
+    "notesPlaceholder": "How was your day? Any notes...",
+    "weeklyChallenges": "Weekly Challenges",
+    "todayLabel": "Today",
+    "thisWeek": "This week",
+    "done": "done",
+    "dailyChallenge": "Daily Challenge",
+    "dailyChallengeDone": "✓ Done! Come back tomorrow 🎉",
+    "dailyChallengeLog": "0/1 · Log a meal in Chat",
+    "goToChat": "Go to Chat",
+    "leaderboard": "🏆 View Leaderboard",
+    "weeklyLeaderboard": "🏆 Weekly Leaderboard",
+    "weekOf": "Week of {{date}} · resets every Monday",
+    "noScores": "No scores yet this week — be the first! 🚀",
+    "you": "you",
+    "challenges": {
+      "log": {
+        "title": "Log every day",
+        "desc": "Track your food 5 days"
+      },
+      "hydration": {
+        "title": "Stay hydrated",
+        "desc": "{{goal}} glasses/day for 5 days"
+      },
+      "protein": {
+        "title": "Hit protein goal",
+        "desc": "{{goal}}g protein for 4 days"
+      },
+      "calories": {
+        "title": "Stay on target",
+        "desc": "Within ±150 kcal of goal for 4 days"
+      },
+      "exercise": {
+        "title": "Move your body",
+        "desc": "Exercise 3 times this week"
+      },
+      "wellness": {
+        "title": "Wellness check",
+        "desc": "Fill your diary 4 days"
+      }
+    }
+  },
+  "profile": {
+    "personalInfo": "Personal info",
+    "age": "Age",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "weight": "Weight (kg)",
+    "height": "Height (cm)",
+    "weightGoal": "Weight goal (kg)",
+    "activityGoal": "Activity & goal",
+    "activityLevel": "Activity level",
+    "wellnessGoal": "Wellness goal",
+    "fitnessGoals": "Fitness goals",
+    "activeDays": "Active days / week",
+    "burnGoal": "Burn goal (kcal/day)",
+    "chatStyle": "Coach response style",
+    "concise": "Concise",
+    "conciseDesc": "Short and to the point",
+    "detailed": "Detailed",
+    "detailedDesc": "In-depth advice",
+    "saveProfile": "Save profile",
+    "logout": "Log out",
+    "deleteAccount": "Delete account",
+    "deleteConfirm": "Delete your account?",
+    "deleteDesc": "This will permanently delete all your data. This action cannot be undone.",
+    "cancel": "Cancel",
+    "currentStreak": "{{value}} day streak",
+    "bestStreak": "Best: {{value}} days",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "version": "NutriCoach v1.0.0",
+    "language": "Language",
+    "dailyGoal": "DAILY CALORIE GOAL",
+    "caloriesPerDay": "calories per day",
+    "savedSuccess": "Profile saved! 🎉",
+    "savedDesc": "Daily goal: {{value}} kcal",
+    "select": "Select",
+    "selectActivity": "Select activity level"
+  },
+  "onboarding": {
+    "continue": "Continue",
+    "saving": "Saving...",
+    "startNow": "Start now 🚀",
+    "privacyAccept": "I have read and accept the",
+    "privacyAnd": "and Terms of Service",
+    "privacyRequired": "You must accept the privacy policy to continue",
+    "step0": {
+      "title": "Hi! What's your name?",
+      "subtitle": "We'll use your name to personalize your experience",
+      "placeholder": "Your name or nickname..."
+    },
+    "step1": {
+      "title": "Your details",
+      "subtitle": "Needed to calculate your precise caloric needs",
+      "age": "Age",
+      "sex": "Biological sex",
+      "weight": "Current weight (kg)",
+      "height": "Height (cm)",
+      "weightGoal": "Target weight (kg) — optional"
+    },
+    "step2": {
+      "title": "How active are you?",
+      "subtitle": "Consider your average weekly routine"
+    },
+    "step3": {
+      "title": "Your goal",
+      "subtitle": "Also choose how you prefer the coach to respond",
+      "chatStyle": "Coach response style"
+    },
+    "step4": {
+      "title": "Fitness goals",
+      "subtitle": "How many days do you want to train and how many calories burn?",
+      "activeDays": "Active days per week",
+      "burnGoal": "Calories to burn on active days",
+      "customKcal": "Custom kcal...",
+      "day": "day",
+      "days": "days",
+      "perWeek": "per week"
+    },
+    "step5": {
+      "title": "Before you begin",
+      "subtitle": "Please read this important information",
+      "d1title": "Not a medical device",
+      "d1text": "NutriCoach is a personal wellness support tool, not a medical service. It does not replace the advice of a nutritionist or doctor.",
+      "d2title": "Not suitable for eating disorders",
+      "d2text": "If you suffer or have suffered from serious eating disorders (anorexia, bulimia, BED), we recommend consulting a specialist before using this app.",
+      "d3title": "Enter accurate data",
+      "d3text": "Caloric calculations depend on the data you enter. The more accurate they are, the more accurate your nutrition plan will be.",
+      "d4title": "AI can make mistakes",
+      "d4text": "AI calorie estimates are approximate. Use them as a reference, not as absolute values."
+    },
+    "errorSaving": "Error saving profile",
+    "activityLevels": {
+      "sedentary": {
+        "label": "Sedentary",
+        "sub": "Little or no exercise"
+      },
+      "light": {
+        "label": "Light",
+        "sub": "1-3 days per week"
+      },
+      "moderate": {
+        "label": "Moderate",
+        "sub": "3-5 days per week"
+      },
+      "active": {
+        "label": "Active",
+        "sub": "6-7 days per week"
+      },
+      "very_active": {
+        "label": "Very active",
+        "sub": "Intense daily training"
+      }
+    },
+    "goals": {
+      "lose_weight": {
+        "label": "Lose weight",
+        "sub": "Controlled caloric deficit"
+      },
+      "maintain": {
+        "label": "Maintain weight",
+        "sub": "Stable caloric balance"
+      },
+      "gain_muscle": {
+        "label": "Gain muscle",
+        "sub": "Caloric surplus + protein"
+      }
+    },
+    "chatStyles": {
+      "concise": {
+        "label": "Concise",
+        "sub": "Short and to the point"
+      },
+      "detailed": {
+        "label": "Detailed",
+        "sub": "In-depth advice and explanations"
+      }
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "kg": "kg",
+    "kcal": "kcal",
+    "min": "min",
+    "g": "g",
+    "addG": "+ add g"
+  }
+}

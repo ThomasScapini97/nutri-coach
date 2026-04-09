@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { format } from "date-fns";
@@ -9,6 +10,7 @@ import { X, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function WeeklyChallenges() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [challenges, setChallenges] = useState([]);
@@ -63,12 +65,12 @@ export default function WeeklyChallenges() {
     const diaryCount = diaryDays.length;
 
     const built = [
-      { id: "log", emoji: "📋", title: "Log every day", desc: "Track your food 5 days", current: loggedDays, target: 5, color: "#16a34a", bg: "#f0fdf4" },
-      { id: "hydration", emoji: "💧", title: "Stay hydrated", desc: `${WATER_GOAL} glasses/day for 5 days`, current: hydrationDays, target: 5, color: "#3b82f6", bg: "#eff6ff" },
-      { id: "protein", emoji: "🥩", title: "Hit protein goal", desc: `${proteinGoal}g protein for 4 days`, current: proteinDays, target: 4, color: "#f59e0b", bg: "#fffbeb" },
-      { id: "calories", emoji: "🎯", title: "Stay on target", desc: "Within ±150 kcal of goal for 4 days", current: calorieDays, target: 4, color: "#8b5cf6", bg: "#f5f3ff" },
-      { id: "exercise", emoji: "🏃", title: "Move your body", desc: "Exercise 3 times this week", current: exerciseDays, target: 3, color: "#ef4444", bg: "#fef2f2" },
-      { id: "diary", emoji: "📓", title: "Wellness check", desc: "Fill your diary 4 days", current: diaryCount, target: 4, color: "#ec4899", bg: "#fdf2f8" },
+      { id: "log", emoji: "📋", title: t("diary.challenges.log.title"), desc: t("diary.challenges.log.desc"), current: loggedDays, target: 5, color: "#16a34a", bg: "#f0fdf4" },
+      { id: "hydration", emoji: "💧", title: t("diary.challenges.hydration.title"), desc: t("diary.challenges.hydration.desc", { goal: WATER_GOAL }), current: hydrationDays, target: 5, color: "#3b82f6", bg: "#eff6ff" },
+      { id: "protein", emoji: "🥩", title: t("diary.challenges.protein.title"), desc: t("diary.challenges.protein.desc", { goal: proteinGoal }), current: proteinDays, target: 4, color: "#f59e0b", bg: "#fffbeb" },
+      { id: "calories", emoji: "🎯", title: t("diary.challenges.calories.title"), desc: t("diary.challenges.calories.desc"), current: calorieDays, target: 4, color: "#8b5cf6", bg: "#f5f3ff" },
+      { id: "exercise", emoji: "🏃", title: t("diary.challenges.exercise.title"), desc: t("diary.challenges.exercise.desc"), current: exerciseDays, target: 3, color: "#ef4444", bg: "#fef2f2" },
+      { id: "diary", emoji: "📓", title: t("diary.challenges.wellness.title"), desc: t("diary.challenges.wellness.desc"), current: diaryCount, target: 4, color: "#ec4899", bg: "#fdf2f8" },
     ];
 
     const todayLogged = foodLogs.some(l => l.date === today && (l.total_calories || 0) > 0);
@@ -138,14 +140,14 @@ export default function WeeklyChallenges() {
               color: completed === challenges.length ? "#16a34a" : "#9ca3af",
             }}
           >
-            {completed}/{challenges.length} done
+            {completed}/{challenges.length} {t("diary.done")}
           </span>
         </div>
 
         <div className="p-3 flex flex-col gap-2">
 
           {/* Daily challenge */}
-          <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500, paddingLeft: "2px" }}>Today</span>
+          <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500, paddingLeft: "2px" }}>{t("diary.todayLabel")}</span>
           <div
             style={{
               borderRadius: "12px", padding: "12px 14px",
@@ -157,11 +159,11 @@ export default function WeeklyChallenges() {
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
                 <span style={{ fontSize: "20px" }}>⚡</span>
                 <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: "13px", fontWeight: 600, color: "#1a3a22", marginBottom: "2px" }}>Daily Challenge</p>
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "#1a3a22", marginBottom: "2px" }}>{t("diary.dailyChallenge")}</p>
                   {dailyDone ? (
-                    <p style={{ fontSize: "11px", color: "#16a34a" }}>✓ Done! Come back tomorrow 🎉</p>
+                    <p style={{ fontSize: "11px", color: "#16a34a" }}>{t("diary.dailyChallengeDone")}</p>
                   ) : (
-                    <p style={{ fontSize: "11px", color: "#92400e" }}>0/1 · Log a meal in Chat</p>
+                    <p style={{ fontSize: "11px", color: "#92400e" }}>{t("diary.dailyChallengeLog")}</p>
                   )}
                 </div>
               </div>
@@ -170,14 +172,14 @@ export default function WeeklyChallenges() {
                   onClick={() => navigate("/Chat")}
                   style={{ display: "flex", alignItems: "center", gap: "4px", background: "#f59e0b", color: "white", border: "none", borderRadius: "8px", padding: "6px 10px", fontSize: "11px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
                 >
-                  Go to Chat <ArrowRight style={{ width: "12px", height: "12px" }} />
+                  {t("diary.goToChat")} <ArrowRight style={{ width: "12px", height: "12px" }} />
                 </button>
               )}
             </div>
           </div>
 
           {/* Weekly challenges */}
-          <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500, paddingLeft: "2px", marginTop: "4px" }}>This week</span>
+          <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500, paddingLeft: "2px", marginTop: "4px" }}>{t("diary.thisWeek")}</span>
 
           {challenges.map((c) => {
             const done = c.current >= c.target;
@@ -228,7 +230,7 @@ export default function WeeklyChallenges() {
               marginTop: "2px",
             }}
           >
-            🏆 View Leaderboard
+            {t("diary.leaderboard")}
           </button>
         </div>
       </motion.div>
@@ -262,8 +264,8 @@ export default function WeeklyChallenges() {
               {/* Header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 10px", borderBottom: "0.5px solid #f3f4f6", flexShrink: 0 }}>
                 <div>
-                  <p style={{ fontSize: "15px", fontWeight: 600, color: "#1a3a22" }}>🏆 Weekly Leaderboard</p>
-                  <p style={{ fontSize: "11px", color: "#9ca3af" }}>Week of {weekStart} · resets every Monday</p>
+                  <p style={{ fontSize: "15px", fontWeight: 600, color: "#1a3a22" }}>{t("diary.weeklyLeaderboard")}</p>
+                  <p style={{ fontSize: "11px", color: "#9ca3af" }}>{t("diary.weekOf", { date: weekStart })}</p>
                 </div>
                 <button
                   onClick={() => setShowLeaderboard(false)}
@@ -289,7 +291,7 @@ export default function WeeklyChallenges() {
                   ))
                 ) : leaderboard.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af", fontSize: "13px" }}>
-                    No scores yet this week — be the first! 🚀
+                    {t("diary.noScores")}
                   </div>
                 ) : (
                   <>
@@ -309,7 +311,7 @@ export default function WeeklyChallenges() {
                             {rankLabel(i)}
                           </span>
                           <span style={{ flex: 1, fontSize: "13px", fontWeight: isMe ? 600 : 400, color: isMe ? "#16a34a" : "#1a3a22", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {row.display_name || "Anonymous"}{isMe ? " (you)" : ""}
+                            {row.display_name || "Anonymous"}{isMe ? ` (${t("diary.you")})` : ""}
                           </span>
                           <span style={{ fontSize: "10px", color: "#9ca3af", background: "#f3f4f6", borderRadius: "6px", padding: "2px 6px", flexShrink: 0 }}>
                             {row.challenges_completed}/6
@@ -330,7 +332,7 @@ export default function WeeklyChallenges() {
                           <div style={{ textAlign: "center", color: "#d1d5db", fontSize: "12px", padding: "6px 0" }}>· · ·</div>
                           <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 10px", borderRadius: "12px", background: "#f0fdf4", border: "0.5px solid #bbf7d0" }}>
                             <span style={{ width: "24px", textAlign: "center", fontSize: "12px", color: "#9ca3af" }}>—</span>
-                            <span style={{ flex: 1, fontSize: "13px", fontWeight: 600, color: "#16a34a" }}>You</span>
+                            <span style={{ flex: 1, fontSize: "13px", fontWeight: 600, color: "#16a34a" }}>{t("diary.you")}</span>
                             <span style={{ fontSize: "10px", color: "#9ca3af", background: "#f3f4f6", borderRadius: "6px", padding: "2px 6px" }}>
                               {challenges.filter(c => c.current >= c.target).length}/6
                             </span>

@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import html2canvas from 'html2canvas';
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +16,7 @@ import { motion } from "framer-motion";
 export default function Summary() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { t } = useTranslation();
   const [showShare, setShowShare] = useState(false);
   const [exportingMeal, setExportingMeal] = useState(null);
   const cardRefs = useRef({});
@@ -304,10 +306,10 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         </button>
         <div className="text-center">
           <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">
-            {isToday ? "Today" : format(selectedDate, "EEEE, MMM d")}
+            {isToday ? t("summary.today") : format(selectedDate, "EEEE, MMM d")}
           </h2>
           <p className="text-[11px] m-0 text-gray-400">
-            {dayLog ? `${netCalories} kcal logged` : "No meals logged"}
+            {dayLog ? `${netCalories} kcal logged` : t("summary.noMealsLogged")}
           </p>
         </div>
         <div className="absolute right-4 flex items-center gap-3">
@@ -344,13 +346,13 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             <div className="flex justify-between items-start mb-[14px] relative">
               <div>
                 <p className="text-[11px] text-white/75 mb-[2px]">
-                  {burnedCalories > 0 ? "Net calories" : "Calories today"}
+                  {burnedCalories > 0 ? t("summary.netCalories") : t("summary.caloriesToday")}
                 </p>
                 <p className="text-[42px] font-medium leading-none tracking-[-1px]">
                   {netCalories.toLocaleString()}
                 </p>
                 <p className="text-[11px] text-white/65 mt-[2px]">
-                  of {calorieGoal.toLocaleString()} kcal goal
+                  {t("summary.kcalGoal", { value: calorieGoal.toLocaleString() })}
                 </p>
               </div>
               <div className="w-11 h-11 rounded-[14px] bg-white/[0.18] flex items-center justify-center">
@@ -367,12 +369,12 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             </div>
             <div className="flex justify-between items-center">
               <p className="text-[11px] text-white/85">
-                {caloriesRemaining > 0 ? `${caloriesRemaining} kcal remaining` : "Goal reached! 🎉"}
+                {caloriesRemaining > 0 ? t("summary.kcalRemaining", { value: caloriesRemaining }) : t("summary.goalReached")}
               </p>
               {burnedCalories > 0 && (
                 <div className="flex gap-[6px]">
-                  <span className="text-[10px] bg-white/15 text-white/90 px-2 py-[2px] rounded-full">🍽 {caloriesConsumed} eaten</span>
-                  <span className="text-[10px] bg-white/15 text-white/90 px-2 py-[2px] rounded-full">🏃 {burnedCalories} burned</span>
+                  <span className="text-[10px] bg-white/15 text-white/90 px-2 py-[2px] rounded-full">🍽 {caloriesConsumed} {t("summary.eaten")}</span>
+                  <span className="text-[10px] bg-white/15 text-white/90 px-2 py-[2px] rounded-full">🏃 {burnedCalories} {t("summary.burned")}</span>
                 </div>
               )}
             </div>
@@ -381,14 +383,14 @@ const caloriesConsumed = dayLog?.total_calories || 0;
           {/* Macro grid 2x2 */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <div className="flex items-center gap-[6px] mb-[10px] px-[2px]">
-              <span className="text-[13px] font-medium text-forest">🏅 Nutrition</span>
+              <span className="text-[13px] font-medium text-forest">{t("summary.nutrition")}</span>
             </div>
             <div style={{ background: "white", borderRadius: "16px", border: "0.5px solid rgba(0,0,0,0.06)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", padding: "12px 14px" }}>
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                <AnimatedProgressBar label="Carbs" value={dayLog?.total_carbs || 0} max={carbsGoal} unit="g" color="chart-3" />
-                <AnimatedProgressBar label="Protein" value={dayLog?.total_protein || 0} max={proteinGoal} unit="g" color="chart-4" />
-                <AnimatedProgressBar label="Fats" value={dayLog?.total_fats || 0} max={fatsGoal} unit="g" color="blue-500" />
-                <AnimatedProgressBar label="Fiber" value={dayLog?.total_fiber || 0} max={fiberGoal} unit="g" color="primary" />
+                <AnimatedProgressBar label={t("dashboard.carbs")} value={dayLog?.total_carbs || 0} max={carbsGoal} unit="g" color="chart-3" />
+                <AnimatedProgressBar label={t("dashboard.protein")} value={dayLog?.total_protein || 0} max={proteinGoal} unit="g" color="chart-4" />
+                <AnimatedProgressBar label={t("dashboard.fats")} value={dayLog?.total_fats || 0} max={fatsGoal} unit="g" color="blue-500" />
+                <AnimatedProgressBar label={t("dashboard.fiber")} value={dayLog?.total_fiber || 0} max={fiberGoal} unit="g" color="primary" />
               </div>
             </div>
           </motion.div>
@@ -401,9 +403,9 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             className="relative"
           >
             <div className="flex items-center justify-between mb-[10px] px-[2px]">
-              <span className="text-[13px] font-medium text-forest">🍽 What you ate</span>
+              <span className="text-[13px] font-medium text-forest">{t("summary.whatYouAte")}</span>
               {dayEntries?.length > 0 && (
-                <span className="text-[11px] text-gray-400">{dayEntries.length} items</span>
+                <span className="text-[11px] text-gray-400">{t("summary.items", { count: dayEntries.length })}</span>
               )}
             </div>
             <div className="flex flex-col gap-[6px]">
@@ -427,8 +429,8 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                   />
                 )) : (
                 <div className="text-center py-8 bg-white rounded-2xl border border-black/[0.06]">
-                  <p className="text-[13px] text-gray-400 mb-1">No food logged yet</p>
-                  <p className="text-xs text-gray-400">Head to chat to start tracking 💬</p>
+                  <p className="text-[13px] text-gray-400 mb-1">{t("summary.noFoodLogged")}</p>
+                  <p className="text-xs text-gray-400">{t("summary.headToChat")}</p>
                 </div>
               )}
             </div>
@@ -443,14 +445,14 @@ const caloriesConsumed = dayLog?.total_calories || 0;
           <div className="flex items-center justify-between mb-[10px]">
             <div className="flex items-center gap-[6px]">
               <TrendingUp className="w-[14px] h-[14px] text-green-600" />
-              <span className="text-[13px] font-medium text-forest">Trend</span>
+              <span className="text-[13px] font-medium text-forest">{t("summary.trend")}</span>
             </div>
             <div className="flex gap-2">
               {[
-                { color: "#16a34a", label: "On track" },
-                { color: "#f59e0b", label: "Close" },
-                { color: "#ef4444", label: "Off track" },
-                { color: "#e5e7eb", label: "No data" },
+                { color: "#16a34a", label: t("summary.onTrack") },
+                { color: "#f59e0b", label: t("summary.close") },
+                { color: "#ef4444", label: t("summary.offTrack") },
+                { color: "#e5e7eb", label: t("summary.noData") },
               ].map(({ color, label }) => (
                 <div key={label} className="flex items-center gap-[3px]">
                   <div className="w-[6px] h-[6px] rounded-[2px] shrink-0" style={{ background: color }} />
@@ -476,7 +478,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                 <span className="text-2xl">🥗</span>
                 <div>
                   <p className="font-semibold text-forest text-sm m-0">NutriCoach</p>
-                  <p className="text-[11px] text-gray-400 m-0">{isToday ? "Today" : format(selectedDate, "EEEE, d MMM yyyy")}</p>
+                  <p className="text-[11px] text-gray-400 m-0">{isToday ? t("summary.today") : format(selectedDate, "EEEE, d MMM yyyy")}</p>
                 </div>
               </div>
 
@@ -492,10 +494,10 @@ const caloriesConsumed = dayLog?.total_calories || 0;
               {/* Macros */}
               <div className="grid grid-cols-4 gap-2">
                 {[
-                  { label: "Protein", value: Math.round(dayLog?.total_protein || 0), color: "#ec4899" },
-                  { label: "Carbs",   value: Math.round(dayLog?.total_carbs   || 0), color: "#f59e0b" },
-                  { label: "Fats",    value: Math.round(dayLog?.total_fats    || 0), color: "#3b82f6" },
-                  { label: "Fiber",   value: Math.round(dayLog?.total_fiber   || 0), color: "#22c55e" },
+                  { label: t("dashboard.protein"), value: Math.round(dayLog?.total_protein || 0), color: "#ec4899" },
+                  { label: t("dashboard.carbs"),   value: Math.round(dayLog?.total_carbs   || 0), color: "#f59e0b" },
+                  { label: t("dashboard.fats"),    value: Math.round(dayLog?.total_fats    || 0), color: "#3b82f6" },
+                  { label: t("dashboard.fiber"),   value: Math.round(dayLog?.total_fiber   || 0), color: "#22c55e" },
                 ].map(m => (
                   <div key={m.label} className="bg-white rounded-[12px] py-2 text-center">
                     <p className="text-[10px] text-gray-400 m-0">{m.label}</p>
@@ -510,11 +512,11 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                 if (!entries.length) return null;
                 const { emoji, label } = MEAL_META[meal];
                 const mealMacros = [
-                  { key: "calories", label: "Calories", unit: "kcal", Icon: Flame,     bg: "bg-orange-100",  color: "text-orange-500", value: Math.round(entries.reduce((s, e) => s + e.total_calories, 0)) },
-                  { key: "carbs",    label: "Carbs",    unit: "g",    Icon: Wheat,     bg: "bg-amber-100",   color: "text-amber-400",  value: Math.round(entries.reduce((s, e) => s + e.total_carbs,    0)) },
-                  { key: "protein",  label: "Protein",  unit: "g",    Icon: Drumstick, bg: "bg-red-100",     color: "text-red-400",    value: Math.round(entries.reduce((s, e) => s + e.total_protein,  0)) },
-                  { key: "fats",     label: "Fats",     unit: "g",    Icon: Droplets,  bg: "bg-blue-100",    color: "text-blue-500",   value: Math.round(entries.reduce((s, e) => s + e.total_fats,     0)) },
-                  { key: "fiber",    label: "Fiber",    unit: "g",    Icon: Salad,     bg: "bg-emerald-100", color: "text-emerald-500", value: Math.round(entries.reduce((s, e) => s + e.total_fiber,    0)) },
+                  { key: "calories", label: t("common.kcal"),           unit: "kcal", Icon: Flame,     bg: "bg-orange-100",  color: "text-orange-500", value: Math.round(entries.reduce((s, e) => s + e.total_calories, 0)) },
+                  { key: "carbs",    label: t("dashboard.carbs"),       unit: "g",    Icon: Wheat,     bg: "bg-amber-100",   color: "text-amber-400",  value: Math.round(entries.reduce((s, e) => s + e.total_carbs,    0)) },
+                  { key: "protein",  label: t("dashboard.protein"),     unit: "g",    Icon: Drumstick, bg: "bg-red-100",     color: "text-red-400",    value: Math.round(entries.reduce((s, e) => s + e.total_protein,  0)) },
+                  { key: "fats",     label: t("dashboard.fats"),        unit: "g",    Icon: Droplets,  bg: "bg-blue-100",    color: "text-blue-500",   value: Math.round(entries.reduce((s, e) => s + e.total_fats,     0)) },
+                  { key: "fiber",    label: t("dashboard.fiber"),       unit: "g",    Icon: Salad,     bg: "bg-emerald-100", color: "text-emerald-500", value: Math.round(entries.reduce((s, e) => s + e.total_fiber,    0)) },
                 ];
                 return (
                   <div key={meal} ref={el => { cardRefs.current[meal] = el; }} className="bg-white rounded-2xl p-4 shadow-md border border-black/[0.08]" style={{ position: 'relative' }}>

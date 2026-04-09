@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -6,24 +7,14 @@ import { Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
-const ACTIVITY_LEVELS = [
-  { value: "sedentary", label: "Sedentary", sub: "Little or no exercise", emoji: "🛋️" },
-  { value: "light", label: "Light", sub: "1-3 days per week", emoji: "🚶" },
-  { value: "moderate", label: "Moderate", sub: "3-5 days per week", emoji: "🏃" },
-  { value: "active", label: "Active", sub: "6-7 days per week", emoji: "💪" },
-  { value: "very_active", label: "Very active", sub: "Intense daily training", emoji: "🔥" },
-];
+const ACTIVITY_LEVEL_VALUES = ["sedentary", "light", "moderate", "active", "very_active"];
+const ACTIVITY_LEVEL_EMOJIS = { sedentary: "🛋️", light: "🚶", moderate: "🏃", active: "💪", very_active: "🔥" };
 
-const GOALS = [
-  { value: "lose_weight", label: "Lose weight", emoji: "🎯", sub: "Controlled caloric deficit" },
-  { value: "maintain", label: "Maintain weight", emoji: "⚖️", sub: "Stable caloric balance" },
-  { value: "gain_muscle", label: "Gain muscle", emoji: "💪", sub: "Caloric surplus + protein" },
-];
+const GOAL_VALUES = ["lose_weight", "maintain", "gain_muscle"];
+const GOAL_EMOJIS = { lose_weight: "🎯", maintain: "⚖️", gain_muscle: "💪" };
 
-const CHAT_STYLES = [
-  { value: "concise", label: "Concise", emoji: "⚡", sub: "Short and to the point" },
-  { value: "detailed", label: "Detailed", emoji: "🧑‍🏫", sub: "In-depth advice and explanations" },
-];
+const CHAT_STYLE_VALUES = ["concise", "detailed"];
+const CHAT_STYLE_EMOJIS = { concise: "⚡", detailed: "🧑‍🏫" };
 
 function calculateCalorieGoal(profile) {
   if (!profile.weight || !profile.height || !profile.age || !profile.gender) return 2000;
@@ -52,6 +43,7 @@ const slideVariants = {
 };
 
 export default function Onboarding({ onComplete }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
@@ -110,22 +102,29 @@ export default function Onboarding({ onComplete }) {
       fats_goal: fatsGoal, carbs_goal: carbsGoal,
     }, { onConflict: 'user_id' });
 
-    if (error) { toast.error("Error saving profile"); setSaving(false); return; }
+    if (error) { toast.error(t("onboarding.errorSaving")); setSaving(false); return; }
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     setSaving(false);
     onComplete();
   };
 
+  const disclaimerItems = [
+    { emoji: "⚕️", title: t("onboarding.step5.d1title"), text: t("onboarding.step5.d1text") },
+    { emoji: "⚠️", title: t("onboarding.step5.d2title"), text: t("onboarding.step5.d2text") },
+    { emoji: "✏️", title: t("onboarding.step5.d3title"), text: t("onboarding.step5.d3text") },
+    { emoji: "🤖", title: t("onboarding.step5.d4title"), text: t("onboarding.step5.d4text") },
+  ];
+
   const steps = [
-    /* Step 0 — Nome */
+    /* Step 0 — Name */
     <div key="name" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>👋</div>
-        <h2 style={{ fontSize: "24px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Hi! What's your name?</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>We'll use your name to personalize your experience</p>
+        <h2 style={{ fontSize: "24px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>{t("onboarding.step0.title")}</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>{t("onboarding.step0.subtitle")}</p>
       </div>
       <input
-        type="text" placeholder="Your name or nickname..."
+        type="text" placeholder={t("onboarding.step0.placeholder")}
         value={form.display_name}
         onChange={e => setForm({ ...form, display_name: e.target.value })}
         onKeyDown={e => e.key === "Enter" && canNext() && goNext()}
@@ -134,20 +133,20 @@ export default function Onboarding({ onComplete }) {
       />
     </div>,
 
-    /* Step 1 — Dati personali */
+    /* Step 1 — Personal details */
     <div key="personal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>📋</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Your details</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Needed to calculate your precise caloric needs</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>{t("onboarding.step1.title")}</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>{t("onboarding.step1.subtitle")}</p>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
         <div>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Age</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>{t("onboarding.step1.age")}</label>
           <input type="number" placeholder="25" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} className={inputCls} />
         </div>
         <div>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Biological sex</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>{t("onboarding.step1.sex")}</label>
           <div style={{ display: "flex", gap: "6px" }}>
             {[{ v: "male", l: "👨 M" }, { v: "female", l: "👩 F" }].map(g => (
               <button key={g.v} onClick={() => setForm({ ...form, gender: g.v })} style={{
@@ -161,83 +160,83 @@ export default function Onboarding({ onComplete }) {
           </div>
         </div>
         <div>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Current weight (kg)</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>{t("onboarding.step1.weight")}</label>
           <input type="number" placeholder="70" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} className={inputCls} />
         </div>
         <div>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Height (cm)</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>{t("onboarding.step1.height")}</label>
           <input type="number" placeholder="175" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} className={inputCls} />
         </div>
         <div style={{ gridColumn: "span 2" }}>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Target weight (kg) — optional</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>{t("onboarding.step1.weightGoal")}</label>
           <input type="number" placeholder="65" value={form.weight_goal} onChange={e => setForm({ ...form, weight_goal: e.target.value })} className={inputCls} />
         </div>
       </div>
     </div>,
 
-    /* Step 2 — Livello attività */
+    /* Step 2 — Activity level */
     <div key="activity" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏃</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>How active are you?</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Consider your average weekly routine</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>{t("onboarding.step2.title")}</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>{t("onboarding.step2.subtitle")}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {ACTIVITY_LEVELS.map(l => (
-          <button key={l.value} onClick={() => setForm({ ...form, activity_level: l.value })} style={{
+        {ACTIVITY_LEVEL_VALUES.map(v => (
+          <button key={v} onClick={() => setForm({ ...form, activity_level: v })} style={{
             display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "14px",
-            border: form.activity_level === l.value ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
-            background: form.activity_level === l.value ? "#f0fdf4" : "#f9fafb",
+            border: form.activity_level === v ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
+            background: form.activity_level === v ? "#f0fdf4" : "#f9fafb",
             cursor: "pointer", fontFamily: "inherit", textAlign: "left",
           }}>
-            <span style={{ fontSize: "24px" }}>{l.emoji}</span>
+            <span style={{ fontSize: "24px" }}>{ACTIVITY_LEVEL_EMOJIS[v]}</span>
             <div>
-              <p style={{ fontSize: "14px", fontWeight: 500, color: form.activity_level === l.value ? "#15803d" : "#1a3a22" }}>{l.label}</p>
-              <p style={{ fontSize: "12px", color: "#9ca3af" }}>{l.sub}</p>
+              <p style={{ fontSize: "14px", fontWeight: 500, color: form.activity_level === v ? "#15803d" : "#1a3a22" }}>{t(`onboarding.activityLevels.${v}.label`)}</p>
+              <p style={{ fontSize: "12px", color: "#9ca3af" }}>{t(`onboarding.activityLevels.${v}.sub`)}</p>
             </div>
-            {form.activity_level === l.value && <span style={{ marginLeft: "auto", color: "#16a34a", fontSize: "16px" }}>✓</span>}
+            {form.activity_level === v && <span style={{ marginLeft: "auto", color: "#16a34a", fontSize: "16px" }}>✓</span>}
           </button>
         ))}
       </div>
     </div>,
 
-    /* Step 3 — Obiettivo + stile chat */
+    /* Step 3 — Goal + chat style */
     <div key="goal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🎯</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Your goal</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Also choose how you prefer the coach to respond</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>{t("onboarding.step3.title")}</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>{t("onboarding.step3.subtitle")}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {GOALS.map(g => (
-          <button key={g.value} onClick={() => setForm({ ...form, goal: g.value })} style={{
+        {GOAL_VALUES.map(v => (
+          <button key={v} onClick={() => setForm({ ...form, goal: v })} style={{
             display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "14px",
-            border: form.goal === g.value ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
-            background: form.goal === g.value ? "#f0fdf4" : "#f9fafb",
+            border: form.goal === v ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
+            background: form.goal === v ? "#f0fdf4" : "#f9fafb",
             cursor: "pointer", fontFamily: "inherit", textAlign: "left",
           }}>
-            <span style={{ fontSize: "24px" }}>{g.emoji}</span>
+            <span style={{ fontSize: "24px" }}>{GOAL_EMOJIS[v]}</span>
             <div>
-              <p style={{ fontSize: "14px", fontWeight: 500, color: form.goal === g.value ? "#15803d" : "#1a3a22" }}>{g.label}</p>
-              <p style={{ fontSize: "12px", color: "#9ca3af" }}>{g.sub}</p>
+              <p style={{ fontSize: "14px", fontWeight: 500, color: form.goal === v ? "#15803d" : "#1a3a22" }}>{t(`onboarding.goals.${v}.label`)}</p>
+              <p style={{ fontSize: "12px", color: "#9ca3af" }}>{t(`onboarding.goals.${v}.sub`)}</p>
             </div>
-            {form.goal === g.value && <span style={{ marginLeft: "auto", color: "#16a34a", fontSize: "16px" }}>✓</span>}
+            {form.goal === v && <span style={{ marginLeft: "auto", color: "#16a34a", fontSize: "16px" }}>✓</span>}
           </button>
         ))}
       </div>
       <div>
-        <p style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px" }}>Coach response style</p>
+        <p style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px" }}>{t("onboarding.step3.chatStyle")}</p>
         <div style={{ display: "flex", gap: "8px" }}>
-          {CHAT_STYLES.map(s => (
-            <button key={s.value} onClick={() => setForm({ ...form, chat_style: s.value })} style={{
+          {CHAT_STYLE_VALUES.map(v => (
+            <button key={v} onClick={() => setForm({ ...form, chat_style: v })} style={{
               flex: 1, padding: "12px 8px", borderRadius: "14px",
-              border: form.chat_style === s.value ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
-              background: form.chat_style === s.value ? "#f0fdf4" : "#f9fafb",
+              border: form.chat_style === v ? "2px solid #16a34a" : "0.5px solid #e5e7eb",
+              background: form.chat_style === v ? "#f0fdf4" : "#f9fafb",
               cursor: "pointer", fontFamily: "inherit", textAlign: "center",
             }}>
-              <div style={{ fontSize: "24px", marginBottom: "4px" }}>{s.emoji}</div>
-              <p style={{ fontSize: "13px", fontWeight: 500, color: form.chat_style === s.value ? "#15803d" : "#1a3a22" }}>{s.label}</p>
-              <p style={{ fontSize: "10px", color: "#9ca3af", lineHeight: 1.3 }}>{s.sub}</p>
+              <div style={{ fontSize: "24px", marginBottom: "4px" }}>{CHAT_STYLE_EMOJIS[v]}</div>
+              <p style={{ fontSize: "13px", fontWeight: 500, color: form.chat_style === v ? "#15803d" : "#1a3a22" }}>{t(`onboarding.chatStyles.${v}.label`)}</p>
+              <p style={{ fontSize: "10px", color: "#9ca3af", lineHeight: 1.3 }}>{t(`onboarding.chatStyles.${v}.sub`)}</p>
             </button>
           ))}
         </div>
@@ -248,11 +247,11 @@ export default function Onboarding({ onComplete }) {
     <div key="fitness" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏋️</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Fitness goals</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>How many days do you want to train and how many calories burn?</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>{t("onboarding.step4.title")}</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>{t("onboarding.step4.subtitle")}</p>
       </div>
       <div>
-        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>Active days per week</label>
+        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>{t("onboarding.step4.activeDays")}</label>
         <div style={{ display: "flex", gap: "8px" }}>
           {[2, 3, 4, 5, 6, 7].map(d => (
             <button key={d} onClick={() => setForm({ ...form, active_days_goal: d })} style={{
@@ -265,11 +264,11 @@ export default function Onboarding({ onComplete }) {
           ))}
         </div>
         <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px", textAlign: "center" }}>
-          {form.active_days_goal} {form.active_days_goal === 1 ? "day" : "days"} per week
+          {form.active_days_goal} {form.active_days_goal === 1 ? t("onboarding.step4.day") : t("onboarding.step4.days")} {t("onboarding.step4.perWeek")}
         </p>
       </div>
       <div>
-        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>Calories to burn on active days</label>
+        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>{t("onboarding.step4.burnGoal")}</label>
         <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
           {[200, 300, 400, 500].map(k => (
             <button key={k} onClick={() => setForm({ ...form, burn_goal: k })} style={{
@@ -282,7 +281,7 @@ export default function Onboarding({ onComplete }) {
           ))}
         </div>
         <input
-          type="number" placeholder="Custom kcal..."
+          type="number" placeholder={t("onboarding.step4.customKcal")}
           value={form.burn_goal}
           onChange={e => setForm({ ...form, burn_goal: Number(e.target.value) })}
           className={inputCls}
@@ -294,16 +293,11 @@ export default function Onboarding({ onComplete }) {
     <div key="disclaimer" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>📌</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Before you begin</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Please read this important information</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>{t("onboarding.step5.title")}</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>{t("onboarding.step5.subtitle")}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {[
-          { emoji: "⚕️", title: "Not a medical device", text: "NutriCoach is a personal wellness support tool, not a medical service. It does not replace the advice of a nutritionist or doctor." },
-          { emoji: "⚠️", title: "Not suitable for eating disorders", text: "If you suffer or have suffered from serious eating disorders (anorexia, bulimia, BED), we recommend consulting a specialist before using this app." },
-          { emoji: "✏️", title: "Enter accurate data", text: "Caloric calculations depend on the data you enter. The more accurate they are, the more accurate your nutrition plan will be." },
-          { emoji: "🤖", title: "AI can make mistakes", text: "AI calorie estimates are approximate. Use them as a reference, not as absolute values." },
-        ].map((item, i) => (
+        {disclaimerItems.map((item, i) => (
           <div key={i} style={{ display: "flex", gap: "12px", padding: "12px 14px", background: "#f9fafb", borderRadius: "12px", border: "0.5px solid #e5e7eb" }}>
             <span style={{ fontSize: "20px", flexShrink: 0 }}>{item.emoji}</span>
             <div>
@@ -330,16 +324,16 @@ export default function Onboarding({ onComplete }) {
             {privacyAccepted && <span style={{ color: "white", fontSize: "13px", fontWeight: 700, lineHeight: 1 }}>✓</span>}
           </div>
           <span style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.5 }}>
-            I have read and accept the{" "}
+            {t("onboarding.privacyAccept")}{" "}
             <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#16a34a", textDecoration: "underline" }}>
-              Privacy Policy
+              {t("profile.privacy")}
             </a>
-            {" "}and Terms of Service
+            {" "}{t("onboarding.privacyAnd")}
           </span>
         </label>
         {privacyError && (
           <p style={{ fontSize: "11px", color: "#dc2626", marginTop: "6px", marginLeft: "30px" }}>
-            You must accept the privacy policy to continue
+            {t("onboarding.privacyRequired")}
           </p>
         )}
       </div>
@@ -389,7 +383,7 @@ export default function Onboarding({ onComplete }) {
               cursor: canNext() ? "pointer" : "default", fontFamily: "inherit",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "background 0.2s",
             }}>
-              Continue <ArrowRight style={{ width: "18px", height: "18px" }} />
+              {t("onboarding.continue")} <ArrowRight style={{ width: "18px", height: "18px" }} />
             </button>
           ) : (
             <button
@@ -405,7 +399,7 @@ export default function Onboarding({ onComplete }) {
               }}
             >
               {saving ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : null}
-              {saving ? "Saving..." : "Start now 🚀"}
+              {saving ? t("onboarding.saving") : t("onboarding.startNow")}
             </button>
           )}
         </div>

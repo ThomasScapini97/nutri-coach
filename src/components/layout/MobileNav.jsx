@@ -2,15 +2,16 @@ import { Link, useLocation } from "react-router-dom";
 import { MessageCircle, BarChart3, Dumbbell, BookOpen } from "lucide-react";
 import { useChatContext } from "@/lib/ChatContext";
 import ChatInput from "@/components/chat/ChatInput";
+import { useTranslation } from "react-i18next";
 
-const navItems = [
-  { path: "/Chat", label: "Chat", icon: MessageCircle },
-  { path: "/Summary", label: "Summary", icon: BarChart3 },
-  { path: "/Exercise", label: "Exercise", icon: Dumbbell },
-  { path: "/Diary", label: "Diary", icon: BookOpen },
-];
-
-function TabIcons({ location }) {
+function NavItems({ location }) {
+  const { t } = useTranslation();
+  const navItems = [
+    { path: "/Chat", label: t("nav.chat"), icon: MessageCircle },
+    { path: "/Summary", label: t("nav.summary"), icon: BarChart3 },
+    { path: "/Exercise", label: t("nav.exercise"), icon: Dumbbell },
+    { path: "/Diary", label: t("nav.diary"), icon: BookOpen },
+  ];
   return (
     <>
       {navItems.map((item) => {
@@ -37,6 +38,7 @@ function TabIcons({ location }) {
   );
 }
 
+
 export default function MobileNav() {
   const location = useLocation();
   const { chatInputProps } = useChatContext();
@@ -62,7 +64,7 @@ export default function MobileNav() {
             borderTop: "0.5px solid rgba(0,0,0,0.06)",
           }}
         >
-          <TabIcons location={location} />
+          <NavItems location={location} />
         </div>
       </nav>
     );
@@ -83,7 +85,7 @@ export default function MobileNav() {
       }}
     >
       <div style={{ display: "flex", width: "100%", height: "56px" }}>
-        <TabIcons location={location} />
+        <NavItems location={location} />
       </div>
     </nav>
   );

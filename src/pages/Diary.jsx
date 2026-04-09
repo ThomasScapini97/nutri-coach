@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { format, subDays } from "date-fns";
@@ -36,6 +37,7 @@ const emptyForm = {
 };
 
 export default function Diary() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -178,16 +180,16 @@ export default function Diary() {
         </button>
         <div className="text-center">
           <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">
-            {isToday ? "Today" : format(selectedDate, "MMM d, yyyy")}
+            {isToday ? t("diary.today") : format(selectedDate, "MMM d, yyyy")}
           </h2>
           <AnimatePresence mode="wait">
             {saved ? (
               <motion.p key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[11px] m-0" style={{ color: "#16a34a" }}>
-                ✓ Saved
+                {t("diary.saved")}
               </motion.p>
             ) : (
               <motion.p key="subtitle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[11px] text-gray-400 m-0">
-                {isToday ? "Auto-saved" : "Past entry"}
+                {isToday ? t("diary.autoSaved") : t("diary.pastEntry")}
               </motion.p>
             )}
           </AnimatePresence>
@@ -208,9 +210,9 @@ export default function Diary() {
           >
             <div className="flex items-center gap-2 px-[14px] py-[10px] border-b border-gray-100">
               <div className="w-[26px] h-[26px] rounded-[7px] bg-blue-100 flex items-center justify-center text-[13px]">⚖️</div>
-              <span className="text-xs font-medium text-forest">Weight Progress</span>
-              {weightGoal && <span className="text-[10px] text-gray-400 ml-auto">Goal: {weightGoal} kg</span>}
-              {isPast && <span className={`text-[10px] text-gray-400 ${weightGoal ? "ml-2" : "ml-auto"}`}>🔒 Read only</span>}
+              <span className="text-xs font-medium text-forest">{t("diary.weightProgress")}</span>
+              {weightGoal && <span className="text-[10px] text-gray-400 ml-auto">{t("diary.goalWeight", { value: weightGoal })}</span>}
+              {isPast && <span className={`text-[10px] text-gray-400 ${weightGoal ? "ml-2" : "ml-auto"}`}>{t("diary.readOnly")}</span>}
             </div>
 
             {/* Weight +/- controls */}
@@ -229,7 +231,7 @@ export default function Diary() {
                     >
                       {Number(weightDiff) > 0 ? "+" : ""}{weightDiff} kg
                     </span>
-                    <span className="text-[9px] text-gray-400">vs yesterday</span>
+                    <span className="text-[9px] text-gray-400">{t("diary.vsYesterday")}</span>
                   </div>
                 )}
                 <input
@@ -256,11 +258,11 @@ export default function Diary() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px]" style={{ color: goalReached ? "#16a34a" : "#6b7280" }}>
-                    {goalReached ? "🎉 Goal reached!" : `🎯 Goal: ${weightGoal} kg`}
+                    {goalReached ? t("diary.goalReached") : `🎯 ${t("diary.goalWeight", { value: weightGoal })}`}
                   </span>
                   {!goalReached && toGoal !== null && (
                     <span className="text-[11px] font-semibold text-green-600">
-                      {Math.abs(Number(toGoal)).toFixed(1)} kg to go
+                      {t("diary.kgToGo", { value: Math.abs(Number(toGoal)).toFixed(1) })}
                     </span>
                   )}
                 </div>
@@ -274,9 +276,9 @@ export default function Diary() {
                   />
                 </div>
                 <div className="flex justify-between items-center mt-[6px]">
-                  <span className="text-[9px] text-gray-400">Start: {startWeight} kg</span>
+                  <span className="text-[9px] text-gray-400">{t("diary.startWeight", { value: startWeight })}</span>
                   <span className="text-[10px] text-green-600 font-semibold">{Math.round(weightProgress)}%</span>
-                  <span className="text-[9px] text-gray-400">Goal: {weightGoal} kg</span>
+                  <span className="text-[9px] text-gray-400">{t("diary.goalWeight", { value: weightGoal })}</span>
                 </div>
               </div>
             )}
@@ -304,7 +306,7 @@ export default function Diary() {
                 </div>
               ) : (
                 <div className="h-[60px] flex items-center justify-center text-gray-400 text-[11px] text-center">
-                  Log weight for 2+ days to see trend
+                  {t("diary.logWeightHint")}
                 </div>
               )}
             </div>
@@ -331,8 +333,8 @@ export default function Diary() {
           >
             <div className="flex items-center gap-2 px-[14px] py-[10px] border-b border-gray-100">
               <div className="w-[26px] h-[26px] rounded-[7px] bg-amber-100 flex items-center justify-center text-[13px]">😊</div>
-              <span className="text-xs font-medium text-forest">How are you feeling?</span>
-              {isPast && <span className="text-[10px] text-gray-400 ml-auto">🔒 Read only</span>}
+              <span className="text-xs font-medium text-forest">{t("diary.howFeeling")}</span>
+              {isPast && <span className="text-[10px] text-gray-400 ml-auto">{t("diary.readOnly")}</span>}
             </div>
 
             <div className="flex gap-[6px] px-3 py-[10px] border-b border-gray-100">
@@ -371,7 +373,7 @@ export default function Diary() {
               <textarea
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="How was your day? Any notes..."
+                placeholder={t("diary.notesPlaceholder")}
                 rows={3}
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-[10px] py-[6px] text-[13px] text-forest outline-none font-[inherit] resize-none leading-relaxed"
               />
