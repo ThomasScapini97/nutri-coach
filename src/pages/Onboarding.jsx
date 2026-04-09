@@ -347,29 +347,35 @@ export default function Onboarding({ onComplete }) {
   ];
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#f0fcf3", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
-      <div style={{ width: "100%", maxWidth: "420px" }}>
+    <div style={{ height: "100dvh", background: "#f0fcf3", display: "flex", flexDirection: "column", alignItems: "center", padding: "0 16px" }}>
+      <div style={{ width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", height: "100%", paddingTop: "24px", paddingBottom: "24px" }}>
 
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+        {/* Logo — fixed */}
+        <div style={{ textAlign: "center", marginBottom: "20px", flexShrink: 0 }}>
           <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: "linear-gradient(135deg, #16a34a, #15803d)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px", fontSize: "24px" }}>🍎</div>
           <p style={{ fontSize: "13px", color: "#9ca3af" }}>NutriCoach AI</p>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "24px" }}>
+        {/* Progress bar — fixed */}
+        <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "20px", flexShrink: 0 }}>
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div key={i} style={{ height: "4px", borderRadius: "99px", background: i <= step ? "#16a34a" : "#d1fae5", transition: "all 0.3s", width: i === step ? "24px" : "8px" }} />
           ))}
         </div>
 
-        <div style={{ background: "white", borderRadius: "24px", padding: "28px 24px", border: "0.5px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 24px rgba(0,0,0,0.06)", overflow: "hidden", position: "relative", minHeight: "420px" }}>
-          <AnimatePresence mode="wait" custom={dir}>
-            <motion.div key={step} custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.28, ease: "easeInOut" }}>
-              {steps[step]}
-            </motion.div>
-          </AnimatePresence>
+        {/* Card — fills remaining space, scrollable inside */}
+        <div style={{ flex: 1, minHeight: 0, background: "white", borderRadius: "24px", border: "0.5px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 24px rgba(0,0,0,0.06)", overflow: "hidden", position: "relative" }}>
+          <div style={{ height: "100%", overflowY: "auto", padding: "28px 24px" }}>
+            <AnimatePresence mode="wait" custom={dir}>
+              <motion.div key={step} custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.28, ease: "easeInOut" }}>
+                {steps[step]}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+        {/* Buttons — always fixed at bottom */}
+        <div style={{ display: "flex", gap: "10px", marginTop: "16px", flexShrink: 0 }}>
           {step > 0 && (
             <button onClick={goPrev} style={{ width: "48px", height: "52px", borderRadius: "14px", background: "white", border: "0.5px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
               <ArrowLeft style={{ width: "18px", height: "18px", color: "#6b7280" }} />
