@@ -486,8 +486,8 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                         style={{
                           position: 'absolute', top: '10px', right: '10px',
                           width: '28px', height: '28px', borderRadius: '8px',
-                          background: 'white', border: '0.5px solid #e5e7eb',
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                          background: '#f3f4f6', border: '1px solid #e5e7eb',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           cursor: 'pointer', zIndex: 1,
                         }}
