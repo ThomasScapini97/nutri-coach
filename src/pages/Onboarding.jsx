@@ -57,6 +57,8 @@ export default function Onboarding({ onComplete }) {
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [privacyError, setPrivacyError] = useState(false);
   const [form, setForm] = useState({
     display_name: "",
     age: "", weight: "", height: "", gender: "",
@@ -311,6 +313,36 @@ export default function Onboarding({ onComplete }) {
           </div>
         ))}
       </div>
+
+      {/* Privacy checkbox */}
+      <div>
+        <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
+          <div
+            onClick={() => { setPrivacyAccepted(v => !v); setPrivacyError(false); }}
+            style={{
+              width: "20px", height: "20px", borderRadius: "6px", flexShrink: 0, marginTop: "1px",
+              border: privacyAccepted ? "none" : "1.5px solid #d1d5db",
+              background: privacyAccepted ? "#16a34a" : "white",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.15s", cursor: "pointer",
+            }}
+          >
+            {privacyAccepted && <span style={{ color: "white", fontSize: "13px", fontWeight: 700, lineHeight: 1 }}>✓</span>}
+          </div>
+          <span style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.5 }}>
+            Ho letto e accetto la{" "}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#16a34a", textDecoration: "underline" }}>
+              Privacy Policy
+            </a>
+            {" "}e i Termini di Servizio
+          </span>
+        </label>
+        {privacyError && (
+          <p style={{ fontSize: "11px", color: "#dc2626", marginTop: "6px", marginLeft: "30px" }}>
+            Devi accettare la privacy policy per continuare
+          </p>
+        )}
+      </div>
     </div>,
   ];
 
@@ -354,11 +386,18 @@ export default function Onboarding({ onComplete }) {
               Continua <ArrowRight style={{ width: "18px", height: "18px" }} />
             </button>
           ) : (
-            <button onClick={handleSave} disabled={saving} style={{
-              flex: 1, height: "52px", borderRadius: "14px", background: "#16a34a", color: "white",
-              border: "none", fontSize: "15px", fontWeight: 500, cursor: "pointer",
-              fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-            }}>
+            <button
+              onClick={() => { if (!privacyAccepted) { setPrivacyError(true); return; } handleSave(); }}
+              disabled={saving}
+              style={{
+                flex: 1, height: "52px", borderRadius: "14px",
+                background: privacyAccepted ? "#16a34a" : "#d1fae5", color: "white",
+                border: "none", fontSize: "15px", fontWeight: 500,
+                cursor: privacyAccepted ? "pointer" : "default",
+                fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                transition: "background 0.2s",
+              }}
+            >
               {saving ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : null}
               {saving ? "Salvataggio..." : "Inizia ora 🚀"}
             </button>
