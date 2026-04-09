@@ -223,12 +223,37 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     setExportingMeal(meal);
     await new Promise(r => setTimeout(r, 60));
     try {
-      const canvas = await html2canvas(cardEl, {
+      const raw = await html2canvas(cardEl, {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
         logging: false,
       });
+
+      // Draw with rounded corners + padding on a transparent canvas
+      const pad = 24;
+      const radius = 32;
+      const w = raw.width + pad * 2;
+      const h = raw.height + pad * 2;
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      // Rounded clip
+      ctx.beginPath();
+      ctx.moveTo(pad + radius, pad);
+      ctx.lineTo(w - pad - radius, pad);
+      ctx.quadraticCurveTo(w - pad, pad, w - pad, pad + radius);
+      ctx.lineTo(w - pad, h - pad - radius);
+      ctx.quadraticCurveTo(w - pad, h - pad, w - pad - radius, h - pad);
+      ctx.lineTo(pad + radius, h - pad);
+      ctx.quadraticCurveTo(pad, h - pad, pad, h - pad - radius);
+      ctx.lineTo(pad, pad + radius);
+      ctx.quadraticCurveTo(pad, pad, pad + radius, pad);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(raw, pad, pad);
+
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const file = new File([blob], `nutricoach-${meal}.png`, { type: 'image/png' });
       if (navigator.share && navigator.canShare({ files: [file] })) {
