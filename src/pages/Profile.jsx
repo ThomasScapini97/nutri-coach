@@ -326,7 +326,7 @@ export default function Profile() {
         >
           <div className="flex items-center gap-2 px-[14px] py-[11px] border-b border-gray-100">
             <div className="w-[26px] h-[26px] rounded-[7px] bg-green-100 flex items-center justify-center text-[13px]">💬</div>
-            <span className="text-xs font-medium text-forest">Stile risposte coach</span>
+            <span className="text-xs font-medium text-forest">Coach response style</span>
           </div>
           <div className="p-[10px_12px_12px]">
             <div className="flex gap-2">
@@ -396,7 +396,7 @@ export default function Profile() {
             <Link to="/privacy" style={{ color: "#9ca3af", textDecoration: "none" }}
               onMouseEnter={e => e.currentTarget.style.color = "#6b7280"}
               onMouseLeave={e => e.currentTarget.style.color = "#9ca3af"}
-            >Termini di Servizio</Link>
+            >Terms of Service</Link>
           </p>
           <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>NutriCoach v1.0.0</p>
         </div>

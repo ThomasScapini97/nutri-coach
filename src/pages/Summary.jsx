@@ -119,7 +119,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
       await supabase.from("messages").insert({
         foodlog_id: dayLog.id,
         role: "system",
-        content: `➕ **${group.food_name}** aggiunto (x${group.quantity + 1})`,
+        content: `➕ **${group.food_name}** added (x${group.quantity + 1})`,
         timestamp: new Date().toISOString(),
       });
       queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
@@ -143,8 +143,8 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         foodlog_id: dayLog.id,
         role: "system",
         content: isDeleted
-          ? `🗑️ **${group.food_name}** eliminato`
-          : `➖ **${group.food_name}** rimosso (x${group.quantity - 1})`,
+          ? `🗑️ **${group.food_name}** deleted`
+          : `➖ **${group.food_name}** removed (x${group.quantity - 1})`,
         timestamp: new Date().toISOString(),
       });
       queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
@@ -194,7 +194,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     await supabase.from("messages").insert({
       foodlog_id: dayLog.id,
       role: "system",
-      content: `✏️ **${entry.food_name}** aggiornato: ${Math.round(entry.grams)}g → ${newGrams}g (${newCalories} kcal)`,
+      content: `✏️ **${entry.food_name}** updated: ${Math.round(entry.grams)}g → ${newGrams}g (${newCalories} kcal)`,
       timestamp: new Date().toISOString(),
     });
 
@@ -202,7 +202,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     queryClient.invalidateQueries({ queryKey: ["foodlog"] });
     queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
 
-    toast.success(`${entry.food_name} aggiornato ✏️`, {
+    toast.success(`${entry.food_name} updated ✏️`, {
       description: `${Math.round(entry.grams)}g → ${newGrams}g · ${newCalories} kcal`,
     });
   };

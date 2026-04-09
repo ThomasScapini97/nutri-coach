@@ -7,17 +7,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 const ACTIVITY_LEVELS = [
-  { value: "sedentary", label: "Sedentario", sub: "Poco o nessun esercizio", emoji: "🛋️" },
-  { value: "light", label: "Leggero", sub: "1-3 giorni a settimana", emoji: "🚶" },
-  { value: "moderate", label: "Moderato", sub: "3-5 giorni a settimana", emoji: "🏃" },
-  { value: "active", label: "Attivo", sub: "6-7 giorni a settimana", emoji: "💪" },
-  { value: "very_active", label: "Molto attivo", sub: "Allenamento intenso quotidiano", emoji: "🔥" },
+  { value: "sedentary", label: "Sedentary", sub: "Little or no exercise", emoji: "🛋️" },
+  { value: "light", label: "Light", sub: "1-3 days per week", emoji: "🚶" },
+  { value: "moderate", label: "Moderate", sub: "3-5 days per week", emoji: "🏃" },
+  { value: "active", label: "Active", sub: "6-7 days per week", emoji: "💪" },
+  { value: "very_active", label: "Very active", sub: "Intense daily training", emoji: "🔥" },
 ];
 
 const GOALS = [
-  { value: "lose_weight", label: "Perdere peso", emoji: "🎯", sub: "Deficit calorico controllato" },
-  { value: "maintain", label: "Mantenere il peso", emoji: "⚖️", sub: "Bilancio calorico stabile" },
-  { value: "gain_muscle", label: "Aumentare la massa", emoji: "💪", sub: "Surplus calorico + proteine" },
+  { value: "lose_weight", label: "Lose weight", emoji: "🎯", sub: "Controlled caloric deficit" },
+  { value: "maintain", label: "Maintain weight", emoji: "⚖️", sub: "Stable caloric balance" },
+  { value: "gain_muscle", label: "Gain muscle", emoji: "💪", sub: "Caloric surplus + protein" },
 ];
 
 const CHAT_STYLES = [
@@ -110,7 +110,7 @@ export default function Onboarding({ onComplete }) {
       fats_goal: fatsGoal, carbs_goal: carbsGoal,
     }, { onConflict: 'user_id' });
 
-    if (error) { toast.error("Errore nel salvataggio"); setSaving(false); return; }
+    if (error) { toast.error("Error saving profile"); setSaving(false); return; }
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     setSaving(false);
     onComplete();
@@ -121,11 +121,11 @@ export default function Onboarding({ onComplete }) {
     <div key="name" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>👋</div>
-        <h2 style={{ fontSize: "24px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Ciao! Come ti chiami?</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Useremo il tuo nome per personalizzare la tua esperienza</p>
+        <h2 style={{ fontSize: "24px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Hi! What's your name?</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>We'll use your name to personalize your experience</p>
       </div>
       <input
-        type="text" placeholder="Il tuo nome o nickname..."
+        type="text" placeholder="Your name or nickname..."
         value={form.display_name}
         onChange={e => setForm({ ...form, display_name: e.target.value })}
         onKeyDown={e => e.key === "Enter" && canNext() && goNext()}
@@ -138,16 +138,16 @@ export default function Onboarding({ onComplete }) {
     <div key="personal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>📋</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>I tuoi dati</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Servono per calcolare il tuo fabbisogno calorico preciso</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Your details</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Needed to calculate your precise caloric needs</p>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
         <div>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Età</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Age</label>
           <input type="number" placeholder="25" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} className={inputCls} />
         </div>
         <div>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Sesso biologico</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Biological sex</label>
           <div style={{ display: "flex", gap: "6px" }}>
             {[{ v: "male", l: "👨 M" }, { v: "female", l: "👩 F" }].map(g => (
               <button key={g.v} onClick={() => setForm({ ...form, gender: g.v })} style={{
@@ -161,15 +161,15 @@ export default function Onboarding({ onComplete }) {
           </div>
         </div>
         <div>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Peso attuale (kg)</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Current weight (kg)</label>
           <input type="number" placeholder="70" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} className={inputCls} />
         </div>
         <div>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Altezza (cm)</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Height (cm)</label>
           <input type="number" placeholder="175" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} className={inputCls} />
         </div>
         <div style={{ gridColumn: "span 2" }}>
-          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Peso obiettivo (kg) — opzionale</label>
+          <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>Target weight (kg) — optional</label>
           <input type="number" placeholder="65" value={form.weight_goal} onChange={e => setForm({ ...form, weight_goal: e.target.value })} className={inputCls} />
         </div>
       </div>
@@ -179,8 +179,8 @@ export default function Onboarding({ onComplete }) {
     <div key="activity" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏃</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Quanto sei attivo?</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Considera la tua routine settimanale media</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>How active are you?</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Consider your average weekly routine</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {ACTIVITY_LEVELS.map(l => (
@@ -205,8 +205,8 @@ export default function Onboarding({ onComplete }) {
     <div key="goal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🎯</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Il tuo obiettivo</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Scegli anche come preferisci che ti risponda il coach</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Your goal</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Also choose how you prefer the coach to respond</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {GOALS.map(g => (
@@ -226,7 +226,7 @@ export default function Onboarding({ onComplete }) {
         ))}
       </div>
       <div>
-        <p style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px" }}>Stile risposte del coach</p>
+        <p style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22", marginBottom: "8px" }}>Coach response style</p>
         <div style={{ display: "flex", gap: "8px" }}>
           {CHAT_STYLES.map(s => (
             <button key={s.value} onClick={() => setForm({ ...form, chat_style: s.value })} style={{
@@ -248,11 +248,11 @@ export default function Onboarding({ onComplete }) {
     <div key="fitness" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏋️</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Obiettivi fitness</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Quanti giorni vuoi allenarti e quante calorie bruciare?</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Fitness goals</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>How many days do you want to train and how many calories burn?</p>
       </div>
       <div>
-        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>Giorni attivi a settimana</label>
+        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>Active days per week</label>
         <div style={{ display: "flex", gap: "8px" }}>
           {[2, 3, 4, 5, 6, 7].map(d => (
             <button key={d} onClick={() => setForm({ ...form, active_days_goal: d })} style={{
@@ -265,11 +265,11 @@ export default function Onboarding({ onComplete }) {
           ))}
         </div>
         <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px", textAlign: "center" }}>
-          {form.active_days_goal} {form.active_days_goal === 1 ? "giorno" : "giorni"} a settimana
+          {form.active_days_goal} {form.active_days_goal === 1 ? "day" : "days"} per week
         </p>
       </div>
       <div>
-        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>Calorie da bruciare nei giorni attivi</label>
+        <label style={{ fontSize: "11px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "10px" }}>Calories to burn on active days</label>
         <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
           {[200, 300, 400, 500].map(k => (
             <button key={k} onClick={() => setForm({ ...form, burn_goal: k })} style={{
@@ -282,7 +282,7 @@ export default function Onboarding({ onComplete }) {
           ))}
         </div>
         <input
-          type="number" placeholder="Kcal personalizzate..."
+          type="number" placeholder="Custom kcal..."
           value={form.burn_goal}
           onChange={e => setForm({ ...form, burn_goal: Number(e.target.value) })}
           className={inputCls}
@@ -294,15 +294,15 @@ export default function Onboarding({ onComplete }) {
     <div key="disclaimer" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>📌</div>
-        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Prima di iniziare</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Leggi queste informazioni importanti</p>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>Before you begin</h2>
+        <p style={{ fontSize: "14px", color: "#9ca3af" }}>Please read this important information</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {[
-          { emoji: "⚕️", title: "Non è un dispositivo medico", text: "NutriCoach è un supporto al benessere personale, non un servizio medico. Non sostituisce il parere di un nutrizionista o medico." },
-          { emoji: "⚠️", title: "Non adatto a disturbi alimentari", text: "Se soffri o hai sofferto di disturbi alimentari seri (anoressia, bulimia, BED), ti consigliamo di consultare uno specialista prima di usare questa app." },
-          { emoji: "✏️", title: "Inserisci dati accurati", text: "I calcoli calorici dipendono dai dati che inserisci. Più sono precisi, più sarà accurato il tuo piano nutrizionale." },
-          { emoji: "🤖", title: "L'AI può sbagliare", text: "Le stime caloriche dell'AI sono approssimative. Usale come riferimento, non come valori assoluti." },
+          { emoji: "⚕️", title: "Not a medical device", text: "NutriCoach is a personal wellness support tool, not a medical service. It does not replace the advice of a nutritionist or doctor." },
+          { emoji: "⚠️", title: "Not suitable for eating disorders", text: "If you suffer or have suffered from serious eating disorders (anorexia, bulimia, BED), we recommend consulting a specialist before using this app." },
+          { emoji: "✏️", title: "Enter accurate data", text: "Caloric calculations depend on the data you enter. The more accurate they are, the more accurate your nutrition plan will be." },
+          { emoji: "🤖", title: "AI can make mistakes", text: "AI calorie estimates are approximate. Use them as a reference, not as absolute values." },
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", gap: "12px", padding: "12px 14px", background: "#f9fafb", borderRadius: "12px", border: "0.5px solid #e5e7eb" }}>
             <span style={{ fontSize: "20px", flexShrink: 0 }}>{item.emoji}</span>
@@ -330,16 +330,16 @@ export default function Onboarding({ onComplete }) {
             {privacyAccepted && <span style={{ color: "white", fontSize: "13px", fontWeight: 700, lineHeight: 1 }}>✓</span>}
           </div>
           <span style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.5 }}>
-            Ho letto e accetto la{" "}
+            I have read and accept the{" "}
             <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#16a34a", textDecoration: "underline" }}>
               Privacy Policy
             </a>
-            {" "}e i Termini di Servizio
+            {" "}and Terms of Service
           </span>
         </label>
         {privacyError && (
           <p style={{ fontSize: "11px", color: "#dc2626", marginTop: "6px", marginLeft: "30px" }}>
-            Devi accettare la privacy policy per continuare
+            You must accept the privacy policy to continue
           </p>
         )}
       </div>
@@ -389,7 +389,7 @@ export default function Onboarding({ onComplete }) {
               cursor: canNext() ? "pointer" : "default", fontFamily: "inherit",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "background 0.2s",
             }}>
-              Continua <ArrowRight style={{ width: "18px", height: "18px" }} />
+              Continue <ArrowRight style={{ width: "18px", height: "18px" }} />
             </button>
           ) : (
             <button
@@ -405,7 +405,7 @@ export default function Onboarding({ onComplete }) {
               }}
             >
               {saving ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : null}
-              {saving ? "Salvataggio..." : "Inizia ora 🚀"}
+              {saving ? "Saving..." : "Start now 🚀"}
             </button>
           )}
         </div>

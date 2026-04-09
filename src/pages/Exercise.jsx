@@ -356,7 +356,7 @@ export default function Exercise() {
       await supabase.from("messages").insert({
         foodlog_id: logId,
         role: "system",
-        content: `${selectedExercise.emoji} **${selectedExercise.name}** aggiunto: ${activityLabel} · ${calories} kcal bruciati`,
+        content: `${selectedExercise.emoji} **${selectedExercise.name}** logged: ${activityLabel} · ${calories} kcal burned`,
         timestamp: new Date().toISOString(),
       });
 
@@ -383,7 +383,7 @@ export default function Exercise() {
         await supabase.from("messages").insert({
           foodlog_id: dayLog.id,
           role: "system",
-          content: `🗑️ **${exercise.exercise_name}** rimosso (${exercise.calories_burned} kcal)`,
+          content: `🗑️ **${exercise.exercise_name}** removed (${exercise.calories_burned} kcal)`,
           timestamp: new Date().toISOString(),
         });
         queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
@@ -426,7 +426,7 @@ export default function Exercise() {
       await supabase.from("messages").insert({
         foodlog_id: logId,
         role: "system",
-        content: `💾 **${preset.name}** preset logged: ${preset.exercises.length} exercises · ${totalCals} kcal bruciati`,
+        content: `💾 **${preset.name}** preset logged: ${preset.exercises.length} exercises · ${totalCals} kcal burned`,
         timestamp: new Date().toISOString(),
       });
 
