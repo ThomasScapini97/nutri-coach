@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import html2canvas from 'html2canvas';
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { recalculateTotals, FIBER_GOAL } from "@/lib/nutritionUtils";
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, Flame, TrendingUp, Share2, Wheat, Drumstick, Droplets, Salad } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, TrendingUp, Share2, Wheat, Drumstick, Droplets, Salad, Download } from "lucide-react";
 import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
 import FoodEntryItem from "../components/summary/FoodEntryItem";
 import ScrollableChart from "../components/summary/ScrollableChart";
@@ -15,6 +16,8 @@ export default function Summary() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showShare, setShowShare] = useState(false);
+  const [exportingMeal, setExportingMeal] = useState(null);
+  const cardRefs = useRef({});
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const queryClient = useQueryClient();
 
@@ -212,6 +215,38 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     lunch:     { emoji: "☀️", label: "Lunch" },
     dinner:    { emoji: "🌙", label: "Dinner" },
     snack:     { emoji: "🍎", label: "Snack" },
+  };
+
+  const exportCard = async (meal, mealLabel) => {
+    const cardEl = cardRefs.current[meal];
+    if (!cardEl) return;
+    setExportingMeal(meal);
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      const canvas = await html2canvas(cardEl, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const file = new File([blob], `nutricoach-${meal}.png`, { type: 'image/png' });
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: `My ${mealLabel} — NutriCoach`, files: [file] });
+        toast.success('Shared! 🎉');
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nutricoach-${meal}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('Saved! 📸');
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') console.error('Export failed:', err);
+    }
+    setExportingMeal(null);
   };
 
   const handleNativeShare = async () => {
@@ -444,7 +479,22 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                   { key: "fiber",    label: "Fiber",    unit: "g",    Icon: Salad,     bg: "bg-emerald-100", color: "text-emerald-500", value: Math.round(entries.reduce((s, e) => s + e.total_fiber,    0)) },
                 ];
                 return (
-                  <div key={meal} className="bg-white rounded-2xl p-4 shadow-md border border-black/[0.08]">
+                  <div key={meal} ref={el => { cardRefs.current[meal] = el; }} className="bg-white rounded-2xl p-4 shadow-md border border-black/[0.08]" style={{ position: 'relative' }}>
+                    {exportingMeal !== meal && (
+                      <button
+                        onClick={() => exportCard(meal, label)}
+                        style={{
+                          position: 'absolute', top: '10px', right: '10px',
+                          width: '28px', height: '28px', borderRadius: '8px',
+                          background: 'white', border: '0.5px solid #e5e7eb',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', zIndex: 1,
+                        }}
+                      >
+                        <Download style={{ width: '13px', height: '13px', color: '#6b7280' }} />
+                      </button>
+                    )}
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-2xl">{emoji}</span>
                       <p className="text-sm font-semibold text-forest m-0">{label}</p>
@@ -460,6 +510,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                         </div>
                       ))}
                     </div>
+                    <p style={{ fontSize: '10px', color: '#16a34a', textAlign: 'right', marginTop: '10px', marginBottom: 0 }}>NutriCoach</p>
                   </div>
                 );
               })}
