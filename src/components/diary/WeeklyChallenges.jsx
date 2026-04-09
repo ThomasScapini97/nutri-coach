@@ -5,11 +5,14 @@ import { format } from "date-fns";
 import { getToday } from "@/lib/nutritionUtils";
 import { WATER_GOAL } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function WeeklyChallenges() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [challenges, setChallenges] = useState([]);
+  const [dailyDone, setDailyDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const [weekStart, setWeekStart] = useState("");
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -68,12 +71,14 @@ export default function WeeklyChallenges() {
       { id: "diary", emoji: "📓", title: "Wellness check", desc: "Fill your diary 4 days", current: diaryCount, target: 4, color: "#ec4899", bg: "#fdf2f8" },
     ];
 
+    const todayLogged = foodLogs.some(l => l.date === today && (l.total_calories || 0) > 0);
+    setDailyDone(todayLogged);
     setChallenges(built);
     setLoading(false);
 
-    // Save score silently
+    // Save score silently (+2 if daily challenge done)
     const completedCount = built.filter(c => c.current >= c.target).length;
-    const points = completedCount + (completedCount === built.length ? 10 : 0);
+    const points = completedCount + (completedCount === built.length ? 10 : 0) + (todayLogged ? 2 : 0);
     const displayName = profile?.display_name || user.email?.split("@")[0] || "Anonymous";
 
     supabase.from("weekly_scores").upsert({
@@ -138,6 +143,42 @@ export default function WeeklyChallenges() {
         </div>
 
         <div className="p-3 flex flex-col gap-2">
+
+          {/* Daily challenge */}
+          <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500, paddingLeft: "2px" }}>Today</span>
+          <div
+            style={{
+              borderRadius: "12px", padding: "12px 14px",
+              background: dailyDone ? "#f0fdf4" : "#fffbeb",
+              border: `1.5px solid ${dailyDone ? "#22c55e" : "#fbbf24"}`,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: "20px" }}>⚡</span>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "#1a3a22", marginBottom: "2px" }}>Daily Challenge</p>
+                  {dailyDone ? (
+                    <p style={{ fontSize: "11px", color: "#16a34a" }}>✓ Done! Come back tomorrow 🎉</p>
+                  ) : (
+                    <p style={{ fontSize: "11px", color: "#92400e" }}>0/1 · Log a meal in Chat</p>
+                  )}
+                </div>
+              </div>
+              {!dailyDone && (
+                <button
+                  onClick={() => navigate("/Chat")}
+                  style={{ display: "flex", alignItems: "center", gap: "4px", background: "#f59e0b", color: "white", border: "none", borderRadius: "8px", padding: "6px 10px", fontSize: "11px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
+                >
+                  Go to Chat <ArrowRight style={{ width: "12px", height: "12px" }} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Weekly challenges */}
+          <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500, paddingLeft: "2px", marginTop: "4px" }}>This week</span>
+
           {challenges.map((c) => {
             const done = c.current >= c.target;
             const pct = Math.min((c.current / c.target) * 100, 100);
