@@ -217,57 +217,72 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     snack:     { emoji: "🍎", label: "Snack" },
   };
 
-  const exportCard = async (meal, mealLabel) => {
+  const buildCardBlob = async (meal) => {
     const cardEl = cardRefs.current[meal];
-    if (!cardEl) return;
+    if (!cardEl) return null;
+    const raw = await html2canvas(cardEl, {
+      backgroundColor: null,
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+    const radius = 16 * 2;
+    const w = raw.width;
+    const h = raw.height;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(radius, 0);
+    ctx.lineTo(w - radius, 0);
+    ctx.quadraticCurveTo(w, 0, w, radius);
+    ctx.lineTo(w, h - radius);
+    ctx.quadraticCurveTo(w, h, w - radius, h);
+    ctx.lineTo(radius, h);
+    ctx.quadraticCurveTo(0, h, 0, h - radius);
+    ctx.lineTo(0, radius);
+    ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(raw, 0, 0);
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  };
+
+  const shareCard = async (meal, mealLabel) => {
     setExportingMeal(meal);
     await new Promise(r => setTimeout(r, 60));
     try {
-      const raw = await html2canvas(cardEl, {
-        backgroundColor: null,
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-
-      // Apply rounded corners (rounded-2xl = 16px, ×2 for scale)
-      const radius = 16 * 2;
-      const w = raw.width;
-      const h = raw.height;
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.beginPath();
-      ctx.moveTo(radius, 0);
-      ctx.lineTo(w - radius, 0);
-      ctx.quadraticCurveTo(w, 0, w, radius);
-      ctx.lineTo(w, h - radius);
-      ctx.quadraticCurveTo(w, h, w - radius, h);
-      ctx.lineTo(radius, h);
-      ctx.quadraticCurveTo(0, h, 0, h - radius);
-      ctx.lineTo(0, radius);
-      ctx.quadraticCurveTo(0, 0, radius, 0);
-      ctx.closePath();
-      ctx.clip();
-      ctx.drawImage(raw, 0, 0);
-
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const blob = await buildCardBlob(meal);
+      if (!blob) return;
       const file = new File([blob], `nutricoach-${meal}.png`, { type: 'image/png' });
       if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({ title: `My ${mealLabel} — NutriCoach`, files: [file] });
         toast.success('Shared! 🎉');
       } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `nutricoach-${meal}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success('Saved! 📸');
+        toast.error('Sharing not supported on this device');
       }
     } catch (err) {
-      if (err?.name !== 'AbortError') console.error('Export failed:', err);
+      if (err?.name !== 'AbortError') console.error('Share failed:', err);
+    }
+    setExportingMeal(null);
+  };
+
+  const saveCard = async (meal) => {
+    setExportingMeal(meal);
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      const blob = await buildCardBlob(meal);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nutricoach-${meal}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Saved! 📸');
+    } catch (err) {
+      console.error('Save failed:', err);
     }
     setExportingMeal(null);
   };
@@ -504,19 +519,34 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                 return (
                   <div key={meal} ref={el => { cardRefs.current[meal] = el; }} className="bg-white rounded-2xl p-4 shadow-md border border-black/[0.08]" style={{ position: 'relative' }}>
                     {exportingMeal !== meal && (
-                      <button
-                        onClick={() => exportCard(meal, label)}
-                        style={{
-                          position: 'absolute', top: '10px', right: '10px',
-                          width: '28px', height: '28px', borderRadius: '8px',
-                          background: '#f3f4f6', border: '1px solid #e5e7eb',
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', zIndex: 1,
-                        }}
-                      >
-                        <Download style={{ width: '13px', height: '13px', color: '#6b7280' }} />
-                      </button>
+                      <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '6px', zIndex: 1 }}>
+                        {navigator.share && (
+                          <button
+                            onClick={() => shareCard(meal, label)}
+                            style={{
+                              width: '28px', height: '28px', borderRadius: '8px',
+                              background: '#f3f4f6', border: '1px solid #e5e7eb',
+                              boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Share2 style={{ width: '13px', height: '13px', color: '#6b7280' }} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => saveCard(meal)}
+                          style={{
+                            width: '28px', height: '28px', borderRadius: '8px',
+                            background: '#f3f4f6', border: '1px solid #e5e7eb',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Download style={{ width: '13px', height: '13px', color: '#6b7280' }} />
+                        </button>
+                      </div>
                     )}
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-2xl">{emoji}</span>
