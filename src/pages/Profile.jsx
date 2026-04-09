@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -383,6 +384,22 @@ export default function Profile() {
             </AlertDialogContent>
           </AlertDialog>
         </motion.div>
+
+        {/* Footer links */}
+        <div style={{ textAlign: "center", marginTop: "8px", marginBottom: "16px" }}>
+          <p style={{ fontSize: "11px", color: "#9ca3af" }}>
+            <Link to="/privacy" style={{ color: "#9ca3af", textDecoration: "none" }}
+              onMouseEnter={e => e.currentTarget.style.color = "#6b7280"}
+              onMouseLeave={e => e.currentTarget.style.color = "#9ca3af"}
+            >Privacy Policy</Link>
+            {" · "}
+            <Link to="/privacy" style={{ color: "#9ca3af", textDecoration: "none" }}
+              onMouseEnter={e => e.currentTarget.style.color = "#6b7280"}
+              onMouseLeave={e => e.currentTarget.style.color = "#9ca3af"}
+            >Termini di Servizio</Link>
+          </p>
+          <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>NutriCoach v1.0.0</p>
+        </div>
 
       </div>
     </div>
