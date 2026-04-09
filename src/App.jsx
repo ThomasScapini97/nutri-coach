@@ -15,6 +15,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Exercise = lazy(() => import('./pages/Exercise'));
 const Diary = lazy(() => import('./pages/Diary'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Privacy = lazy(() => import('./pages/Privacy'));
 
 const PageLoader = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -71,6 +72,7 @@ const AuthenticatedApp = () => {
         <Route path="/Profile" element={<Profile />} />
         <Route path="/Diary" element={<Diary />} />
       </Route>
+      <Route path="/privacy" element={<Privacy />} />
       <Route path="*" element={<Navigate to="/Chat" replace />} />
     </Routes>
   );
