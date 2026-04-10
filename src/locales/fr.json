@@ -40,7 +40,7 @@
   },
   "exercise": {
     "title": "Exercice",
-    "logExercise": "+ Enregistrer un exercice",
+    "logExercise": "Enregistrer exercice",
     "savedWorkouts": "Séances sauvegardées",
     "noSavedWorkouts": "Aucune séance sauvegardée",
     "noSavedWorkoutsDesc": "Enregistrez des exercices et appuyez sur 'Sauvegarder comme preset'",

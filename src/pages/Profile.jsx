@@ -350,6 +350,40 @@ export default function Profile() {
           </div>
         </motion.div>
 
+        {/* Language selector */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden"
+        >
+          <div className="flex items-center gap-2 px-[14px] py-[11px] border-b border-gray-100">
+            <div className="w-[26px] h-[26px] rounded-[7px] bg-blue-100 flex items-center justify-center text-[13px]"><Globe className="w-3.5 h-3.5 text-blue-500" /></div>
+            <span className="text-xs font-medium text-forest">{t("profile.language")}</span>
+          </div>
+          <div className="p-[10px_12px_12px] flex flex-wrap gap-2">
+            {[
+              { code: "en", flag: "🇬🇧", label: "English" },
+              { code: "it", flag: "🇮🇹", label: "Italiano" },
+              { code: "es", flag: "🇪🇸", label: "Español" },
+              { code: "fr", flag: "🇫🇷", label: "Français" },
+              { code: "de", flag: "🇩🇪", label: "Deutsch" },
+              { code: "pt", flag: "🇵🇹", label: "Português" },
+            ].map(({ code, flag, label }) => {
+              const active = i18n.language?.startsWith(code);
+              return (
+                <button key={code} onClick={() => i18n.changeLanguage(code)}
+                  className="flex items-center gap-[5px] px-3 py-[6px] rounded-full text-[12px] font-medium cursor-pointer font-[inherit]"
+                  style={{
+                    border: active ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
+                    background: active ? "#f0fdf4" : "#f9fafb",
+                    color: active ? "#15803d" : "#6b7280",
+                  }}
+                >
+                  <span>{flag}</span> {label}
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+
         {/* Buttons */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
           className="flex flex-col gap-2"
@@ -386,40 +420,6 @@ export default function Profile() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </motion.div>
-
-        {/* Language selector */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden"
-        >
-          <div className="flex items-center gap-2 px-[14px] py-[11px] border-b border-gray-100">
-            <div className="w-[26px] h-[26px] rounded-[7px] bg-blue-100 flex items-center justify-center text-[13px]"><Globe className="w-3.5 h-3.5 text-blue-500" /></div>
-            <span className="text-xs font-medium text-forest">{t("profile.language")}</span>
-          </div>
-          <div className="p-[10px_12px_12px] flex flex-wrap gap-2">
-            {[
-              { code: "en", flag: "🇬🇧", label: "English" },
-              { code: "it", flag: "🇮🇹", label: "Italiano" },
-              { code: "es", flag: "🇪🇸", label: "Español" },
-              { code: "fr", flag: "🇫🇷", label: "Français" },
-              { code: "de", flag: "🇩🇪", label: "Deutsch" },
-              { code: "pt", flag: "🇵🇹", label: "Português" },
-            ].map(({ code, flag, label }) => {
-              const active = i18n.language?.startsWith(code);
-              return (
-                <button key={code} onClick={() => i18n.changeLanguage(code)}
-                  className="flex items-center gap-[5px] px-3 py-[6px] rounded-full text-[12px] font-medium cursor-pointer font-[inherit]"
-                  style={{
-                    border: active ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                    background: active ? "#f0fdf4" : "#f9fafb",
-                    color: active ? "#15803d" : "#6b7280",
-                  }}
-                >
-                  <span>{flag}</span> {label}
-                </button>
-              );
-            })}
-          </div>
         </motion.div>
 
         {/* Footer links */}

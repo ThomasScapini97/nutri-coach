@@ -40,7 +40,7 @@
   },
   "exercise": {
     "title": "Training",
-    "logExercise": "+ Übung erfassen",
+    "logExercise": "Übung protokollieren",
     "savedWorkouts": "Gespeicherte Workouts",
     "noSavedWorkouts": "Keine gespeicherten Workouts",
     "noSavedWorkoutsDesc": "Erfasse Übungen und tippe auf 'Als Preset speichern'",

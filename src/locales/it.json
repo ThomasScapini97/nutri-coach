@@ -40,7 +40,7 @@
   },
   "exercise": {
     "title": "Esercizi",
-    "logExercise": "+ Registra esercizio",
+    "logExercise": "Registra esercizio",
     "savedWorkouts": "Allenamenti salvati",
     "noSavedWorkouts": "Nessun allenamento salvato",
     "noSavedWorkoutsDesc": "Registra degli esercizi e premi 'Salva come preset' per crearne uno",

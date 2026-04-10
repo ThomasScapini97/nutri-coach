@@ -40,7 +40,7 @@
   },
   "exercise": {
     "title": "Exercise",
-    "logExercise": "+ Log exercise",
+    "logExercise": "Log exercise",
     "savedWorkouts": "Saved Workouts",
     "noSavedWorkouts": "No saved workouts yet",
     "noSavedWorkoutsDesc": "Log some exercises and tap 'Save as preset' to create one",
