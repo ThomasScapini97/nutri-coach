@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MessageCircle, BarChart3, Dumbbell, BookOpen } from "lucide-react";
 import { useChatContext } from "@/lib/ChatContext";
@@ -43,6 +44,22 @@ export default function MobileNav() {
   const location = useLocation();
   const { chatInputProps } = useChatContext();
   const isChat = location.pathname === "/Chat";
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const handleResize = () => {
+      const offset = Math.max(window.innerHeight - viewport.height - viewport.offsetTop, 0);
+      setKeyboardOffset(offset);
+    };
+    viewport.addEventListener("resize", handleResize);
+    viewport.addEventListener("scroll", handleResize);
+    return () => {
+      viewport.removeEventListener("resize", handleResize);
+      viewport.removeEventListener("scroll", handleResize);
+    };
+  }, []);
 
   const safeBottom = "env(safe-area-inset-bottom, 16px)";
 
@@ -56,6 +73,8 @@ export default function MobileNav() {
           borderRadius: "24px 24px 0 0",
           boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
           paddingBottom: safeBottom,
+          transform: keyboardOffset > 0 ? `translateY(-${keyboardOffset}px)` : undefined,
+          transition: "transform 0.1s ease-out",
         }}
       >
         <ChatInput embedded {...chatInputProps} />
