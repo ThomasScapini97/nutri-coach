@@ -328,7 +328,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-nav pt-top-bar md:pt-0">
+      <div className="flex-1 overflow-y-auto pt-top-bar md:pt-0" style={{ paddingBottom: 'calc(200px + env(safe-area-inset-bottom))' }}>
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
 
           {/* Hero calorie card */}
@@ -439,9 +439,23 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         </div>
       </div>
 
-      {/* Trend chart */}
-      <div className="bg-mint px-4 pt-2 pb-nav shrink-0">
-        <div className="bg-white rounded-[20px] px-4 pt-[10px] pb-[10px] border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+      {/* Trend chart — fixed above navbar */}
+      <div style={{
+        position: 'fixed',
+        bottom: 'calc(72px + env(safe-area-inset-bottom))',
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        padding: '0 16px 8px',
+        background: '#f0fcf3',
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '20px',
+          padding: '10px 16px',
+          border: '0.5px solid rgba(0,0,0,0.06)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+        }}>
           <div className="flex items-center justify-between mb-[10px]">
             <div className="flex items-center gap-[6px]">
               <TrendingUp className="w-[14px] h-[14px] text-green-600" />
