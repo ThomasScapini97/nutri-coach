@@ -184,8 +184,7 @@ export default function Chat() {
   const queryClient = useQueryClient();
   const handleSendRef = useRef(null);
   const handlePhotoSendRef = useRef(null);
-  const lastScrollTop = useRef(0);
-  const [dashboardTop, setDashboardTop] = useState(16);
+
 
   const { data: profile } = useQuery({
     queryKey: ["userProfile", user?.id],
@@ -484,18 +483,22 @@ export default function Chat() {
         )}
       </div>
 
+      {/* Fixed DailyDashboard below top bar — messages scroll behind glassmorphism card */}
+      <div style={{
+        position: 'fixed',
+        top: 'calc(60px + env(safe-area-inset-top, 0px))',
+        left: 0,
+        right: 0,
+        zIndex: 40,
+        pointerEvents: 'auto',
+      }}>
+        <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={FIBER_GOAL} userId={user?.id} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
+      </div>
+
       <div
         className="flex-1 overflow-y-auto pb-[160px] md:pb-6 bg-mint"
-        style={{ paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))' }}
-        onScroll={(e) => {
-          const current = e.currentTarget.scrollTop;
-          setDashboardTop(current < 60 || current < lastScrollTop.current ? 0 : 16);
-          lastScrollTop.current = current;
-        }}
+        style={{ paddingTop: 'calc(170px + env(safe-area-inset-top, 0px))' }}
       >
-        <div style={{ position: "sticky", top: dashboardTop, zIndex: 10, transition: "top 0.3s ease" }}>
-          <DailyDashboard todayLog={todayLog} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal || 120} carbsGoal={profile?.carbs_goal || 250} fatsGoal={profile?.fats_goal || 65} fiberGoal={FIBER_GOAL} userId={user?.id} onWaterUpdate={() => queryClient.invalidateQueries({ queryKey: ["foodlog"] })} />
-        </div>
         <div className="max-w-4xl mx-auto space-y-5 px-4 pt-2 pb-6">
           {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
           {isLoading && <TypingIndicator />}
