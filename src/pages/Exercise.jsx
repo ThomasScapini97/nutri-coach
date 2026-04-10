@@ -543,7 +543,7 @@ export default function Exercise() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-nav" style={{ paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))' }}>
+      <div className="flex-1 overflow-y-auto pb-nav pt-top-bar md:pt-0">
         <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
 
           {/* Hero card */}
