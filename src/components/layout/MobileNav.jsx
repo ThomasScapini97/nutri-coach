@@ -47,17 +47,31 @@ export default function MobileNav() {
   const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-    const handleResize = () => {
-      const offset = Math.max(window.innerHeight - viewport.height, 0);
+    const update = () => {
+      const vv = window.visualViewport;
+      const offset = vv ? Math.max(window.innerHeight - vv.height, 0) : 0;
       setKeyboardOffset(offset);
     };
-    viewport.addEventListener("resize", handleResize);
-    viewport.addEventListener("scroll", handleResize);
+
+    // visualViewport fires during keyboard animation — read after rAF to get settled value
+    const handleVVResize = () => requestAnimationFrame(update);
+
+    // Fallback: focusin waits 300ms for keyboard animation to complete
+    let focusTimer;
+    const onFocus = () => { clearTimeout(focusTimer); focusTimer = setTimeout(update, 300); };
+    const onBlur  = () => { clearTimeout(focusTimer); focusTimer = setTimeout(() => setKeyboardOffset(0), 100); };
+
+    window.visualViewport?.addEventListener("resize", handleVVResize);
+    window.visualViewport?.addEventListener("scroll", handleVVResize);
+    document.addEventListener("focusin",  onFocus);
+    document.addEventListener("focusout", onBlur);
+
     return () => {
-      viewport.removeEventListener("resize", handleResize);
-      viewport.removeEventListener("scroll", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleVVResize);
+      window.visualViewport?.removeEventListener("scroll", handleVVResize);
+      document.removeEventListener("focusin",  onFocus);
+      document.removeEventListener("focusout", onBlur);
+      clearTimeout(focusTimer);
     };
   }, []);
 
@@ -74,7 +88,6 @@ export default function MobileNav() {
           boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
           bottom: keyboardOffset > 0 ? `${keyboardOffset}px` : 0,
           paddingBottom: keyboardOffset > 0 ? 0 : safeBottom,
-          transition: "bottom 0.1s ease-out",
         }}
       >
         <ChatInput embedded {...chatInputProps} />
