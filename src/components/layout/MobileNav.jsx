@@ -67,14 +67,14 @@ export default function MobileNav() {
   if (isChat && chatInputProps) {
     return (
       <nav
-        className="md:hidden fixed z-50 bottom-0 left-0 right-0"
+        className="md:hidden fixed z-50 left-0 right-0"
         style={{
           background: "white",
           borderRadius: "24px 24px 0 0",
           boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
-          paddingBottom: safeBottom,
-          transform: keyboardOffset > 0 ? `translateY(-${keyboardOffset}px)` : undefined,
-          transition: "transform 0.1s ease-out",
+          bottom: keyboardOffset > 0 ? `${keyboardOffset}px` : 0,
+          paddingBottom: keyboardOffset > 0 ? 0 : safeBottom,
+          transition: "bottom 0.1s ease-out",
         }}
       >
         <ChatInput embedded {...chatInputProps} />
