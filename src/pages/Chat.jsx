@@ -462,7 +462,7 @@ export default function Chat() {
   useEffect(() => () => setChatInputProps(null), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="flex flex-col overflow-hidden h-[100dvh] pb-[env(safe-area-inset-bottom)] rounded-[20px] bg-mint">
+    <div className="flex flex-col overflow-hidden h-[100dvh] rounded-[20px] bg-mint">
       <DailyNotificationPopup
         evaluation={dailyEvaluation}
         onClose={() => {
