@@ -731,9 +731,25 @@ export default function Exercise() {
         </div>
       </div>
 
-      {/* Bottom chart */}
-      <div className="bg-mint px-4 pb-nav shrink-0">
-        <div className="bg-white rounded-[20px] p-[10px_16px] border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.06)] max-w-[480px] mx-auto">
+      {/* Bottom chart — fixed above navbar */}
+      <div style={{
+        position: 'fixed',
+        bottom: 'calc(56px + env(safe-area-inset-bottom))',
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        padding: '0 16px 8px',
+        background: '#f0fcf3',
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '20px',
+          padding: '10px 16px',
+          border: '0.5px solid rgba(0,0,0,0.06)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+          maxWidth: '480px',
+          margin: '0 auto',
+        }}>
           <div className="flex items-center justify-between mb-[10px]">
             <div className="flex items-center gap-[6px]">
               <TrendingUp className="w-[14px] h-[14px] text-red-600" />

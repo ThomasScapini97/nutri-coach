@@ -442,7 +442,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
       {/* Trend chart — fixed above navbar */}
       <div style={{
         position: 'fixed',
-        bottom: 'calc(72px + env(safe-area-inset-bottom))',
+        bottom: 'calc(56px + env(safe-area-inset-bottom))',
         left: 0,
         right: 0,
         zIndex: 30,
