@@ -328,7 +328,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-[72px]">
+      <div className="flex-1 overflow-y-auto pb-nav">
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
 
           {/* Hero calorie card */}
@@ -440,7 +440,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
       </div>
 
       {/* Trend chart */}
-      <div className="bg-mint px-4 pt-2 pb-[72px] shrink-0">
+      <div className="bg-mint px-4 pt-2 pb-nav shrink-0">
         <div className="bg-white rounded-[20px] px-4 pt-[10px] pb-[10px] border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
           <div className="flex items-center justify-between mb-[10px]">
             <div className="flex items-center gap-[6px]">

@@ -543,7 +543,7 @@ export default function Exercise() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-[72px]">
+      <div className="flex-1 overflow-y-auto pb-nav">
         <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
 
           {/* Hero card */}
@@ -732,7 +732,7 @@ export default function Exercise() {
       </div>
 
       {/* Bottom chart */}
-      <div className="bg-mint px-4 pb-[72px] shrink-0">
+      <div className="bg-mint px-4 pb-nav shrink-0">
         <div className="bg-white rounded-[20px] p-[10px_16px] border border-black/[0.06] shadow-[0_2px_12px_rgba(0,0,0,0.06)] max-w-[480px] mx-auto">
           <div className="flex items-center justify-between mb-[10px]">
             <div className="flex items-center gap-[6px]">

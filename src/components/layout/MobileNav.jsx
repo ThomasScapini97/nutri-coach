@@ -44,6 +44,8 @@ export default function MobileNav() {
   const { chatInputProps } = useChatContext();
   const isChat = location.pathname === "/Chat";
 
+  const safeBottom = "env(safe-area-inset-bottom, 16px)";
+
   // ── /Chat: expanded nav with ChatInput above tab icons ──────────────────────
   if (isChat && chatInputProps) {
     return (
@@ -53,7 +55,7 @@ export default function MobileNav() {
           background: "white",
           borderRadius: "24px 24px 0 0",
           boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          paddingBottom: safeBottom,
         }}
       >
         <ChatInput embedded {...chatInputProps} />
@@ -78,10 +80,7 @@ export default function MobileNav() {
         background: "white",
         borderRadius: "24px 24px 0 0",
         boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
-        display: "flex",
-        height: "calc(56px + env(safe-area-inset-bottom, 0px))",
-        alignItems: "flex-start",
+        paddingBottom: safeBottom,
       }}
     >
       <div style={{ display: "flex", width: "100%", height: "56px" }}>

@@ -200,7 +200,7 @@ export default function Diary() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-[72px]">
+      <div className="flex-1 overflow-y-auto pb-nav">
         <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
 
           {/* Weight card */}
