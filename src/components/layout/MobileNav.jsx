@@ -50,7 +50,7 @@ export default function MobileNav() {
     const viewport = window.visualViewport;
     if (!viewport) return;
     const handleResize = () => {
-      const offset = Math.max(window.innerHeight - viewport.height - viewport.offsetTop, 0);
+      const offset = Math.max(window.innerHeight - viewport.height, 0);
       setKeyboardOffset(offset);
     };
     viewport.addEventListener("resize", handleResize);
