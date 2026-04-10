@@ -115,4 +115,7 @@
   .pb-nav {
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
+  .pt-top-bar {
+    padding-top: calc(60px + env(safe-area-inset-top, 0px));
+  }
 }
