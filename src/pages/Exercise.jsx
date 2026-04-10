@@ -522,10 +522,10 @@ export default function Exercise() {
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col overflow-hidden h-[100dvh] bg-mint">
+    <div className="flex flex-col h-[100dvh] bg-mint">
 
       {/* Date navigator */}
-      <div className="relative flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-4 py-[14px] shrink-0">
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-4 py-[14px]" style={{ paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))' }}>
         <button onClick={() => navigateDay(-1)} className="absolute left-[56px] bg-transparent border-none flex items-center justify-center cursor-pointer p-1">
           <ChevronLeft className="w-5 h-5 text-gray-500" />
         </button>
@@ -543,7 +543,7 @@ export default function Exercise() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-nav">
+      <div className="flex-1 overflow-y-auto pb-nav" style={{ paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))' }}>
         <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
 
           {/* Hero card */}

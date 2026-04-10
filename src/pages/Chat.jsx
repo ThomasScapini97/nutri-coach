@@ -462,7 +462,7 @@ export default function Chat() {
   useEffect(() => () => setChatInputProps(null), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="flex flex-col overflow-hidden h-[100dvh] rounded-[20px] bg-mint">
+    <div className="flex flex-col h-[100dvh] bg-mint">
       <DailyNotificationPopup
         evaluation={dailyEvaluation}
         onClose={() => {
@@ -472,7 +472,7 @@ export default function Chat() {
       />
 
       {/* Top bar */}
-      <div className="flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-6 py-[14px] shrink-0 relative">
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-6 py-[14px]" style={{ paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))' }}>
         <div className="text-center">
           <h2 className="text-base font-semibold text-forest leading-[1.2] m-0">NutriCoach</h2>
           <p className="text-[11px] text-gray-400 m-0">Your nutrition coach</p>
@@ -486,6 +486,7 @@ export default function Chat() {
 
       <div
         className="flex-1 overflow-y-auto pb-[160px] md:pb-6 bg-mint"
+        style={{ paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))' }}
         onScroll={(e) => {
           const current = e.currentTarget.scrollTop;
           setDashboardTop(current < 60 || current < lastScrollTop.current ? 0 : 16);
