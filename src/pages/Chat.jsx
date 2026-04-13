@@ -305,14 +305,6 @@ export default function Chat() {
   const lastLogTime = chatMessages?.length ? chatMessages[chatMessages.length - 1].timestamp : null;
   useMealReminderCheck(lastLogTime);
 
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, []);
 
   const handlePhotoSend = async (imageBase64) => {
     await handleSendRef.current?.("📷 Foto", imageBase64);

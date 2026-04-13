@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MessageCircle, BarChart3, Dumbbell, BookOpen } from "lucide-react";
 import { useChatContext } from "@/lib/ChatContext";
@@ -43,64 +42,20 @@ export default function MobileNav() {
   const location = useLocation();
   const { chatInputProps } = useChatContext();
   const isChat = location.pathname === "/Chat";
-  const [navTop, setNavTop] = useState(null);
 
-  useEffect(() => {
-    const navHeight = isChat ? 110 : 56;
-
-    const update = () => {
-      const vv = window.visualViewport;
-      if (!vv) {
-        setNavTop(null);
-        return;
-      }
-      const top = vv.offsetTop + vv.height - navHeight;
-      setNavTop(Math.round(top));
-    };
-
-    const handleVVResize = () => requestAnimationFrame(update);
-
-    window.visualViewport?.addEventListener("resize", handleVVResize);
-    window.visualViewport?.addEventListener("scroll", handleVVResize);
-
-    update();
-
-    return () => {
-      window.visualViewport?.removeEventListener("resize", handleVVResize);
-      window.visualViewport?.removeEventListener("scroll", handleVVResize);
-    };
-  }, [isChat]);
-
-  const safeBottom = "env(safe-area-inset-bottom, 16px)";
-
-  const navPosition = navTop !== null
-    ? { top: `${navTop}px`, bottom: "auto", paddingBottom: 0 }
-    : { bottom: 0, top: "auto", paddingBottom: safeBottom };
+  const navStyle = {
+    background: "white",
+    borderRadius: "24px 24px 0 0",
+    boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
+    paddingBottom: "env(safe-area-inset-bottom, 16px)",
+  };
 
   // ── /Chat: expanded nav with ChatInput above tab icons ──────────────────────
   if (isChat && chatInputProps) {
     return (
-      <nav
-        className="md:hidden"
-        style={{
-          position: "fixed",
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          background: "white",
-          borderRadius: "24px 24px 0 0",
-          boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
-          ...navPosition,
-        }}
-      >
+      <nav className="md:hidden fixed z-50 bottom-0 left-0 right-0" style={navStyle}>
         <ChatInput embedded {...chatInputProps} />
-        <div
-          style={{
-            display: "flex",
-            height: "56px",
-            borderTop: "0.5px solid rgba(0,0,0,0.06)",
-          }}
-        >
+        <div style={{ display: "flex", height: "56px", borderTop: "0.5px solid rgba(0,0,0,0.06)" }}>
           <NavItems location={location} />
         </div>
       </nav>
@@ -109,19 +64,7 @@ export default function MobileNav() {
 
   // ── Other pages: same edge-to-edge style, only icons ───────────────────────
   return (
-    <nav
-      className="md:hidden"
-      style={{
-        position: "fixed",
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        background: "white",
-        borderRadius: "24px 24px 0 0",
-        boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
-        ...navPosition,
-      }}
-    >
+    <nav className="md:hidden fixed z-50 bottom-0 left-0 right-0" style={navStyle}>
       <div style={{ display: "flex", width: "100%", height: "56px" }}>
         <NavItems location={location} />
       </div>
