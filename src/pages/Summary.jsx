@@ -13,6 +13,7 @@ import FoodEntryItem from "../components/summary/FoodEntryItem";
 import ScrollableChart from "../components/summary/ScrollableChart";
 import { motion, AnimatePresence } from "framer-motion";
 import buildSystemPrompt from "@/lib/buildSystemPrompt";
+import ReactMarkdown from 'react-markdown';
 
 export default function Summary() {
   const { user } = useAuth();
@@ -731,7 +732,11 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                       lineHeight: '1.4',
                     }}
                   >
-                    {msg.content}
+                    {msg.role === 'assistant' ? (
+                      <div className="prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : msg.content}
                   </div>
                 ))}
                 {pastChatLoading && (
