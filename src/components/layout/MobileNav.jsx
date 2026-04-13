@@ -49,7 +49,7 @@ export default function MobileNav() {
   useEffect(() => {
     const update = () => {
       const vv = window.visualViewport;
-      const offset = vv ? Math.max(window.innerHeight - vv.height, 0) : 0;
+      const offset = vv ? Math.max(window.innerHeight - vv.height - vv.offsetTop, 0) : 0;
       setKeyboardOffset(offset);
     };
 

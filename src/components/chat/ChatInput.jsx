@@ -11,6 +11,7 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
   const [isRecording, setIsRecording] = useState(false);
   const fileInputRef = useRef(null);
   const menuRef = useRef(null);
+  const textareaRef = useRef(null);
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef("");
 
@@ -32,11 +33,19 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
     };
   }, []);
 
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = Math.min(textarea.scrollHeight, 128) + "px";
+  }, [message]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!message.trim() || isLoading) return;
     onSend(message.trim());
     setMessage("");
+    textareaRef.current?.blur();
   };
 
   const handleFileChange = async (e) => {
@@ -201,6 +210,7 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
         </div>
 
         <textarea
+          ref={textareaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(e); } }}
