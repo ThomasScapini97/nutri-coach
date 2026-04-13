@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import html2canvas from 'html2canvas';
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
@@ -7,11 +7,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { recalculateTotals, FIBER_GOAL } from "@/lib/nutritionUtils";
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, Flame, TrendingUp, Share2, Wheat, Drumstick, Droplets, Salad, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, TrendingUp, Share2, Wheat, Drumstick, Droplets, Salad, Download, Plus, X, Send } from "lucide-react";
 import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
 import FoodEntryItem from "../components/summary/FoodEntryItem";
 import ScrollableChart from "../components/summary/ScrollableChart";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Summary() {
   const { user } = useAuth();
@@ -22,6 +22,11 @@ export default function Summary() {
   const [isExportingProgress, setIsExportingProgress] = useState(false);
   const cardRefs = useRef({});
   const progressCardRef = useRef(null);
+  const pastChatEndRef = useRef(null);
+  const [showPastChat, setShowPastChat] = useState(false);
+  const [pastChatMessages, setPastChatMessages] = useState([]);
+  const [pastChatInput, setPastChatInput] = useState("");
+  const [pastChatLoading, setPastChatLoading] = useState(false);
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const queryClient = useQueryClient();
 
@@ -72,6 +77,7 @@ export default function Summary() {
   };
 
   const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
+  const isPast = !isToday;
 const caloriesConsumed = dayLog?.total_calories || 0;
   const burnedCalories = dayLog?.total_burned_calories || 0;
   const netCalories = Math.max(caloriesConsumed - burnedCalories, 0);
@@ -345,6 +351,115 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     setIsExportingProgress(false);
   };
 
+  useEffect(() => {
+    setPastChatMessages([]);
+    setShowPastChat(false);
+  }, [dateStr]);
+
+  useEffect(() => {
+    pastChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [pastChatMessages, pastChatLoading]);
+
+  const handlePastChatSend = async () => {
+    const text = pastChatInput.trim();
+    if (!text || pastChatLoading) return;
+    setPastChatInput("");
+    const userMsg = { role: "user", content: text, id: crypto.randomUUID() };
+    setPastChatMessages(prev => [...prev, userMsg]);
+    setPastChatLoading(true);
+    try {
+      const pastDaySystemPrompt = `You are NutriCoach, a nutrition tracking assistant.
+The user is logging food they ate on ${format(selectedDate, 'EEEE, MMMM d, yyyy')}.
+Parse what they ate and return nutrition data.
+Always respond in the same language the user writes in.
+Be concise — confirm what you logged in 1-2 lines.
+
+Nutrition values per 100g:
+- Bresaola: 155 kcal, 32g protein, 0g carbs, 2g fat
+- Olio d'oliva: 884 kcal, 0g protein, 0g carbs, 100g fat
+- Parmigiano reggiano: 392 kcal, 33g protein, 0g carbs, 28g fat
+- Petto di pollo: 165 kcal, 31g protein, 0g carbs, 4g fat
+- Pasta: 350 kcal, 12g protein, 71g carbs, 1g fat
+- Uovo intero: 155 kcal per 100g — 1 egg = 55g = 85 kcal
+- Pane comune: 270 kcal, 9g protein, 53g carbs, 1g fat
+
+Unit conversions:
+- 1 uovo = 55g = 85 kcal
+- 1 cucchiaio olio = 10g = 88 kcal
+- 1 fetta pane = 30g = 81 kcal
+
+Response format (JSON only):
+{"message":"your confirmation","foods":[{"food_name":"name","meal_type":"breakfast/lunch/dinner/snack","grams":100,"calories":0,"carbs":0,"protein":0,"fats":0,"fiber":0}]}`;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 1024,
+          system: pastDaySystemPrompt,
+          messages: [{ role: "user", content: text }],
+        }),
+      });
+      const data = await response.json();
+      const rawText = data.content?.[0]?.text || '{"message":"Sorry, could not process.","foods":[]}';
+      let result;
+      try {
+        const cleaned = rawText.replace(/```json|```/g, "").trim();
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+        if (!result?.message) throw new Error("Invalid");
+      } catch {
+        result = { message: rawText, foods: [] };
+      }
+      setPastChatMessages(prev => [...prev, { role: "assistant", content: result.message, id: crypto.randomUUID() }]);
+      const foods = Array.isArray(result.foods) ? result.foods : [];
+      if (foods.length > 0) {
+        let logId = dayLog?.id;
+        if (!logId) {
+          const { data: created, error: insertError } = await supabase.from('food_logs').insert({
+            date: dateStr, user_id: user.id,
+            total_calories: 0, total_carbs: 0, total_protein: 0, total_fats: 0, total_fiber: 0, total_burned_calories: 0,
+          }).select().single();
+          if (insertError) {
+            const { data: existing } = await supabase.from('food_logs').select('id').eq('date', dateStr).eq('user_id', user.id).maybeSingle();
+            logId = existing?.id;
+          } else {
+            logId = created?.id;
+          }
+        }
+        if (logId) {
+          await supabase.from('food_entries').insert(
+            foods.map(food => ({
+              foodlog_id: logId,
+              food_name: food.food_name,
+              food_key: food.food_name.toLowerCase().trim().replace(/\s+/g, '_'),
+              meal_type: food.meal_type,
+              grams: food.grams || null,
+              calories: food.calories || 0,
+              carbs: food.carbs || 0,
+              protein: food.protein || 0,
+              fats: food.fats || 0,
+              fiber: food.fiber || 0,
+              timestamp: new Date().toISOString(),
+            }))
+          );
+          await recalculateTotals(logId);
+          queryClient.invalidateQueries({ queryKey: ["foodEntries", logId] });
+          queryClient.invalidateQueries({ queryKey: ["foodlog", dateStr, user?.id] });
+          queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+          toast.success(`Added to ${format(selectedDate, 'MMM d')} ✅`);
+        }
+      }
+    } catch (err) {
+      console.error("Past chat error:", err);
+      setPastChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong.", id: crypto.randomUUID() }]);
+    } finally {
+      setPastChatLoading(false);
+    }
+  };
+
   const handleNativeShare = async () => {
     const dateLabel = isToday ? "Today" : format(selectedDate, "EEEE, d MMM");
     try {
@@ -534,6 +649,149 @@ const caloriesConsumed = dayLog?.total_calories || 0;
           <ScrollableChart calorieGoal={calorieGoal} />
         </div>
       </div>
+
+      {/* Floating + button for past days */}
+      {isPast && (
+        <button
+          onClick={() => setShowPastChat(true)}
+          style={{
+            position: 'fixed',
+            bottom: 'calc(200px + env(safe-area-inset-bottom))',
+            right: '20px',
+            zIndex: 35,
+            width: '48px',
+            height: '48px',
+            borderRadius: '50%',
+            background: '#16a34a',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(22,163,74,0.4)',
+          }}
+        >
+          <Plus style={{ width: '22px', height: '22px', color: 'white' }} />
+        </button>
+      )}
+
+      {/* Past day mini chat bottom sheet */}
+      <AnimatePresence>
+        {showPastChat && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 60 }}
+              onClick={() => setShowPastChat(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              style={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                zIndex: 61,
+                background: 'white',
+                borderRadius: '24px 24px 0 0',
+                height: '65vh',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {/* Header */}
+              <div style={{ padding: '16px 16px 10px', borderBottom: '0.5px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: '15px', color: '#15803d' }}>
+                      Add food to {format(selectedDate, 'MMM d')}
+                    </p>
+                    <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                      Tell me what you ate on this day
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowPastChat(false)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9ca3af' }}
+                  >
+                    <X style={{ width: '20px', height: '20px' }} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {pastChatMessages.length === 0 && (
+                  <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '13px', marginTop: '24px' }}>
+                    What did you eat? 🍽
+                  </p>
+                )}
+                {pastChatMessages.map(msg => (
+                  <div
+                    key={msg.id}
+                    style={{
+                      alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                      maxWidth: '80%',
+                      background: msg.role === 'user' ? '#16a34a' : '#f3f4f6',
+                      color: msg.role === 'user' ? 'white' : '#111827',
+                      borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      lineHeight: '1.4',
+                    }}
+                  >
+                    {msg.content}
+                  </div>
+                ))}
+                {pastChatLoading && (
+                  <div style={{ alignSelf: 'flex-start', background: '#f3f4f6', borderRadius: '18px 18px 18px 4px', padding: '10px 14px' }}>
+                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>...</span>
+                  </div>
+                )}
+                <div ref={pastChatEndRef} />
+              </div>
+
+              {/* Input bar */}
+              <div style={{ padding: '10px 12px', borderTop: '0.5px solid rgba(0,0,0,0.06)', display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, paddingBottom: 'calc(10px + env(safe-area-inset-bottom))' }}>
+                <input
+                  type="text"
+                  value={pastChatInput}
+                  onChange={e => setPastChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handlePastChatSend(); }}
+                  placeholder="e.g. pasta al pomodoro 200g"
+                  style={{
+                    flex: 1,
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '9999px',
+                    padding: '10px 16px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    background: '#f9fafb',
+                  }}
+                />
+                <button
+                  onClick={handlePastChatSend}
+                  disabled={!pastChatInput.trim() || pastChatLoading}
+                  style={{
+                    width: '38px', height: '38px', borderRadius: '50%',
+                    background: pastChatInput.trim() && !pastChatLoading ? '#16a34a' : '#e5e7eb',
+                    border: 'none', cursor: pastChatInput.trim() && !pastChatLoading ? 'pointer' : 'default',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  <Send style={{ width: '16px', height: '16px', color: pastChatInput.trim() && !pastChatLoading ? 'white' : '#9ca3af' }} />
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Share modal */}
       {showShare && (
