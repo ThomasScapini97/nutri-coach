@@ -19,7 +19,9 @@ export default function Summary() {
   const { t } = useTranslation();
   const [showShare, setShowShare] = useState(false);
   const [exportingMeal, setExportingMeal] = useState(null);
+  const [isExportingProgress, setIsExportingProgress] = useState(false);
   const cardRefs = useRef({});
+  const progressCardRef = useRef(null);
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const queryClient = useQueryClient();
 
@@ -289,6 +291,60 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     setExportingMeal(null);
   };
 
+  const buildProgressBlob = async () => {
+    const cardEl = progressCardRef.current;
+    if (!cardEl) return null;
+    const raw = await html2canvas(cardEl, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
+    const radius = 20 * 2;
+    const w = raw.width, h = raw.height;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(radius, 0); ctx.lineTo(w - radius, 0); ctx.quadraticCurveTo(w, 0, w, radius);
+    ctx.lineTo(w, h - radius); ctx.quadraticCurveTo(w, h, w - radius, h);
+    ctx.lineTo(radius, h); ctx.quadraticCurveTo(0, h, 0, h - radius);
+    ctx.lineTo(0, radius); ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.closePath(); ctx.clip(); ctx.drawImage(raw, 0, 0);
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  };
+
+  const shareProgressCard = async () => {
+    setIsExportingProgress(true);
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      const blob = await buildProgressBlob();
+      if (!blob) return;
+      const file = new File([blob], 'nutricoach-progress.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: "My Daily Progress — NutriCoach", files: [file] });
+        toast.success('Shared! 🎉');
+      } else {
+        toast.error('Sharing not supported on this device');
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') console.error('Share failed:', err);
+    }
+    setIsExportingProgress(false);
+  };
+
+  const saveProgressCard = async () => {
+    setIsExportingProgress(true);
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      const blob = await buildProgressBlob();
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'nutricoach-progress.png'; a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Saved! 📸');
+    } catch (err) {
+      console.error('Save failed:', err);
+    }
+    setIsExportingProgress(false);
+  };
+
   const handleNativeShare = async () => {
     const dateLabel = isToday ? "Today" : format(selectedDate, "EEEE, d MMM");
     try {
@@ -484,6 +540,59 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-end justify-center" onClick={() => setShowShare(false)}>
           <div className="w-full max-w-[480px] bg-white rounded-t-[28px] px-4 pb-10 pt-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
+
+            {/* Today's Progress exportable card */}
+            <div ref={progressCardRef} className="bg-white rounded-[20px] p-4 shadow-md border border-black/[0.08] mb-4" style={{ position: 'relative' }}>
+              {!isExportingProgress && (
+                <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '6px', zIndex: 1 }}>
+                  {navigator.share && (
+                    <button
+                      onClick={shareProgressCard}
+                      style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#f3f4f6', border: '1px solid #e5e7eb', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                    >
+                      <Share2 style={{ width: '13px', height: '13px', color: '#6b7280' }} />
+                    </button>
+                  )}
+                  <button
+                    onClick={saveProgressCard}
+                    style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#f3f4f6', border: '1px solid #e5e7eb', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  >
+                    <Download style={{ width: '13px', height: '13px', color: '#6b7280' }} />
+                  </button>
+                </div>
+              )}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">🔥</span>
+                <p className="text-sm font-semibold text-forest m-0">Today's Progress</p>
+              </div>
+              <div className="flex items-baseline gap-1 mb-2">
+                <span style={{ fontSize: '32px', fontWeight: 700, color: '#15803d', lineHeight: 1 }}>{netCalories}</span>
+                <span style={{ fontSize: '13px', color: '#9ca3af' }}>/ {calorieGoal} kcal</span>
+              </div>
+              <div style={{ background: '#e5e7eb', borderRadius: '9999px', height: '6px', overflow: 'hidden', marginBottom: '14px' }}>
+                <div style={{ width: `${caloriePercentage}%`, background: '#16a34a', height: '100%', borderRadius: '9999px' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[
+                  { label: 'Protein', value: Math.round(dayLog?.total_protein || 0), goal: proteinGoal, color: '#ec4899' },
+                  { label: 'Carbs',   value: Math.round(dayLog?.total_carbs   || 0), goal: carbsGoal,  color: '#f59e0b' },
+                  { label: 'Fats',    value: Math.round(dayLog?.total_fats    || 0), goal: fatsGoal,   color: '#3b82f6' },
+                  { label: 'Fiber',   value: Math.round(dayLog?.total_fiber   || 0), goal: fiberGoal,  color: '#22c55e' },
+                ].map(m => (
+                  <div key={m.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}>{m.label}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: m.color }}>{m.value}g <span style={{ fontWeight: 400, color: '#9ca3af' }}>/ {m.goal}g</span></span>
+                  </div>
+                ))}
+              </div>
+              {burnedCalories > 0 && (
+                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '10px', marginBottom: 0 }}>🏃 {burnedCalories} kcal burned</p>
+              )}
+              {(dayLog?.water_glasses || 0) > 0 && (
+                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', marginBottom: 0 }}>💧 {dayLog.water_glasses}/8 glasses</p>
+              )}
+              <p style={{ fontSize: '10px', fontWeight: 500, color: '#16a34a', textAlign: 'right', marginTop: '12px', marginBottom: 0 }}>NutriCoach</p>
+            </div>
 
             {/* Card preview */}
             <div className="rounded-[20px] p-4 space-y-3" style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>
