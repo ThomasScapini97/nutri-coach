@@ -126,11 +126,11 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
       </div>
 
       {/* Scrollable chart */}
-      <div ref={scrollRef} style={{ overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+      <div ref={scrollRef} style={{ overflowX: "auto", overflowY: "visible", scrollbarWidth: "none", msOverflowStyle: "none" }}>
         <div style={{
           display: "flex", alignItems: "flex-end", gap: `${BAR_GAP}px`,
           width: `${allDays.length * (BAR_WIDTH + BAR_GAP)}px`,
-          height: "55px", paddingBottom: "16px",
+          height: "80px",
         }}>
           {allDays.map((dateStr) => {
             const calories = logs[dateStr] || 0;
@@ -139,7 +139,7 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
             const isSelectedBar = dateStr === selectedDate;
             const isFutureBar = dateStr > todayStr;
             const barColor = isFutureBar ? "#f3f4f6" : getBarColor(calories, calorieGoal);
-            const barHeight = isFutureBar || !calories ? 4 : Math.max(4, (calories / maxCalories) * 28);
+            const barHeight = isFutureBar || !calories ? 4 : Math.max(4, (calories / maxCalories) * 40);
             const dayLabel = format(new Date(dateStr + "T12:00:00"), "EEE");
             const dayNum = format(new Date(dateStr + "T12:00:00"), "d");
             const labelColor = isSelectedBar ? "#16a34a" : isTodayBar ? "#16a34a" : "#9ca3af";
@@ -152,10 +152,10 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
                 style={{
                   width: `${BAR_WIDTH}px`, flexShrink: 0,
                   display: "flex", flexDirection: "column", alignItems: "center",
-                  cursor: isFutureBar ? "default" : "pointer", gap: "3px",
+                  cursor: isFutureBar ? "default" : "pointer",
                 }}
               >
-                <div style={{ width: "100%", height: "32px", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                <div style={{ width: "100%", flex: 1, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: barHeight }}
@@ -169,12 +169,14 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
                     }}
                   />
                 </div>
-                <span style={{ fontSize: isSelectedBar ? "10px" : "9px", color: labelColor, fontWeight: labelWeight, lineHeight: 1 }}>
-                  {dayLabel}
-                </span>
-                <span style={{ fontSize: isSelectedBar ? "10px" : "9px", color: labelColor, fontWeight: labelWeight, lineHeight: 1 }}>
-                  {dayNum}
-                </span>
+                <div style={{ textAlign: "center", paddingTop: "6px" }}>
+                  <div style={{ fontSize: isSelectedBar ? "11px" : "10px", color: labelColor, fontWeight: labelWeight, lineHeight: 1.2 }}>
+                    {dayNum}
+                  </div>
+                  <div style={{ fontSize: "8px", color: isSelectedBar || isTodayBar ? labelColor : "#d1d5db", lineHeight: 1.2 }}>
+                    {dayLabel}
+                  </div>
+                </div>
               </div>
             );
           })}
