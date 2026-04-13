@@ -181,6 +181,8 @@ export default function Chat() {
   const [showScanner, setShowScanner] = useState(false);
   const [pastSummaries, setPastSummaries] = useState([]);
   const messagesEndRef = useRef(null);
+  const dashboardRef = useRef(null);
+  const [dashboardHeight, setDashboardHeight] = useState(170);
   const queryClient = useQueryClient();
   const handleSendRef = useRef(null);
   const handlePhotoSendRef = useRef(null);
@@ -257,6 +259,18 @@ export default function Chat() {
     checkEndOfDay();
     return () => clearInterval(interval);
   }, [todayLog, calorieGoal, dailyEvaluation, evaluationDismissed]);
+
+  useEffect(() => {
+    const el = dashboardRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        setDashboardHeight(entry.contentRect.height + 60);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const isLoadingRef = useRef(false);
   useEffect(() => { isLoadingRef.current = isLoading; }, [isLoading]);
@@ -493,7 +507,7 @@ export default function Chat() {
       </div>
 
       {/* Fixed DailyDashboard below top bar — messages scroll behind glassmorphism card */}
-      <div style={{
+      <div ref={dashboardRef} style={{
         position: 'fixed',
         top: 'calc(60px + env(safe-area-inset-top, 0px))',
         left: 0,
@@ -506,7 +520,7 @@ export default function Chat() {
 
       <div
         className="flex-1 overflow-y-auto pb-[160px] md:pb-6 bg-mint"
-        style={{ paddingTop: 'calc(170px + env(safe-area-inset-top, 0px))' }}
+        style={{ paddingTop: `calc(${dashboardHeight}px + env(safe-area-inset-top, 0px) + 8px)` }}
       >
         <div className="max-w-4xl mx-auto space-y-5 px-4 pt-2 pb-6">
           {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
