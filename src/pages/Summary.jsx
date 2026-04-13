@@ -564,9 +564,25 @@ const caloriesConsumed = dayLog?.total_calories || 0;
           >
             <div className="flex items-center justify-between mb-[10px] px-[2px]">
               <span className="text-[13px] font-medium text-forest">{t("summary.whatYouAte")}</span>
-              {dayEntries?.length > 0 && (
-                <span className="text-[11px] text-gray-400">{t("summary.items", { count: dayEntries.length })}</span>
-              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {dayEntries?.length > 0 && (
+                  <span className="text-[11px] text-gray-400">{t("summary.items", { count: dayEntries.length })}</span>
+                )}
+                {isPast && (
+                  <button
+                    onClick={() => setShowPastChat(true)}
+                    style={{
+                      width: "26px", height: "26px", borderRadius: "50%",
+                      background: "#16a34a", border: "none",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", flexShrink: 0,
+                      boxShadow: "0 2px 6px rgba(22,163,74,0.3)",
+                    }}
+                  >
+                    <Plus style={{ width: "14px", height: "14px", color: "white" }} />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex flex-col gap-[6px]">
               {groupedEntries.length > 0 ? groupedEntries.map(group => (
@@ -639,30 +655,6 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         </div>
       </div>
 
-      {/* Floating + button for past days */}
-      {isPast && (
-        <button
-          onClick={() => setShowPastChat(true)}
-          style={{
-            position: 'fixed',
-            bottom: 'calc(200px + env(safe-area-inset-bottom))',
-            right: '20px',
-            zIndex: 35,
-            width: '48px',
-            height: '48px',
-            borderRadius: '50%',
-            background: '#16a34a',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(22,163,74,0.4)',
-          }}
-        >
-          <Plus style={{ width: '22px', height: '22px', color: 'white' }} />
-        </button>
-      )}
 
       {/* Past day mini chat bottom sheet */}
       <AnimatePresence>
