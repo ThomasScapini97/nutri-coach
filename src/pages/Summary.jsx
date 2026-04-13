@@ -25,6 +25,7 @@ export default function Summary() {
   const cardRefs = useRef({});
   const progressCardRef = useRef(null);
   const pastChatEndRef = useRef(null);
+  const sheetRef = useRef(null);
   const [showPastChat, setShowPastChat] = useState(false);
   const [pastChatMessages, setPastChatMessages] = useState([]);
   const [pastChatInput, setPastChatInput] = useState("");
@@ -359,6 +360,34 @@ const caloriesConsumed = dayLog?.total_calories || 0;
   }, [dateStr]);
 
   useEffect(() => {
+    if (showPastChat) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [showPastChat]);
+
+  useEffect(() => {
+    if (!showPastChat) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sheetEl = sheetRef.current;
+    if (!sheetEl) return;
+    const update = () => {
+      const offsetY = window.innerHeight - vv.height - vv.offsetTop;
+      sheetEl.style.transform = `translateY(-${Math.max(offsetY, 0)}px)`;
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+      if (sheetEl) sheetEl.style.transform = '';
+    };
+  }, [showPastChat]);
+
+  useEffect(() => {
     pastChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [pastChatMessages, pastChatLoading]);
 
@@ -674,6 +703,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
               onClick={() => setShowPastChat(false)}
             />
             <motion.div
+              ref={sheetRef}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -686,7 +716,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                 zIndex: 61,
                 background: 'white',
                 borderRadius: '24px 24px 0 0',
-                height: '65vh',
+                height: '75vh',
                 display: 'flex',
                 flexDirection: 'column',
               }}
