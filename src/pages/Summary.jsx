@@ -620,7 +620,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                 {(dayLog?.water_glasses || 0) > 0 && (
                   <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', marginBottom: 0 }}>💧 {dayLog.water_glasses}/8 glasses</p>
                 )}
-                <p style={{ fontSize: '10px', fontWeight: 500, color: '#16a34a', textAlign: 'right', marginTop: '12px', marginBottom: 0 }}>NutriCoach</p>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', letterSpacing: '0.2px', textAlign: 'right', marginTop: '12px', marginBottom: 0 }}>@nutricoach.app</p>
               </div>
 
               {/* Per-meal cards — same style as NutritionCard in chat */}
