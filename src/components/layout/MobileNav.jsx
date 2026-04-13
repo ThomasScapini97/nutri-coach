@@ -86,8 +86,11 @@ export default function MobileNav() {
           background: "white",
           borderRadius: "24px 24px 0 0",
           boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
-          bottom: keyboardOffset > 0 ? `${keyboardOffset}px` : 0,
-          paddingBottom: keyboardOffset > 0 ? 0 : safeBottom,
+          bottom: 0,
+          paddingBottom: safeBottom,
+          transform: keyboardOffset > 0 ? `translateY(-${keyboardOffset}px)` : "translateY(0)",
+          transition: "transform 0.25s ease",
+          willChange: "transform",
         }}
       >
         <ChatInput embedded {...chatInputProps} />

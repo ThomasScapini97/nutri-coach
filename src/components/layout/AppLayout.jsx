@@ -14,9 +14,9 @@ export default function AppLayout() {
   return (
     <ChatProvider>
       <div className="min-h-screen md:bg-gray-100">
-        <div className="flex min-h-screen bg-background md:max-w-[808px] md:mx-auto md:shadow-xl overflow-x-hidden">
+        <div className="flex min-h-screen bg-background md:max-w-[808px] md:mx-auto md:shadow-xl">
           <Sidebar />
-          <main className="flex-1 flex flex-col min-h-screen" style={{ minWidth: 0, overflow: "hidden" }}>
+          <main className="flex-1 flex flex-col min-h-screen" style={{ minWidth: 0 }}>
             {/* Avatar / back button — hidden on desktop (sidebar handles navigation) */}
             <div className="md:hidden fixed top-[14px] left-[16px] z-[100]">
               {isProfile ? (
