@@ -12,6 +12,7 @@ import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
 import FoodEntryItem from "../components/summary/FoodEntryItem";
 import ScrollableChart from "../components/summary/ScrollableChart";
 import { motion, AnimatePresence } from "framer-motion";
+import buildSystemPrompt from "@/lib/buildSystemPrompt";
 
 export default function Summary() {
   const { user } = useAuth();
@@ -368,28 +369,13 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     setPastChatMessages(prev => [...prev, userMsg]);
     setPastChatLoading(true);
     try {
-      const pastDaySystemPrompt = `You are NutriCoach, a nutrition tracking assistant.
-The user is logging food they ate on ${format(selectedDate, 'EEEE, MMMM d, yyyy')}.
-Parse what they ate and return nutrition data.
-Always respond in the same language the user writes in.
-Be concise — confirm what you logged in 1-2 lines.
-
-Nutrition values per 100g:
-- Bresaola: 155 kcal, 32g protein, 0g carbs, 2g fat
-- Olio d'oliva: 884 kcal, 0g protein, 0g carbs, 100g fat
-- Parmigiano reggiano: 392 kcal, 33g protein, 0g carbs, 28g fat
-- Petto di pollo: 165 kcal, 31g protein, 0g carbs, 4g fat
-- Pasta: 350 kcal, 12g protein, 71g carbs, 1g fat
-- Uovo intero: 155 kcal per 100g — 1 egg = 55g = 85 kcal
-- Pane comune: 270 kcal, 9g protein, 53g carbs, 1g fat
-
-Unit conversions:
-- 1 uovo = 55g = 85 kcal
-- 1 cucchiaio olio = 10g = 88 kcal
-- 1 fetta pane = 30g = 81 kcal
-
-Response format (JSON only):
-{"message":"your confirmation","foods":[{"food_name":"name","meal_type":"breakfast/lunch/dinner/snack","grams":100,"calories":0,"carbs":0,"protein":0,"fats":0,"fiber":0}]}`;
+      const pastDaySystemPrompt = buildSystemPrompt(
+        profile,
+        dayLog,
+        dayEntries || [],
+        [],
+        format(selectedDate, 'EEEE, MMMM d, yyyy')
+      );
 
       const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch("/api/chat", {
