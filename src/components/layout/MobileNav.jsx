@@ -39,41 +39,41 @@ function NavItems({ location }) {
   );
 }
 
+
 export default function MobileNav() {
   const location = useLocation();
   const { chatInputProps } = useChatContext();
   const isChat = location.pathname === "/Chat";
-  const [navStyle, setNavStyle] = useState({ position: "fixed", bottom: 0, left: 0, right: 0 });
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   useEffect(() => {
-    const vv = window.visualViewport;
-
-    if (!vv) {
-      setNavStyle({ position: "fixed", bottom: 0, left: 0, right: 0 });
-      return;
-    }
-
-    const navHeight = isChat ? 110 : 56;
-
     const update = () => {
-      setNavStyle({
-        position: "fixed",
-        top: `${vv.offsetTop + vv.height - navHeight}px`,
-        left: `${vv.offsetLeft}px`,
-        width: `${vv.width}px`,
-        bottom: "auto",
-      });
+      const vv = window.visualViewport;
+      const offset = vv ? Math.max(window.innerHeight - vv.height - vv.offsetTop, 0) : 0;
+      setKeyboardOffset(offset);
     };
 
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
-    update();
+    // visualViewport fires during keyboard animation — read after rAF to get settled value
+    const handleVVResize = () => requestAnimationFrame(update);
+
+    // Fallback: focusin waits 300ms for keyboard animation to complete
+    let focusTimer;
+    const onFocus = () => { clearTimeout(focusTimer); focusTimer = setTimeout(update, 300); };
+    const onBlur  = () => { clearTimeout(focusTimer); focusTimer = setTimeout(() => setKeyboardOffset(0), 100); };
+
+    window.visualViewport?.addEventListener("resize", handleVVResize);
+    window.visualViewport?.addEventListener("scroll", handleVVResize);
+    document.addEventListener("focusin",  onFocus);
+    document.addEventListener("focusout", onBlur);
 
     return () => {
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
+      window.visualViewport?.removeEventListener("resize", handleVVResize);
+      window.visualViewport?.removeEventListener("scroll", handleVVResize);
+      document.removeEventListener("focusin",  onFocus);
+      document.removeEventListener("focusout", onBlur);
+      clearTimeout(focusTimer);
     };
-  }, [isChat]);
+  }, []);
 
   const safeBottom = "env(safe-area-inset-bottom, 16px)";
 
@@ -81,14 +81,16 @@ export default function MobileNav() {
   if (isChat && chatInputProps) {
     return (
       <nav
-        className="md:hidden"
+        className="md:hidden fixed z-50 left-0 right-0"
         style={{
-          ...navStyle,
-          zIndex: 50,
           background: "white",
           borderRadius: "24px 24px 0 0",
           boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
+          bottom: 0,
           paddingBottom: safeBottom,
+          transform: keyboardOffset > 0 ? `translateY(-${keyboardOffset}px)` : "translateY(0)",
+          transition: "transform 0.25s ease",
+          willChange: "transform",
         }}
       >
         <ChatInput embedded {...chatInputProps} />
@@ -108,10 +110,8 @@ export default function MobileNav() {
   // ── Other pages: same edge-to-edge style, only icons ───────────────────────
   return (
     <nav
-      className="md:hidden"
+      className="md:hidden fixed z-50 bottom-0 left-0 right-0"
       style={{
-        ...navStyle,
-        zIndex: 50,
         background: "white",
         borderRadius: "24px 24px 0 0",
         boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
