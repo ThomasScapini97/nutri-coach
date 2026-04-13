@@ -27,7 +27,7 @@ function getBarColor(calories, goal) {
   return "#ef4444";
 }
 
-export default function ScrollableChart({ calorieGoal = 2000 }) {
+export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
   const { user } = useAuth();
   const [logs, setLogs] = useState({});
   const [showCalendar, setShowCalendar] = useState(false);
@@ -65,6 +65,14 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
     const todayIndex = allDays.findIndex(d => d === format(getToday(), "yyyy-MM-dd"));
     scrollRef.current.scrollLeft = (todayIndex - 4) * (BAR_WIDTH + BAR_GAP);
   }, []);
+
+  useEffect(() => {
+    if (!scrollRef.current || !selectedDate) return;
+    const idx = allDays.findIndex(d => d === selectedDate);
+    if (idx >= 0) {
+      scrollRef.current.scrollLeft = Math.max(0, (idx - 3) * (BAR_WIDTH + BAR_GAP));
+    }
+  }, [selectedDate]);
 
   const openDayDetail = async (dateStr) => {
     if (dateStr >= format(getToday(), "yyyy-MM-dd") && dateStr !== format(getToday(), "yyyy-MM-dd")) return;
@@ -128,11 +136,14 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
             const calories = logs[dateStr] || 0;
             const todayStr = format(getToday(), "yyyy-MM-dd");
             const isTodayBar = dateStr === todayStr;
+            const isSelectedBar = dateStr === selectedDate;
             const isFutureBar = dateStr > todayStr;
             const barColor = isFutureBar ? "#f3f4f6" : getBarColor(calories, calorieGoal);
             const barHeight = isFutureBar || !calories ? 4 : Math.max(4, (calories / maxCalories) * 28);
             const dayLabel = format(new Date(dateStr + "T12:00:00"), "EEE");
             const dayNum = format(new Date(dateStr + "T12:00:00"), "d");
+            const labelColor = isSelectedBar ? "#16a34a" : isTodayBar ? "#16a34a" : "#9ca3af";
+            const labelWeight = isSelectedBar ? 700 : isTodayBar ? 600 : 400;
 
             return (
               <div
@@ -153,13 +164,15 @@ export default function ScrollableChart({ calorieGoal = 2000 }) {
                       width: "100%", borderRadius: "4px 4px 0 0",
                       background: barColor,
                       border: isTodayBar ? "2px solid #15803d" : "none",
+                      outline: isSelectedBar && !isTodayBar ? "2px solid #16a34a" : "none",
+                      outlineOffset: "2px",
                     }}
                   />
                 </div>
-                <span style={{ fontSize: "9px", color: isTodayBar ? "#16a34a" : "#9ca3af", fontWeight: isTodayBar ? 600 : 400, lineHeight: 1 }}>
+                <span style={{ fontSize: isSelectedBar ? "10px" : "9px", color: labelColor, fontWeight: labelWeight, lineHeight: 1 }}>
                   {dayLabel}
                 </span>
-                <span style={{ fontSize: "9px", color: isTodayBar ? "#16a34a" : "#9ca3af", fontWeight: isTodayBar ? 600 : 400, lineHeight: 1 }}>
+                <span style={{ fontSize: isSelectedBar ? "10px" : "9px", color: labelColor, fontWeight: labelWeight, lineHeight: 1 }}>
                   {dayNum}
                 </span>
               </div>

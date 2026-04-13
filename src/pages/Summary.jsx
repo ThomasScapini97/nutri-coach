@@ -651,7 +651,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
               ))}
             </div>
           </div>
-          <ScrollableChart calorieGoal={calorieGoal} />
+          <ScrollableChart calorieGoal={calorieGoal} selectedDate={dateStr} />
         </div>
       </div>
 
