@@ -38,7 +38,7 @@ const EXERCISES_LIST = [
   { name: "Pilates", emoji: "🤸" }, { name: "Other", emoji: "💪" },
 ];
 
-export default function ScrollableExerciseChart({ burnGoal = 300 }) {
+export default function ScrollableExerciseChart({ burnGoal = 300, selectedDate }) {
   const { user } = useAuth();
   const [logs, setLogs] = useState({});
   const [showCalendar, setShowCalendar] = useState(false);
@@ -73,9 +73,11 @@ export default function ScrollableExerciseChart({ burnGoal = 300 }) {
 
   useEffect(() => {
     if (!scrollRef.current) return;
-    const todayIndex = allDays.findIndex(d => d === format(getToday(), "yyyy-MM-dd"));
-    scrollRef.current.scrollLeft = (todayIndex - 4) * (BAR_WIDTH + BAR_GAP);
-  }, []);
+    const targetDate = selectedDate || format(getToday(), "yyyy-MM-dd");
+    const targetIndex = allDays.findIndex(d => d === targetDate);
+    const idx = targetIndex >= 0 ? targetIndex : allDays.findIndex(d => d === format(getToday(), "yyyy-MM-dd"));
+    scrollRef.current.scrollLeft = (idx - 4) * (BAR_WIDTH + BAR_GAP);
+  }, [selectedDate]);
 
   const openDayDetail = async (dateStr) => {
     setSelectedDay(dateStr);
@@ -124,6 +126,7 @@ export default function ScrollableExerciseChart({ burnGoal = 300 }) {
             const burned = logs[dateStr] || 0;
             const todayStr = format(getToday(), "yyyy-MM-dd");
             const isTodayBar = dateStr === todayStr;
+            const isSelectedBar = selectedDate && dateStr === selectedDate && !isTodayBar;
             const isFutureBar = dateStr > todayStr;
             const barColor = isFutureBar ? "#f3f4f6" : getBarColor(burned, burnGoal);
             const barHeight = isFutureBar || !burned ? 4 : Math.max(4, (burned / maxBurned) * 28);
@@ -148,12 +151,13 @@ export default function ScrollableExerciseChart({ burnGoal = 300 }) {
                     style={{
                       width: "100%", borderRadius: "4px 4px 0 0",
                       background: barColor,
-                      border: isTodayBar ? "2px solid #b91c1c" : "none",
+                      border: isTodayBar ? "2px solid #b91c1c" : isSelectedBar ? "2px solid #ef4444" : "none",
+                      outline: isSelectedBar ? "2px solid #ef4444" : "none",
                     }}
                   />
                 </div>
-                <span style={{ fontSize: "9px", color: isTodayBar ? "#dc2626" : "#9ca3af", fontWeight: isTodayBar ? 600 : 400, lineHeight: 1 }}>{dayLabel}</span>
-                <span style={{ fontSize: "9px", color: isTodayBar ? "#dc2626" : "#9ca3af", fontWeight: isTodayBar ? 600 : 400, lineHeight: 1 }}>{dayNum}</span>
+                <span style={{ fontSize: isSelectedBar ? "10px" : "9px", color: (isTodayBar || isSelectedBar) ? "#ef4444" : "#9ca3af", fontWeight: (isTodayBar || isSelectedBar) ? 700 : 400, lineHeight: 1 }}>{dayLabel}</span>
+                <span style={{ fontSize: isSelectedBar ? "10px" : "9px", color: (isTodayBar || isSelectedBar) ? "#ef4444" : "#9ca3af", fontWeight: (isTodayBar || isSelectedBar) ? 700 : 400, lineHeight: 1 }}>{dayNum}</span>
               </div>
             );
           })}

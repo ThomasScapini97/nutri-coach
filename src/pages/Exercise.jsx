@@ -1,12 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Plus, X, Clock, Trash2, TrendingUp, ChevronLeft, ChevronRight, Bookmark, Save } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
+import { Flame, Plus, X, Clock, Trash2, TrendingUp, ChevronLeft, ChevronRight, Bookmark, Save, Share2, Send, Download } from "lucide-react";
 import { toast } from "sonner";
+import html2canvas from 'html2canvas';
+import ReactMarkdown from 'react-markdown';
 import ScrollableExerciseChart from "../components/summary/ScrollableExerciseChart";
 import { getToday } from "@/lib/nutritionUtils";
 
@@ -176,10 +178,19 @@ export default function Exercise() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === getToday();
+  const isPast = !isToday;
 
   // Sheet state
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [showSavePreset, setShowSavePreset] = useState(false);
+  const [showPastExerciseChat, setShowPastExerciseChat] = useState(false);
+  const [pastExerciseChatMessages, setPastExerciseChatMessages] = useState([]);
+  const [pastExerciseChatInput, setPastExerciseChatInput] = useState("");
+  const [pastExerciseChatLoading, setPastExerciseChatLoading] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
+  const [isExportingBurnCard, setIsExportingBurnCard] = useState(false);
+  const [exportingExerciseCard, setExportingExerciseCard] = useState(null);
+  const sheetExerciseY = useMotionValue(0);
 
   // Exercise form state
   const [exerciseType, setExerciseType] = useState("cardio-speed");
@@ -195,6 +206,9 @@ export default function Exercise() {
   const [presetName, setPresetName] = useState("");
   const [savingPreset, setSavingPreset] = useState(false);
   const pressTimerRef = useRef(null);
+  const burnCardRef = useRef(null);
+  const exerciseCardRefs = useRef({});
+  const pastExerciseChatEndRef = useRef(null);
 
   // ─── Queries ────────────────────────────────────────────────────────────────
 
@@ -519,6 +533,217 @@ export default function Exercise() {
     setSavingPreset(false);
   };
 
+  // ─── Effects ─────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    setPastExerciseChatMessages([]);
+    setShowPastExerciseChat(false);
+  }, [dateStr]);
+
+  useEffect(() => {
+    pastExerciseChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [pastExerciseChatMessages, pastExerciseChatLoading]);
+
+  // ─── Past exercise chat handler ───────────────────────────────────────────────
+
+  const handlePastExerciseChatSend = async () => {
+    const text = pastExerciseChatInput.trim();
+    if (!text || pastExerciseChatLoading) return;
+    setPastExerciseChatInput("");
+    const userMsg = { role: "user", content: text, id: crypto.randomUUID() };
+    setPastExerciseChatMessages(prev => [...prev, userMsg]);
+    setPastExerciseChatLoading(true);
+    try {
+      const pastExerciseSystemPrompt = `You are NutriCoach, a fitness tracking assistant.
+The user is logging exercise they did on ${format(selectedDate, 'EEEE, MMMM d, yyyy')}.
+Parse what they did and return exercise data.
+Always respond in the same language the user writes in.
+Be concise — confirm what you logged in 1-2 lines.
+
+User stats: weight ${weight}kg, age ${age}, height ${height}cm, gender ${gender}
+
+MET values for calorie calculation (calories = MET × 3.5 × weight_kg / 200 × minutes):
+- Running 8km/h: MET 8, 10km/h: MET 10, 12km/h: MET 12
+- Walking: MET 3.5-5.5
+- Cycling: MET 6-10
+- Swimming: MET 8
+- HIIT: MET 10
+- Gym/weights: MET 4.5-6 (use sets × 1.5 min as duration)
+- Yoga: MET 2.5
+- Football/Basketball: MET 6.5-7
+
+Default durations if not specified:
+- Run/walk/cycle: 30 min
+- Gym session: 3 sets per exercise
+- Yoga/stretching: 45 min
+
+NEVER ask for more info — always estimate and log.
+
+Response format (JSON only):
+{
+  "message": "confirmation",
+  "exercises": [
+    {
+      "exercise_name": "Running",
+      "exercise_type": "cardio-speed",
+      "duration_minutes": 30,
+      "speed_kmh": 10,
+      "calories_burned": 280,
+      "sets": null,
+      "reps": null,
+      "weight_kg": null
+    }
+  ]
+}`;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 1024,
+          system: pastExerciseSystemPrompt,
+          messages: [{ role: "user", content: text }],
+        }),
+      });
+      const data = await response.json();
+      const rawText = data.content?.[0]?.text || '{"message":"Sorry, could not process.","exercises":[]}';
+      let result;
+      try {
+        const cleaned = rawText.replace(/```json|```/g, "").trim();
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+        if (!result?.message) throw new Error("Invalid");
+      } catch {
+        result = { message: rawText, exercises: [] };
+      }
+      setPastExerciseChatMessages(prev => [...prev, { role: "assistant", content: result.message, id: crypto.randomUUID() }]);
+      const exercises = Array.isArray(result.exercises) ? result.exercises : [];
+      if (exercises.length > 0) {
+        const logId = await ensureFoodLog();
+        if (logId) {
+          let totalCals = 0;
+          for (const ex of exercises) {
+            await supabase.from("exercise_logs").insert({
+              user_id: user.id,
+              foodlog_id: logId,
+              date: dateStr,
+              exercise_name: ex.exercise_name,
+              duration_minutes: ex.duration_minutes || null,
+              calories_burned: ex.calories_burned || 0,
+              exercise_type: ex.exercise_type || "other",
+              speed_kmh: ex.speed_kmh || null,
+              sets: ex.sets || null,
+              reps: ex.reps || null,
+              weight_kg: ex.weight_kg || null,
+            });
+            totalCals += ex.calories_burned || 0;
+          }
+          const newTotal = (dayLog?.total_burned_calories || 0) + totalCals;
+          await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", logId);
+          queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
+          queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
+          queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+          toast.success(`Added to ${format(selectedDate, 'MMM d')} ✅`);
+        }
+      }
+    } catch (err) {
+      console.error("Past exercise chat error:", err);
+      setPastExerciseChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong.", id: crypto.randomUUID() }]);
+    } finally {
+      setPastExerciseChatLoading(false);
+    }
+  };
+
+  // ─── Share card helpers ───────────────────────────────────────────────────────
+
+  const buildCardBlob = async (ref, radius = 40) => {
+    const cardEl = ref.current;
+    if (!cardEl) return null;
+    const raw = await html2canvas(cardEl, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
+    const r = radius;
+    const w = raw.width, h = raw.height;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(r, 0); ctx.lineTo(w - r, 0); ctx.quadraticCurveTo(w, 0, w, r);
+    ctx.lineTo(w, h - r); ctx.quadraticCurveTo(w, h, w - r, h);
+    ctx.lineTo(r, h); ctx.quadraticCurveTo(0, h, 0, h - r);
+    ctx.lineTo(0, r); ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath(); ctx.clip(); ctx.drawImage(raw, 0, 0);
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  };
+
+  const shareBurnCard = async () => {
+    setIsExportingBurnCard(true);
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      const blob = await buildCardBlob(burnCardRef);
+      if (!blob) return;
+      const file = new File([blob], 'nutricoach-burn.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: "Today's Burn — NutriCoach", files: [file] });
+        toast.success('Shared! 🎉');
+      } else {
+        toast.error('Sharing not supported on this device');
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') console.error('Share failed:', err);
+    }
+    setIsExportingBurnCard(false);
+  };
+
+  const saveBurnCard = async () => {
+    setIsExportingBurnCard(true);
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      const blob = await buildCardBlob(burnCardRef);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'nutricoach-burn.png'; a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Saved! 📸');
+    } catch (err) { console.error('Save failed:', err); }
+    setIsExportingBurnCard(false);
+  };
+
+  const shareExerciseCard = async (exerciseId) => {
+    setExportingExerciseCard(exerciseId);
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      const ref = { current: exerciseCardRefs.current[exerciseId] };
+      const blob = await buildCardBlob(ref);
+      if (!blob) return;
+      const file = new File([blob], 'nutricoach-exercise.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: "Exercise — NutriCoach", files: [file] });
+        toast.success('Shared! 🎉');
+      } else {
+        toast.error('Sharing not supported on this device');
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') console.error('Share failed:', err);
+    }
+    setExportingExerciseCard(null);
+  };
+
+  const saveExerciseCard = async (exerciseId) => {
+    setExportingExerciseCard(exerciseId);
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      const ref = { current: exerciseCardRefs.current[exerciseId] };
+      const blob = await buildCardBlob(ref);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'nutricoach-exercise.png'; a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Saved! 📸');
+    } catch (err) { console.error('Save failed:', err); }
+    setExportingExerciseCard(null);
+  };
+
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -537,13 +762,24 @@ export default function Exercise() {
             {totalBurnedToday} {t("exercise.kcalBurned")}
           </p>
         </div>
-        <button onClick={() => navigateDay(1)} disabled={isToday} className={`absolute right-4 bg-transparent border-none flex items-center justify-center p-1 ${isToday ? "opacity-30 cursor-default" : "cursor-pointer"}`}>
-          <ChevronRight className="w-5 h-5 text-gray-500" />
-        </button>
+        <div className="absolute right-4 flex items-center gap-3">
+          <button onClick={() => navigateDay(1)} disabled={isToday} className={`bg-transparent border-none flex items-center justify-center p-1 ${isToday ? "opacity-30 cursor-default" : "cursor-pointer"}`}>
+            <ChevronRight className="w-5 h-5 text-gray-500" />
+          </button>
+          <button onClick={() => setShowShareSheet(true)} className="bg-transparent border-none flex items-center justify-center cursor-pointer p-1">
+            <Share2 className="w-[18px] h-[18px] text-gray-400" />
+          </button>
+        </div>
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-nav pt-top-bar md:pt-0">
+      <div
+        className="flex-1 overflow-y-auto md:pt-0"
+        style={{
+          paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(180px + env(safe-area-inset-bottom))',
+        }}
+      >
         <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
 
           {/* Hero card */}
@@ -675,9 +911,25 @@ export default function Exercise() {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
               className=""
             >
-              <p className="text-[13px] font-medium text-forest mb-2 px-[2px] m-0">
-                🏃 {isToday ? t("exercise.todayExercises") : t("exercise.exercisesLogged")}
-              </p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", padding: "0 2px" }}>
+                <p className="text-[13px] font-medium text-forest m-0">
+                  🏃 {isToday ? t("exercise.todayExercises") : t("exercise.exercisesLogged")}
+                </p>
+                {isPast && (
+                  <button
+                    onClick={() => setShowPastExerciseChat(true)}
+                    style={{
+                      width: "26px", height: "26px", borderRadius: "50%",
+                      background: "#ef4444", border: "none",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer",
+                      boxShadow: "0 2px 6px rgba(239,68,68,0.3)",
+                    }}
+                  >
+                    <Plus style={{ width: "14px", height: "14px", color: "white" }} />
+                  </button>
+                )}
+              </div>
               <div className="flex flex-col gap-[6px]">
                 {dayExercises.map((exercise) => {
                   const ex = EXERCISES.find(e => e.name === exercise.exercise_name);
@@ -725,6 +977,22 @@ export default function Exercise() {
               <p className="text-xs text-gray-400 m-0">
                 {t("exercise.noExerciseYetDesc")}
               </p>
+              {isPast && (
+                <button
+                  onClick={() => setShowPastExerciseChat(true)}
+                  style={{
+                    marginTop: "12px",
+                    background: "#ef4444", border: "none", borderRadius: "10px",
+                    padding: "8px 16px", color: "white", fontSize: "13px",
+                    fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+                    display: "inline-flex", alignItems: "center", gap: "6px",
+                    boxShadow: "0 2px 8px rgba(239,68,68,0.3)",
+                  }}
+                >
+                  <Plus style={{ width: "14px", height: "14px" }} />
+                  Add past exercises
+                </button>
+              )}
             </div>
           )}
 
@@ -769,7 +1037,7 @@ export default function Exercise() {
               ))}
             </div>
           </div>
-          <ScrollableExerciseChart burnGoal={burnGoal} />
+          <ScrollableExerciseChart burnGoal={burnGoal} selectedDate={dateStr} />
         </div>
       </div>
 
@@ -1006,6 +1274,242 @@ export default function Exercise() {
               >
                 {savingPreset ? t("exercise.saving") : t("exercise.savePresetBtn")}
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Past exercise mini chat ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showPastExerciseChat && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 60 }}
+              onClick={() => setShowPastExerciseChat(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              style={{
+                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 61,
+                background: 'white', borderRadius: '24px 24px 0 0',
+                height: '60vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              }}
+            >
+              <div style={{ padding: '16px 16px 10px', borderBottom: '0.5px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: '15px', color: '#dc2626' }}>
+                      Add exercise to {format(selectedDate, 'MMM d')}
+                    </p>
+                    <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                      Tell me what exercise you did on this day
+                    </p>
+                  </div>
+                  <button onClick={() => setShowPastExerciseChat(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9ca3af' }}>
+                    <X style={{ width: '20px', height: '20px' }} />
+                  </button>
+                </div>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {pastExerciseChatMessages.length === 0 && (
+                  <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '13px', marginTop: '24px' }}>
+                    What did you do? 🏃
+                  </p>
+                )}
+                {pastExerciseChatMessages.map(msg => (
+                  <div
+                    key={msg.id}
+                    style={{
+                      alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                      maxWidth: '80%',
+                      background: msg.role === 'user' ? '#ef4444' : '#f3f4f6',
+                      color: msg.role === 'user' ? 'white' : '#111827',
+                      borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                      padding: '10px 14px', fontSize: '14px', lineHeight: '1.4',
+                    }}
+                  >
+                    {msg.role === 'assistant' ? (
+                      <div className="prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : msg.content}
+                  </div>
+                ))}
+                {pastExerciseChatLoading && (
+                  <div style={{ alignSelf: 'flex-start', background: '#f3f4f6', borderRadius: '18px 18px 18px 4px', padding: '10px 14px' }}>
+                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>...</span>
+                  </div>
+                )}
+                <div ref={pastExerciseChatEndRef} />
+              </div>
+              <div style={{ padding: '10px 12px', borderTop: '0.5px solid rgba(0,0,0,0.06)', display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, paddingBottom: 'calc(10px + env(safe-area-inset-bottom))' }}>
+                <input
+                  type="text"
+                  value={pastExerciseChatInput}
+                  onChange={e => setPastExerciseChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handlePastExerciseChatSend(); }}
+                  placeholder="e.g. ran 5km at 10km/h"
+                  style={{ flex: 1, border: '1px solid #e5e7eb', borderRadius: '9999px', padding: '10px 16px', fontSize: '14px', outline: 'none', background: '#f9fafb' }}
+                />
+                <button
+                  onClick={handlePastExerciseChatSend}
+                  disabled={!pastExerciseChatInput.trim() || pastExerciseChatLoading}
+                  style={{
+                    width: '38px', height: '38px', borderRadius: '50%',
+                    background: pastExerciseChatInput.trim() && !pastExerciseChatLoading ? '#ef4444' : '#e5e7eb',
+                    border: 'none', cursor: pastExerciseChatInput.trim() && !pastExerciseChatLoading ? 'pointer' : 'default',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s',
+                  }}
+                >
+                  <Send style={{ width: '16px', height: '16px', color: pastExerciseChatInput.trim() && !pastExerciseChatLoading ? 'white' : '#9ca3af' }} />
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Share sheet ─────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showShareSheet && (
+          <motion.div
+            className="fixed inset-0 z-[9999] flex items-end justify-center"
+            style={{ background: "rgba(0,0,0,0.6)" }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowShareSheet(false)}
+          >
+            <motion.div
+              className="w-full max-w-[480px] bg-white rounded-t-[28px] max-h-[85vh] flex flex-col"
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              style={{ y: sheetExerciseY }}
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 1 }}
+              dragTransition={{ bounceStiffness: 600, bounceDamping: 30 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 80 || info.velocity.y > 300) {
+                  animate(sheetExerciseY, window.innerHeight, { duration: 0.25, ease: "easeIn" })
+                    .then(() => { setShowShareSheet(false); sheetExerciseY.set(0); });
+                } else {
+                  animate(sheetExerciseY, 0, { duration: 0.2, ease: "easeOut" });
+                }
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Handle bar */}
+              <div
+                onClick={() => setShowShareSheet(false)}
+                style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px", cursor: "grab", flexShrink: 0 }}
+              >
+                <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "#d1d5db" }} />
+              </div>
+
+              {/* Scrollable content */}
+              <div className="overflow-y-auto px-4 pb-10" onPointerDown={e => e.stopPropagation()}>
+                <div className="rounded-[20px] p-4 space-y-3" style={{ background: "linear-gradient(135deg, #fff1f2, #ffe4e6)" }}>
+                  <div className="flex items-center gap-3 pb-1">
+                    <span className="text-2xl">🔥</span>
+                    <div>
+                      <p className="font-semibold text-forest text-sm m-0">NutriCoach</p>
+                      <p className="text-[11px] text-gray-400 m-0">{isToday ? t("exercise.today") : format(selectedDate, "EEEE, d MMM yyyy")}</p>
+                    </div>
+                  </div>
+
+                  {/* Burn card */}
+                  <div ref={burnCardRef} className="bg-white rounded-2xl p-4 shadow-md border border-black/[0.08]" style={{ position: 'relative' }}>
+                    {!isExportingBurnCard && (
+                      <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '6px', zIndex: 1 }}>
+                        {navigator.share && (
+                          <button onClick={shareBurnCard} style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#f3f4f6', border: '1px solid #e5e7eb', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                            <Share2 style={{ width: '13px', height: '13px', color: '#6b7280' }} />
+                          </button>
+                        )}
+                        <button onClick={saveBurnCard} style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#f3f4f6', border: '1px solid #e5e7eb', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                          <Download style={{ width: '13px', height: '13px', color: '#6b7280' }} />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-2xl">🔥</span>
+                      <p className="text-sm font-semibold text-forest m-0">Today's Burn</p>
+                    </div>
+                    <div className="flex items-baseline gap-1 mb-2">
+                      <span style={{ fontSize: '28px', fontWeight: 700, color: '#dc2626', lineHeight: 1 }}>{totalBurnedToday}</span>
+                      <span style={{ fontSize: '12px', color: '#9ca3af' }}>/ {burnGoal} kcal</span>
+                    </div>
+                    <div style={{ background: '#e5e7eb', borderRadius: '9999px', height: '5px', overflow: 'hidden', marginBottom: '12px' }}>
+                      <div style={{ width: `${Math.min((totalBurnedToday / burnGoal) * 100, 100)}%`, background: '#ef4444', height: '100%', borderRadius: '9999px' }} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '12px', color: '#6b7280' }}>🎯 Active days this week:</span>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#1a3a22' }}>{activeDaysThisWeek}/{activeDaysGoal}</span>
+                    </div>
+                    {dayExercises.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+                        {dayExercises.map((e, i) => {
+                          const ex = EXERCISES.find(x => x.name === e.exercise_name);
+                          return (
+                            <span key={i} style={{ fontSize: '10px', background: '#fef2f2', color: '#dc2626', padding: '2px 8px', borderRadius: '9999px', border: '0.5px solid #fecaca' }}>
+                              {ex?.emoji || "💪"} {e.exercise_name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <p style={{ fontSize: '11px', fontWeight: 600, color: '#ef4444', letterSpacing: '0.2px', textAlign: 'right', marginTop: '8px', marginBottom: 0 }}>@nutricoach.app</p>
+                  </div>
+
+                  {/* Per-exercise cards */}
+                  {dayExercises.map((exercise) => {
+                    const ex = EXERCISES.find(e => e.name === exercise.exercise_name);
+                    return (
+                      <div
+                        key={exercise.id}
+                        ref={el => { exerciseCardRefs.current[exercise.id] = el; }}
+                        className="bg-white rounded-2xl p-4 shadow-md border border-black/[0.08]"
+                        style={{ position: 'relative' }}
+                      >
+                        {exportingExerciseCard !== exercise.id && (
+                          <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '6px', zIndex: 1 }}>
+                            {navigator.share && (
+                              <button onClick={() => shareExerciseCard(exercise.id)} style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#f3f4f6', border: '1px solid #e5e7eb', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <Share2 style={{ width: '13px', height: '13px', color: '#6b7280' }} />
+                              </button>
+                            )}
+                            <button onClick={() => saveExerciseCard(exercise.id)} style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#f3f4f6', border: '1px solid #e5e7eb', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                              <Download style={{ width: '13px', height: '13px', color: '#6b7280' }} />
+                            </button>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                          <span style={{ fontSize: '28px' }}>{ex?.emoji || "💪"}</span>
+                          <p style={{ fontSize: '15px', fontWeight: 600, color: '#1a3a22', margin: 0 }}>{exercise.exercise_name}</p>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                          {exercise.duration_minutes > 0 && (
+                            <span style={{ fontSize: '12px', background: '#fef2f2', color: '#dc2626', padding: '3px 10px', borderRadius: '9999px' }}>⏱ {exercise.duration_minutes} min</span>
+                          )}
+                          {exercise.speed_kmh > 0 && (
+                            <span style={{ fontSize: '12px', background: '#fef2f2', color: '#dc2626', padding: '3px 10px', borderRadius: '9999px' }}>🏃 {exercise.speed_kmh} km/h</span>
+                          )}
+                          {exercise.sets && exercise.reps && (
+                            <span style={{ fontSize: '12px', background: '#fef2f2', color: '#dc2626', padding: '3px 10px', borderRadius: '9999px' }}>💪 {exercise.sets}×{exercise.reps}{exercise.weight_kg ? ` · ${exercise.weight_kg}kg` : ""}</span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Flame style={{ width: '16px', height: '16px', color: '#ef4444' }} />
+                          <span style={{ fontSize: '20px', fontWeight: 700, color: '#dc2626' }}>{exercise.calories_burned}</span>
+                          <span style={{ fontSize: '12px', color: '#9ca3af' }}>kcal burned</span>
+                        </div>
+                        <p style={{ fontSize: '11px', fontWeight: 600, color: '#ef4444', letterSpacing: '0.2px', textAlign: 'right', marginTop: '8px', marginBottom: 0 }}>@nutricoach.app</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
