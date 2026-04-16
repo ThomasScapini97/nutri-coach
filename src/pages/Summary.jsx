@@ -781,10 +781,36 @@ const caloriesConsumed = dayLog?.total_calories || 0;
       </AnimatePresence>
 
       {/* Share modal */}
-      {showShare && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-end justify-center" onClick={() => setShowShare(false)}>
-          <div className="w-full max-w-[480px] bg-white rounded-t-[28px] px-4 pb-10 pt-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
+      <AnimatePresence>
+        {showShare && (
+        <motion.div
+          className="fixed inset-0 z-[9999] flex items-end justify-center"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onClick={() => setShowShare(false)}
+        >
+          <motion.div
+            className="w-full max-w-[480px] bg-white rounded-t-[28px] max-h-[85vh] flex flex-col"
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0, bottom: 0.3 }}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 100 || info.velocity.y > 500) setShowShare(false);
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Handle bar — tap or drag to close */}
+            <div
+              onClick={() => setShowShare(false)}
+              style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px", cursor: "grab", flexShrink: 0 }}
+            >
+              <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "#d1d5db" }} />
+            </div>
+
+            {/* Scrollable content — stopPropagation prevents drag conflict */}
+            <div className="overflow-y-auto px-4 pb-10" onPointerDown={e => e.stopPropagation()}>
 
             {/* Card preview */}
             <div className="rounded-[20px] p-4 space-y-3" style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>
@@ -957,8 +983,10 @@ const caloriesConsumed = dayLog?.total_calories || 0;
               </button>
             )}
           </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
