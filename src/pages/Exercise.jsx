@@ -1,14 +1,13 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
-import { Flame, Plus, X, Clock, Trash2, TrendingUp, ChevronLeft, ChevronRight, Bookmark, Save, Share2, Send, Download } from "lucide-react";
+import { Flame, Plus, X, Clock, Trash2, TrendingUp, ChevronLeft, ChevronRight, Bookmark, Save, Share2, Download } from "lucide-react";
 import { toast } from "sonner";
 import html2canvas from 'html2canvas';
-import ReactMarkdown from 'react-markdown';
 import ScrollableExerciseChart from "../components/summary/ScrollableExerciseChart";
 import { getToday } from "@/lib/nutritionUtils";
 
@@ -178,15 +177,10 @@ export default function Exercise() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === getToday();
-  const isPast = !isToday;
 
   // Sheet state
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [showSavePreset, setShowSavePreset] = useState(false);
-  const [showPastExerciseChat, setShowPastExerciseChat] = useState(false);
-  const [pastExerciseChatMessages, setPastExerciseChatMessages] = useState([]);
-  const [pastExerciseChatInput, setPastExerciseChatInput] = useState("");
-  const [pastExerciseChatLoading, setPastExerciseChatLoading] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [isExportingBurnCard, setIsExportingBurnCard] = useState(false);
   const [exportingExerciseCard, setExportingExerciseCard] = useState(null);
@@ -208,7 +202,6 @@ export default function Exercise() {
   const pressTimerRef = useRef(null);
   const burnCardRef = useRef(null);
   const exerciseCardRefs = useRef({});
-  const pastExerciseChatEndRef = useRef(null);
 
   // ─── Queries ────────────────────────────────────────────────────────────────
 
@@ -533,129 +526,6 @@ export default function Exercise() {
     setSavingPreset(false);
   };
 
-  // ─── Effects ─────────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    setPastExerciseChatMessages([]);
-    setShowPastExerciseChat(false);
-  }, [dateStr]);
-
-  useEffect(() => {
-    pastExerciseChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [pastExerciseChatMessages, pastExerciseChatLoading]);
-
-  // ─── Past exercise chat handler ───────────────────────────────────────────────
-
-  const handlePastExerciseChatSend = async () => {
-    const text = pastExerciseChatInput.trim();
-    if (!text || pastExerciseChatLoading) return;
-    setPastExerciseChatInput("");
-    const userMsg = { role: "user", content: text, id: crypto.randomUUID() };
-    setPastExerciseChatMessages(prev => [...prev, userMsg]);
-    setPastExerciseChatLoading(true);
-    try {
-      const pastExerciseSystemPrompt = `You are NutriCoach, a fitness tracking assistant.
-The user is logging exercise they did on ${format(selectedDate, 'EEEE, MMMM d, yyyy')}.
-Parse what they did and return exercise data.
-Always respond in the same language the user writes in.
-Be concise — confirm what you logged in 1-2 lines.
-
-User stats: weight ${weight}kg, age ${age}, height ${height}cm, gender ${gender}
-
-MET values for calorie calculation (calories = MET × 3.5 × weight_kg / 200 × minutes):
-- Running 8km/h: MET 8, 10km/h: MET 10, 12km/h: MET 12
-- Walking: MET 3.5-5.5
-- Cycling: MET 6-10
-- Swimming: MET 8
-- HIIT: MET 10
-- Gym/weights: MET 4.5-6 (use sets × 1.5 min as duration)
-- Yoga: MET 2.5
-- Football/Basketball: MET 6.5-7
-
-Default durations if not specified:
-- Run/walk/cycle: 30 min
-- Gym session: 3 sets per exercise
-- Yoga/stretching: 45 min
-
-NEVER ask for more info — always estimate and log.
-
-Response format (JSON only):
-{
-  "message": "confirmation",
-  "exercises": [
-    {
-      "exercise_name": "Running",
-      "exercise_type": "cardio-speed",
-      "duration_minutes": 30,
-      "speed_kmh": 10,
-      "calories_burned": 280,
-      "sets": null,
-      "reps": null,
-      "weight_kg": null
-    }
-  ]
-}`;
-
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
-        body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 1024,
-          system: pastExerciseSystemPrompt,
-          messages: [{ role: "user", content: text }],
-        }),
-      });
-      const data = await response.json();
-      const rawText = data.content?.[0]?.text || '{"message":"Sorry, could not process.","exercises":[]}';
-      let result;
-      try {
-        const cleaned = rawText.replace(/```json|```/g, "").trim();
-        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-        result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-        if (!result?.message) throw new Error("Invalid");
-      } catch {
-        result = { message: rawText, exercises: [] };
-      }
-      setPastExerciseChatMessages(prev => [...prev, { role: "assistant", content: result.message, id: crypto.randomUUID() }]);
-      const exercises = Array.isArray(result.exercises) ? result.exercises : [];
-      if (exercises.length > 0) {
-        const logId = await ensureFoodLog();
-        if (logId) {
-          let totalCals = 0;
-          for (const ex of exercises) {
-            await supabase.from("exercise_logs").insert({
-              user_id: user.id,
-              foodlog_id: logId,
-              date: dateStr,
-              exercise_name: ex.exercise_name,
-              duration_minutes: ex.duration_minutes || null,
-              calories_burned: ex.calories_burned || 0,
-              exercise_type: ex.exercise_type || "other",
-              speed_kmh: ex.speed_kmh || null,
-              sets: ex.sets || null,
-              reps: ex.reps || null,
-              weight_kg: ex.weight_kg || null,
-            });
-            totalCals += ex.calories_burned || 0;
-          }
-          const newTotal = (dayLog?.total_burned_calories || 0) + totalCals;
-          await supabase.from("food_logs").update({ total_burned_calories: newTotal }).eq("id", logId);
-          queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
-          queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
-          queryClient.invalidateQueries({ queryKey: ["foodlog"] });
-          toast.success(`Added to ${format(selectedDate, 'MMM d')} ✅`);
-        }
-      }
-    } catch (err) {
-      console.error("Past exercise chat error:", err);
-      setPastExerciseChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong.", id: crypto.randomUUID() }]);
-    } finally {
-      setPastExerciseChatLoading(false);
-    }
-  };
-
   // ─── Share card helpers ───────────────────────────────────────────────────────
 
   const buildCardBlob = async (ref, radius = 40) => {
@@ -911,25 +781,9 @@ Response format (JSON only):
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
               className=""
             >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", padding: "0 2px" }}>
-                <p className="text-[13px] font-medium text-forest m-0">
-                  🏃 {isToday ? t("exercise.todayExercises") : t("exercise.exercisesLogged")}
-                </p>
-                {isPast && (
-                  <button
-                    onClick={() => setShowPastExerciseChat(true)}
-                    style={{
-                      width: "26px", height: "26px", borderRadius: "50%",
-                      background: "#ef4444", border: "none",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer",
-                      boxShadow: "0 2px 6px rgba(239,68,68,0.3)",
-                    }}
-                  >
-                    <Plus style={{ width: "14px", height: "14px", color: "white" }} />
-                  </button>
-                )}
-              </div>
+              <p className="text-[13px] font-medium text-forest mb-2 px-[2px] m-0">
+                🏃 {isToday ? t("exercise.todayExercises") : t("exercise.exercisesLogged")}
+              </p>
               <div className="flex flex-col gap-[6px]">
                 {dayExercises.map((exercise) => {
                   const ex = EXERCISES.find(e => e.name === exercise.exercise_name);
@@ -977,22 +831,6 @@ Response format (JSON only):
               <p className="text-xs text-gray-400 m-0">
                 {t("exercise.noExerciseYetDesc")}
               </p>
-              {isPast && (
-                <button
-                  onClick={() => setShowPastExerciseChat(true)}
-                  style={{
-                    marginTop: "12px",
-                    background: "#ef4444", border: "none", borderRadius: "10px",
-                    padding: "8px 16px", color: "white", fontSize: "13px",
-                    fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-                    display: "inline-flex", alignItems: "center", gap: "6px",
-                    boxShadow: "0 2px 8px rgba(239,68,68,0.3)",
-                  }}
-                >
-                  <Plus style={{ width: "14px", height: "14px" }} />
-                  Add past exercises
-                </button>
-              )}
             </div>
           )}
 
@@ -1276,98 +1114,6 @@ Response format (JSON only):
               </button>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Past exercise mini chat ─────────────────────────────────────────── */}
-      <AnimatePresence>
-        {showPastExerciseChat && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 60 }}
-              onClick={() => setShowPastExerciseChat(false)}
-            />
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              style={{
-                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 61,
-                background: 'white', borderRadius: '24px 24px 0 0',
-                height: '60vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
-              }}
-            >
-              <div style={{ padding: '16px 16px 10px', borderBottom: '0.5px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <p style={{ margin: 0, fontWeight: 600, fontSize: '15px', color: '#dc2626' }}>
-                      Add exercise to {format(selectedDate, 'MMM d')}
-                    </p>
-                    <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
-                      Tell me what exercise you did on this day
-                    </p>
-                  </div>
-                  <button onClick={() => setShowPastExerciseChat(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9ca3af' }}>
-                    <X style={{ width: '20px', height: '20px' }} />
-                  </button>
-                </div>
-              </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {pastExerciseChatMessages.length === 0 && (
-                  <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '13px', marginTop: '24px' }}>
-                    What did you do? 🏃
-                  </p>
-                )}
-                {pastExerciseChatMessages.map(msg => (
-                  <div
-                    key={msg.id}
-                    style={{
-                      alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                      maxWidth: '80%',
-                      background: msg.role === 'user' ? '#ef4444' : '#f3f4f6',
-                      color: msg.role === 'user' ? 'white' : '#111827',
-                      borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                      padding: '10px 14px', fontSize: '14px', lineHeight: '1.4',
-                    }}
-                  >
-                    {msg.role === 'assistant' ? (
-                      <div className="prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
-                      </div>
-                    ) : msg.content}
-                  </div>
-                ))}
-                {pastExerciseChatLoading && (
-                  <div style={{ alignSelf: 'flex-start', background: '#f3f4f6', borderRadius: '18px 18px 18px 4px', padding: '10px 14px' }}>
-                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>...</span>
-                  </div>
-                )}
-                <div ref={pastExerciseChatEndRef} />
-              </div>
-              <div style={{ padding: '10px 12px', borderTop: '0.5px solid rgba(0,0,0,0.06)', display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, paddingBottom: 'calc(10px + env(safe-area-inset-bottom))' }}>
-                <input
-                  type="text"
-                  value={pastExerciseChatInput}
-                  onChange={e => setPastExerciseChatInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handlePastExerciseChatSend(); }}
-                  placeholder="e.g. ran 5km at 10km/h"
-                  style={{ flex: 1, border: '1px solid #e5e7eb', borderRadius: '9999px', padding: '10px 16px', fontSize: '14px', outline: 'none', background: '#f9fafb' }}
-                />
-                <button
-                  onClick={handlePastExerciseChatSend}
-                  disabled={!pastExerciseChatInput.trim() || pastExerciseChatLoading}
-                  style={{
-                    width: '38px', height: '38px', borderRadius: '50%',
-                    background: pastExerciseChatInput.trim() && !pastExerciseChatLoading ? '#ef4444' : '#e5e7eb',
-                    border: 'none', cursor: pastExerciseChatInput.trim() && !pastExerciseChatLoading ? 'pointer' : 'default',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s',
-                  }}
-                >
-                  <Send style={{ width: '16px', height: '16px', color: pastExerciseChatInput.trim() && !pastExerciseChatLoading ? 'white' : '#9ca3af' }} />
-                </button>
-              </div>
-            </motion.div>
-          </>
         )}
       </AnimatePresence>
 
