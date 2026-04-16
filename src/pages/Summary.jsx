@@ -11,7 +11,7 @@ import { ChevronLeft, ChevronRight, Flame, TrendingUp, Share2, Wheat, Drumstick,
 import AnimatedProgressBar from "../components/summary/AnimatedProgressBar";
 import FoodEntryItem from "../components/summary/FoodEntryItem";
 import ScrollableChart from "../components/summary/ScrollableChart";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
 import buildSystemPrompt from "@/lib/buildSystemPrompt";
 import ReactMarkdown from 'react-markdown';
 
@@ -20,6 +20,7 @@ export default function Summary() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { t } = useTranslation();
   const [showShare, setShowShare] = useState(false);
+  const sheetY = useMotionValue(0);
   const [exportingMeal, setExportingMeal] = useState(null);
   const [isExportingProgress, setIsExportingProgress] = useState(false);
   const cardRefs = useRef({});
@@ -793,11 +794,18 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             className="w-full max-w-[480px] bg-white rounded-t-[28px] max-h-[85vh] flex flex-col"
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            style={{ y: sheetY }}
             drag="y"
-            dragConstraints={{ top: 0 }}
-            dragElastic={{ top: 0, bottom: 0.3 }}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 1 }}
+            dragTransition={{ bounceStiffness: 600, bounceDamping: 30 }}
             onDragEnd={(_, info) => {
-              if (info.offset.y > 100 || info.velocity.y > 500) setShowShare(false);
+              if (info.offset.y > 80 || info.velocity.y > 300) {
+                animate(sheetY, window.innerHeight, { duration: 0.25, ease: "easeIn" })
+                  .then(() => { setShowShare(false); sheetY.set(0); });
+              } else {
+                animate(sheetY, 0, { duration: 0.2, ease: "easeOut" });
+              }
             }}
             onClick={e => e.stopPropagation()}
           >
