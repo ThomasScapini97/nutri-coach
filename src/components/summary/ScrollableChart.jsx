@@ -199,79 +199,88 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
               exit={{ y: 300 }}
               transition={{ type: "spring", damping: 25 }}
               onClick={e => e.stopPropagation()}
-              style={{ background: "white", borderRadius: "24px 24px 0 0", padding: "20px", width: "100%", maxWidth: "480px", maxHeight: "70vh", overflowY: "auto" }}
+              style={{
+                background: "white", borderRadius: "24px 24px 0 0",
+                width: "100%", maxWidth: "480px", maxHeight: "70vh",
+                display: "flex", flexDirection: "column", position: "relative",
+              }}
             >
-              {/* Header popup */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                <div>
-                  <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22" }}>
-                    {format(new Date(selectedDay + "T12:00:00"), "EEEE, MMM d")}
-                  </p>
-                  <p style={{ fontSize: "11px", color: "#9ca3af" }}>Read only — past day</p>
+              {/* Header — fixed */}
+              <div style={{ padding: "20px 20px 12px", flexShrink: 0, borderBottom: "0.5px solid rgba(0,0,0,0.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22", margin: 0 }}>
+                      {format(new Date(selectedDay + "T12:00:00"), "EEEE, MMM d")}
+                    </p>
+                    <p style={{ fontSize: "11px", color: "#9ca3af", margin: 0 }}>Read only — past day</p>
+                  </div>
+                  <button onClick={() => setSelectedDay(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <X style={{ width: "14px", height: "14px", color: "#6b7280" }} />
+                  </button>
                 </div>
-                <button onClick={() => setSelectedDay(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <X style={{ width: "14px", height: "14px", color: "#6b7280" }} />
-                </button>
               </div>
 
-              {/* Calorie summary */}
-              {logs[selectedDay] > 0 && (
-                <div style={{
-                  background: "#f0fdf4", borderRadius: "12px", padding: "10px 14px",
-                  marginBottom: "14px", display: "flex", alignItems: "center", justifyContent: "space-between",
-                }}>
-                  <span style={{ fontSize: "12px", color: "#16a34a", fontWeight: 500 }}>Total calories</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22" }}>{logs[selectedDay]}</span>
-                    <span style={{ fontSize: "11px", color: "#9ca3af" }}>/ {calorieGoal} kcal</span>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: getStatusColor(logs[selectedDay], calorieGoal) || "#e5e7eb" }} />
+              {/* Scrollable content */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", paddingBottom: "calc(80px + env(safe-area-inset-bottom))" }}>
+                {/* Calorie summary */}
+                {logs[selectedDay] > 0 && (
+                  <div style={{
+                    background: "#f0fdf4", borderRadius: "12px", padding: "10px 14px",
+                    marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between",
+                  }}>
+                    <span style={{ fontSize: "12px", color: "#16a34a", fontWeight: 500 }}>Total calories</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "16px", fontWeight: 600, color: "#1a3a22" }}>{logs[selectedDay]}</span>
+                      <span style={{ fontSize: "11px", color: "#9ca3af" }}>/ {calorieGoal} kcal</span>
+                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: getStatusColor(logs[selectedDay], calorieGoal) || "#e5e7eb" }} />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Lista pasti */}
-              {loadingEntries ? (
-                <div style={{ textAlign: "center", padding: "24px", color: "#9ca3af", fontSize: "13px" }}>Loading...</div>
-              ) : dayEntries.length > 0 ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {Object.values(dayEntries.reduce((acc, entry) => {
-                    const mealType = entry.meal_type?.toLowerCase().trim() || "other";
-                    const foodKey = (entry.food_name || "").toLowerCase().trim().replace(/\s+/g, "_");
-                    const key = `${foodKey}_${mealType}`;
-                    if (!acc[key]) {
-                      acc[key] = { ...entry, meal_type: mealType, quantity: 1, totalCalories: entry.calories || 0 };
-                    } else {
-                      acc[key].quantity += 1;
-                      acc[key].totalCalories += entry.calories || 0;
-                    }
-                    return acc;
-                  }, {})).map((group, i) => {
-                    const style = mealColors[group.meal_type] || { bg: "#f3f4f6", color: "#6b7280" };
-                    return (
-                      <div key={i} style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "10px 12px", background: "white", borderRadius: "12px",
-                        border: "0.5px solid rgba(0,0,0,0.06)",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: style.bg, color: style.color, fontWeight: 500 }}>
-                            {group.meal_type}
-                          </span>
-                          <span style={{ fontSize: "13px", color: "#1a3a22" }}>{group.food_name}</span>
-                          {group.quantity > 1 && (
-                            <span style={{ fontSize: "11px", color: "#6b7280" }}>x{group.quantity}</span>
-                          )}
+                {/* Lista pasti */}
+                {loadingEntries ? (
+                  <div style={{ textAlign: "center", padding: "24px", color: "#9ca3af", fontSize: "13px" }}>Loading...</div>
+                ) : dayEntries.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {Object.values(dayEntries.reduce((acc, entry) => {
+                      const mealType = entry.meal_type?.toLowerCase().trim() || "other";
+                      const foodKey = (entry.food_name || "").toLowerCase().trim().replace(/\s+/g, "_");
+                      const key = `${foodKey}_${mealType}`;
+                      if (!acc[key]) {
+                        acc[key] = { ...entry, meal_type: mealType, quantity: 1, totalCalories: entry.calories || 0 };
+                      } else {
+                        acc[key].quantity += 1;
+                        acc[key].totalCalories += entry.calories || 0;
+                      }
+                      return acc;
+                    }, {})).map((group, i) => {
+                      const s = mealColors[group.meal_type] || { bg: "#f3f4f6", color: "#6b7280" };
+                      return (
+                        <div key={i} style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "10px 12px", background: "white", borderRadius: "12px",
+                          border: "0.5px solid rgba(0,0,0,0.06)",
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: s.bg, color: s.color, fontWeight: 500 }}>
+                              {group.meal_type}
+                            </span>
+                            <span style={{ fontSize: "13px", color: "#1a3a22" }}>{group.food_name}</span>
+                            {group.quantity > 1 && (
+                              <span style={{ fontSize: "11px", color: "#6b7280" }}>x{group.quantity}</span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: "12px", fontWeight: 500, color: "#dc2626" }}>{group.totalCalories} kcal</span>
                         </div>
-                        <span style={{ fontSize: "12px", fontWeight: 500, color: "#dc2626" }}>{group.totalCalories} kcal</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div style={{ textAlign: "center", padding: "24px", color: "#9ca3af", fontSize: "13px" }}>
-                  No food logged this day
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "24px", color: "#9ca3af", fontSize: "13px" }}>
+                    No food logged this day
+                  </div>
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}
