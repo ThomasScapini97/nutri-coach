@@ -120,7 +120,7 @@ export default function ScrollableExerciseChart({ burnGoal = 300, selectedDate }
         <div style={{
           display: "flex", alignItems: "flex-end", gap: `${BAR_GAP}px`,
           width: `${allDays.length * (BAR_WIDTH + BAR_GAP)}px`,
-          height: "55px", paddingBottom: "16px",
+          height: "80px",
         }}>
           {allDays.map((dateStr) => {
             const burned = logs[dateStr] || 0;
@@ -129,7 +129,7 @@ export default function ScrollableExerciseChart({ burnGoal = 300, selectedDate }
             const isSelectedBar = selectedDate && dateStr === selectedDate && !isTodayBar;
             const isFutureBar = dateStr > todayStr;
             const barColor = isFutureBar ? "#f3f4f6" : getBarColor(burned, burnGoal);
-            const barHeight = isFutureBar || !burned ? 4 : Math.max(4, (burned / maxBurned) * 28);
+            const barHeight = isFutureBar || !burned ? 4 : Math.max(4, (burned / maxBurned) * 40);
             const dayLabel = format(new Date(dateStr + "T12:00:00"), "EEE");
             const dayNum = format(new Date(dateStr + "T12:00:00"), "d");
 
@@ -143,7 +143,7 @@ export default function ScrollableExerciseChart({ burnGoal = 300, selectedDate }
                   cursor: isFutureBar ? "default" : "pointer", gap: "3px",
                 }}
               >
-                <div style={{ width: "100%", height: "32px", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                <div style={{ width: "100%", flex: 1, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: barHeight }}
