@@ -7,6 +7,103 @@ const supabase = createClient(
 
 const DAILY_LIMIT = 50;
 
+const ITALIAN_TO_ENGLISH = {
+  "sottilette": "processed cheese slices",
+  "sottiletta": "processed cheese slices",
+  "marmellata": "jam",
+  "prosciutto": "cured ham",
+  "bresaola": "beef bresaola",
+  "pancetta": "bacon pancetta",
+  "mortadella": "mortadella bologna",
+  "speck": "speck ham",
+  "nduja": "nduja spreadable salami",
+  "burrata": "burrata cheese",
+  "ricotta": "ricotta cheese",
+  "grana": "grana padano cheese",
+  "pecorino": "pecorino cheese",
+  "scamorza": "scamorza cheese",
+  "feta": "feta cheese",
+  "brie": "brie cheese",
+  "camembert": "camembert cheese",
+  "prosciutto cotto": "cooked ham",
+  "salame": "salami",
+  "coppa": "coppa salumi",
+  "lenticchie": "lentils",
+  "ceci": "chickpeas",
+  "fagioli": "beans",
+  "farro": "farro spelt",
+  "orzo": "barley",
+  "polenta": "polenta cornmeal",
+  "gnocchi": "gnocchi potato",
+  "focaccia": "focaccia bread",
+  "grissini": "breadsticks grissini",
+  "crackers": "crackers",
+  "biscotti": "cookies biscuits",
+  "cornetto": "croissant",
+  "brioche": "brioche bread",
+  "cioccolato": "chocolate",
+  "nutella": "nutella hazelnut spread",
+  "gelato": "ice cream gelato",
+};
+
+async function searchOpenFoodFacts(foodName) {
+  const trySearch = async (query, countryFilter = true) => {
+    try {
+      const q = encodeURIComponent(query);
+      const cc = countryFilter ? "&lc=it&cc=it" : "&lc=it";
+      const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=5${cc}`;
+      const res = await fetch(url, {
+        headers: { "User-Agent": "NutriCoach/1.0 (privacy@nutricoach.app)" },
+        signal: AbortSignal.timeout(2000),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const products = data.products || [];
+      for (const product of products) {
+        const n = product.nutriments;
+        if (!n) continue;
+        const per100 = {
+          calories: Math.round(n["energy-kcal_100g"] || (n["energy_100g"] || 0) / 4.184 || 0),
+          protein: Math.round((n["proteins_100g"] || 0) * 10) / 10,
+          carbs: Math.round((n["carbohydrates_100g"] || 0) * 10) / 10,
+          fats: Math.round((n["fat_100g"] || 0) * 10) / 10,
+          fiber: Math.round((n["fiber_100g"] || 0) * 10) / 10,
+        };
+        if (per100.calories > 0) {
+          return { name: product.product_name || foodName, per100 };
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Step 1: exact Italian name, Italy filter
+  let result = await trySearch(foodName, true);
+  if (result) return result;
+
+  // Step 2: English translation if available, Italy filter
+  const englishName = ITALIAN_TO_ENGLISH[foodName.toLowerCase()];
+  if (englishName) {
+    result = await trySearch(englishName, true);
+    if (result) return result;
+  }
+
+  // Step 3: exact Italian name, world database (no country filter)
+  result = await trySearch(foodName, false);
+  if (result) return result;
+
+  // Step 4: English translation, world database
+  if (englishName) {
+    result = await trySearch(englishName, false);
+    if (result) return result;
+  }
+
+  // Step 5: no results found
+  return null;
+}
+
 // Estrai lista alimenti dal messaggio utente con AI leggera
 
 export default async function handler(req, res) {
