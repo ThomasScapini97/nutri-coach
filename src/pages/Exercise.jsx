@@ -370,6 +370,7 @@ export default function Exercise() {
       });
 
       queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
+      queryClient.invalidateQueries({ queryKey: ["exercises", "chart-90days"] });
       queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       queryClient.invalidateQueries({ queryKey: ["messages", logId] });
@@ -398,6 +399,7 @@ export default function Exercise() {
         queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
       }
       queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
+      queryClient.invalidateQueries({ queryKey: ["exercises", "chart-90days"] });
       queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       toast.success("Exercise removed");
@@ -440,6 +442,7 @@ export default function Exercise() {
       });
 
       queryClient.invalidateQueries({ queryKey: ["exercises", dateStr] });
+      queryClient.invalidateQueries({ queryKey: ["exercises", "chart-90days"] });
       queryClient.invalidateQueries({ queryKey: ["exercises-week"] });
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       queryClient.invalidateQueries({ queryKey: ["messages", logId] });

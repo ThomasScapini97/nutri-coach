@@ -59,6 +59,9 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
       return map;
     },
     staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     enabled: !!user?.id,
   });
 

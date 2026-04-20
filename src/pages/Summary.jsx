@@ -141,6 +141,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
       });
       queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+      queryClient.invalidateQueries({ queryKey: ["foodlog", "chart-90days"] });
       queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
       toast.success(`Added ${group.food_name} ➕`);
     } catch {
@@ -166,6 +167,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
       });
       queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+      queryClient.invalidateQueries({ queryKey: ["foodlog", "chart-90days"] });
       queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
       toast.success(`Removed ${group.food_name} ➖`);
     } catch {
@@ -217,6 +219,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
 
     queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
     queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+    queryClient.invalidateQueries({ queryKey: ["foodlog", "chart-90days"] });
     queryClient.invalidateQueries({ queryKey: ["messages", dayLog.id] });
 
     toast.success(`${entry.food_name} updated ✏️`, {
@@ -439,6 +442,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
           queryClient.invalidateQueries({ queryKey: ["foodEntries", logId] });
           queryClient.invalidateQueries({ queryKey: ["foodlog", dateStr, user?.id] });
           queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+          queryClient.invalidateQueries({ queryKey: ["foodlog", "chart-90days"] });
           toast.success(`Added to ${format(selectedDate, 'MMM d')} ✅`);
         }
       }
