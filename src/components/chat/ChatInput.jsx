@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, ScanLine, Camera, Plus, Mic } from "lucide-react";
+import { Send, ScanLine, Camera, Plus, Mic, Search } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import { motion, AnimatePresence } from "framer-motion";
 import { compressImage } from "@/lib/imageUtils";
+import FoodSearch from "./FoodSearch";
 
 export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSend, embedded = false }) {
   const [message, setMessage] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [compressing, setCompressing] = useState(false);
+  const [showFoodSearch, setShowFoodSearch] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const fileInputRef = useRef(null);
   const menuRef = useRef(null);
@@ -115,6 +117,12 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
       label: "Scanner",
       bg: "#f0fcf3",
       action: () => { setMenuOpen(false); onScannerOpen(); },
+    },
+    {
+      icon: <Search className="w-5 h-5 text-blue-500" />,
+      label: "Search",
+      bg: "#eff6ff",
+      action: () => { setMenuOpen(false); setShowFoodSearch(true); },
     },
   ];
 
@@ -286,6 +294,19 @@ export default function ChatInput({ onSend, isLoading, onScannerOpen, onPhotoSen
           75%, 100% { transform: scale(1.6); opacity: 0; }
         }
       `}</style>
+
+      {showFoodSearch && (
+        <FoodSearch
+          onProductFound={(product) => {
+            const g = product.grams || 100;
+            const n = product.adjusted || product.per100;
+            const msg = `I just ate ${product.name} (${g}g): ${n.calories} kcal, ${n.protein}g protein, ${n.carbs}g carbs, ${n.fats}g fats, ${n.fiber}g fiber.`;
+            onSend(msg);
+            setShowFoodSearch(false);
+          }}
+          onClose={() => setShowFoodSearch(false)}
+        />
+      )}
     </form>
   );
 }
