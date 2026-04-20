@@ -20,18 +20,9 @@ export default function FoodSearch({ onProductFound, onClose }) {
     if (q.length < 2) { setResults([]); return; }
     setLoading(true);
     try {
-      const encoded = encodeURIComponent(q);
-      const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encoded}&search_simple=1&action=process&json=1&page_size=10&lc=it`;
-      const res = await fetch(url, {
-        headers: { "User-Agent": "NutriCoach/1.0 (privacy@nutricoach.app)" },
-        signal: AbortSignal.timeout(5000),
-      });
+      const res = await fetch(`/api/search-food?query=${encodeURIComponent(q)}`);
       const data = await res.json();
-      const valid = (data.products || []).filter(p =>
-        (p.nutriments?.["energy-kcal_100g"] > 0 || p.nutriments?.["energy_100g"] > 0) &&
-        p.product_name
-      );
-      setResults(valid.slice(0, 10));
+      setResults(data.results || []);
     } catch {
       setResults([]);
     } finally {
@@ -52,40 +43,28 @@ export default function FoodSearch({ onProductFound, onClose }) {
     setGrams("100");
   };
 
-  const getCalPer100 = (product) => {
-    const n = product.nutriments;
-    return Math.round(n["energy-kcal_100g"] || (n["energy_100g"] || 0) / 4.184 || 0);
-  };
+  const getCalPer100 = (product) => product.per100.calories;
 
   const getAdjusted = (product, g) => {
-    const n = product.nutriments;
+    const p = product.per100;
     const factor = g / 100;
     return {
-      calories: Math.round((n["energy-kcal_100g"] || (n["energy_100g"] || 0) / 4.184 || 0) * factor),
-      protein: Math.round((n["proteins_100g"] || 0) * factor * 10) / 10,
-      carbs: Math.round((n["carbohydrates_100g"] || 0) * factor * 10) / 10,
-      fats: Math.round((n["fat_100g"] || 0) * factor * 10) / 10,
-      fiber: Math.round((n["fiber_100g"] || 0) * factor * 10) / 10,
+      calories: Math.round(p.calories * factor),
+      protein: Math.round(p.protein * factor * 10) / 10,
+      carbs: Math.round(p.carbs * factor * 10) / 10,
+      fats: Math.round(p.fats * factor * 10) / 10,
+      fiber: Math.round(p.fiber * factor * 10) / 10,
     };
   };
 
   const handleConfirm = () => {
     if (!selectedProduct) return;
     const g = Number(grams) || 100;
-    const n = selectedProduct.nutriments;
-    const per100 = {
-      calories: Math.round(n["energy-kcal_100g"] || (n["energy_100g"] || 0) / 4.184 || 0),
-      protein: Math.round((n["proteins_100g"] || 0) * 10) / 10,
-      carbs: Math.round((n["carbohydrates_100g"] || 0) * 10) / 10,
-      fats: Math.round((n["fat_100g"] || 0) * 10) / 10,
-      fiber: Math.round((n["fiber_100g"] || 0) * 10) / 10,
-    };
-    const adjusted = getAdjusted(selectedProduct, g);
     onProductFound({
-      name: selectedProduct.product_name,
+      name: selectedProduct.name,
       grams: g,
-      per100,
-      adjusted,
+      per100: selectedProduct.per100,
+      adjusted: getAdjusted(selectedProduct, g),
     });
   };
 
@@ -166,10 +145,10 @@ export default function FoodSearch({ onProductFound, onClose }) {
 
             {results.map((product, i) => {
               const calPer100 = getCalPer100(product);
-              const isSelected = selectedProduct?.product_name === product.product_name && selectedProduct?.brands === product.brands;
+              const isSelected = selectedProduct?.id === product.id;
               return (
                 <div
-                  key={i}
+                  key={product.id || i}
                   onClick={() => handleSelect(product)}
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -183,11 +162,11 @@ export default function FoodSearch({ onProductFound, onClose }) {
                 >
                   <div style={{ flex: 1, minWidth: 0, marginRight: "10px" }}>
                     <p style={{ fontSize: "13px", fontWeight: 600, color: "#111827", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {product.product_name}
+                      {product.name}
                     </p>
-                    {product.brands && (
+                    {product.brand && (
                       <p style={{ fontSize: "11px", color: "#9ca3af", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {product.brands}
+                        {product.brand}
                       </p>
                     )}
                   </div>
@@ -217,7 +196,7 @@ export default function FoodSearch({ onProductFound, onClose }) {
               >
                 {/* Selected product name */}
                 <p style={{ fontSize: "13px", fontWeight: 600, color: "#1a3a22", margin: "0 0 10px" }}>
-                  {selectedProduct.product_name}
+                  {selectedProduct.name}
                 </p>
 
                 {/* Grams input + nutrition preview */}
