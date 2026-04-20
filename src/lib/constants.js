@@ -4,7 +4,7 @@
 export const WATER_GOAL = 8; // glasses per day
 
 // AI / Chat
-export const AI_MAX_TOKENS = 1500;
+export const AI_MAX_TOKENS = 3000;
 export const CHAT_HISTORY_LIMIT = 10; // messages sent as context to AI
 
 // Daily summaries (memory)
