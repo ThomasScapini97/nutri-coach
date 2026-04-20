@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
@@ -40,7 +41,6 @@ const EXERCISES_LIST = [
 
 export default function ScrollableExerciseChart({ burnGoal = 300, selectedDate }) {
   const { user } = useAuth();
-  const [logs, setLogs] = useState({});
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
@@ -52,24 +52,28 @@ export default function ScrollableExerciseChart({ burnGoal = 300, selectedDate }
     format(subDays(getToday(), DAYS_BACK - i), "yyyy-MM-dd")
   );
 
-  useEffect(() => {
-    if (!user?.id) return;
-    const from = format(subDays(getToday(), DAYS_BACK), "yyyy-MM-dd");
-    const to = format(getToday(), "yyyy-MM-dd");
-    supabase
-      .from("exercise_logs")
-      .select("date, calories_burned")
-      .eq("user_id", user.id)
-      .gte("date", from)
-      .lte("date", to)
-      .then(({ data }) => {
-        const map = {};
-        (data || []).forEach(l => {
-          map[l.date] = (map[l.date] || 0) + l.calories_burned;
-        });
-        setLogs(map);
+  const { data: logsData } = useQuery({
+    queryKey: ["exercises", "chart-90days", user?.id],
+    queryFn: async () => {
+      const from = format(subDays(getToday(), DAYS_BACK), "yyyy-MM-dd");
+      const to = format(getToday(), "yyyy-MM-dd");
+      const { data } = await supabase
+        .from("exercise_logs")
+        .select("date, calories_burned")
+        .eq("user_id", user.id)
+        .gte("date", from)
+        .lte("date", to);
+      const map = {};
+      (data || []).forEach(l => {
+        map[l.date] = (map[l.date] || 0) + l.calories_burned;
       });
-  }, [user?.id]);
+      return map;
+    },
+    staleTime: 0,
+    enabled: !!user?.id,
+  });
+
+  const logs = logsData ?? {};
 
   useEffect(() => {
     if (!scrollRef.current) return;

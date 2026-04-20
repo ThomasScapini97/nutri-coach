@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
@@ -29,7 +30,6 @@ function getBarColor(calories, goal) {
 
 export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
   const { user } = useAuth();
-  const [logs, setLogs] = useState({});
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
@@ -41,24 +41,28 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
     format(subDays(getToday(), DAYS_BACK - i), "yyyy-MM-dd")
   );
 
-  useEffect(() => {
-    if (!user?.id) return;
-    const from = format(subDays(getToday(), DAYS_BACK), "yyyy-MM-dd");
-    const to = format(getToday(), "yyyy-MM-dd");
-    supabase
-      .from("food_logs")
-      .select("date, total_calories, total_burned_calories")
-      .eq("user_id", user.id)
-      .gte("date", from)
-      .lte("date", to)
-      .then(({ data }) => {
-        const map = {};
-        (data || []).forEach(l => {
-          map[l.date] = Math.max((l.total_calories || 0) - (l.total_burned_calories || 0), 0);
-        });
-        setLogs(map);
+  const { data: logsData } = useQuery({
+    queryKey: ["foodlog", "chart-90days", user?.id],
+    queryFn: async () => {
+      const from = format(subDays(getToday(), DAYS_BACK), "yyyy-MM-dd");
+      const to = format(getToday(), "yyyy-MM-dd");
+      const { data } = await supabase
+        .from("food_logs")
+        .select("date, total_calories, total_burned_calories")
+        .eq("user_id", user.id)
+        .gte("date", from)
+        .lte("date", to);
+      const map = {};
+      (data || []).forEach(l => {
+        map[l.date] = Math.max((l.total_calories || 0) - (l.total_burned_calories || 0), 0);
       });
-  }, [user?.id]);
+      return map;
+    },
+    staleTime: 0,
+    enabled: !!user?.id,
+  });
+
+  const logs = logsData ?? {};
 
   useEffect(() => {
     if (!scrollRef.current) return;
