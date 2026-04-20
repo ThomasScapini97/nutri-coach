@@ -650,7 +650,7 @@ export default function Exercise() {
         className="flex-1 overflow-y-auto md:pt-0"
         style={{
           paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(200px + env(safe-area-inset-bottom))',
+          paddingBottom: 'calc(220px + env(safe-area-inset-bottom))',
         }}
       >
         <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
