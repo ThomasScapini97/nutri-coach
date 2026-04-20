@@ -647,7 +647,7 @@ export default function Exercise() {
         className="flex-1 overflow-y-auto md:pt-0"
         style={{
           paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(180px + env(safe-area-inset-bottom))',
+          paddingBottom: 'calc(200px + env(safe-area-inset-bottom))',
         }}
       >
         <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
@@ -853,8 +853,6 @@ export default function Exercise() {
           padding: '10px 16px',
           border: '0.5px solid rgba(0,0,0,0.06)',
           boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          maxWidth: '480px',
-          margin: '0 auto',
         }}>
           <div className="flex items-center justify-between mb-[10px]">
             <div className="flex items-center gap-[6px]">
