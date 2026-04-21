@@ -30,17 +30,19 @@ const ITALIAN_TO_ENGLISH = {
 
 const searchUSDA = async (query) => {
   try {
-    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=${process.env.USDA_API_KEY}&pageSize=15&dataType=Foundation,SR%20Legacy,Branded`;
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(3000),
-    });
+    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=${process.env.USDA_API_KEY}&pageSize=50&dataType=Foundation,SR%20Legacy,Branded`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
     if (!response.ok) return [];
     const data = await response.json();
 
+    const q = query.toLowerCase();
+
     return (data.foods || [])
       .filter(food => {
-        const calories = food.foodNutrients?.find(n => n.nutrientId === 1008 || n.nutrientName?.includes("Energy"))?.value;
-        return calories > 0;
+        const nameMatch = (food.description || "").toLowerCase().includes(q);
+        const brandMatch = (food.brandOwner || food.brandName || "").toLowerCase().includes(q);
+        const calories = food.foodNutrients?.find(n => n.nutrientId === 1008)?.value;
+        return (nameMatch || brandMatch) && calories > 0;
       })
       .map(food => {
         const getNutrient = (ids) => {
@@ -75,30 +77,38 @@ const searchOFF = async (query) => {
   const trySearch = async (searchQuery, countryFilter = true) => {
     const q = encodeURIComponent(searchQuery);
     const cc = countryFilter ? "&lc=it&cc=it" : "";
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=15${cc}&fields=product_name,brands,nutriments,image_small_url,id,code`;
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=30${cc}&fields=product_name,brands,nutriments,image_small_url,id,code`;
     const response = await fetch(url, {
       headers: { "User-Agent": "NutriCoach/1.0 (privacy@nutricoach.app)" },
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(4000),
     });
     if (!response.ok) return [];
     const data = await response.json();
-    return (data.products || []).filter(p => {
-      const n = p.nutriments;
-      return n && (n["energy-kcal_100g"] > 0 || n["energy_100g"] > 0) && p.product_name;
-    }).map(p => ({
-      id: p.id || p.code,
-      name: p.product_name,
-      brand: p.brands || "",
-      image: p.image_small_url || null,
-      source: "off",
-      per100: {
-        calories: Math.round(p.nutriments["energy-kcal_100g"] || (p.nutriments["energy_100g"] || 0) / 4.184),
-        protein: Math.round((p.nutriments["proteins_100g"] || 0) * 10) / 10,
-        carbs: Math.round((p.nutriments["carbohydrates_100g"] || 0) * 10) / 10,
-        fats: Math.round((p.nutriments["fat_100g"] || 0) * 10) / 10,
-        fiber: Math.round((p.nutriments["fiber_100g"] || 0) * 10) / 10,
-      },
-    }));
+
+    const qLower = searchQuery.toLowerCase();
+
+    return (data.products || [])
+      .filter(p => {
+        const n = p.nutriments;
+        const hasNutrition = n && (n["energy-kcal_100g"] > 0 || n["energy_100g"] > 0);
+        const nameContains = (p.product_name || "").toLowerCase().includes(qLower);
+        const brandContains = (p.brands || "").toLowerCase().includes(qLower);
+        return hasNutrition && p.product_name && (nameContains || brandContains);
+      })
+      .map(p => ({
+        id: p.id || p.code,
+        name: p.product_name,
+        brand: p.brands || "",
+        image: p.image_small_url || null,
+        source: "off",
+        per100: {
+          calories: Math.round(p.nutriments["energy-kcal_100g"] || (p.nutriments["energy_100g"] || 0) / 4.184),
+          protein: Math.round((p.nutriments["proteins_100g"] || 0) * 10) / 10,
+          carbs: Math.round((p.nutriments["carbohydrates_100g"] || 0) * 10) / 10,
+          fats: Math.round((p.nutriments["fat_100g"] || 0) * 10) / 10,
+          fiber: Math.round((p.nutriments["fiber_100g"] || 0) * 10) / 10,
+        },
+      }));
   };
 
   // Step 1: exact name, Italy
@@ -130,13 +140,16 @@ export default async function handler(req, res) {
   const { query } = req.query;
   if (!query || query.length < 1) return res.status(400).json({ error: "Query too short" });
 
+  const q = query.toLowerCase();
+  const english = ITALIAN_TO_ENGLISH[q];
+
   try {
-    const english = ITALIAN_TO_ENGLISH[query.toLowerCase()];
     const searchPromises = [searchUSDA(query), searchOFF(query)];
     if (english && english !== query) {
       searchPromises.push(searchUSDA(english));
       searchPromises.push(searchOFF(english));
     }
+
     const allResults = await Promise.all(searchPromises);
 
     const seen = new Set();
@@ -151,12 +164,14 @@ export default async function handler(req, res) {
       }
     }
 
-    // Sort: items whose name starts with query first
-    const q = query.toLowerCase();
+    // Sort: starts-with first, then contains; shorter names ranked higher within each tier
     merged.sort((a, b) => {
-      const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1;
-      const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1;
-      return aStarts - bStarts;
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      const aStarts = aName.startsWith(q) ? 0 : 1;
+      const bStarts = bName.startsWith(q) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return aName.length - bName.length;
     });
 
     res.setHeader("Cache-Control", "s-maxage=60");
