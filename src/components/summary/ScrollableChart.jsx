@@ -197,8 +197,9 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+            style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center", overscrollBehavior: "contain" }}
             onClick={() => setSelectedDay(null)}
+            onTouchMove={e => e.stopPropagation()}
           >
             <motion.div
               initial={{ y: 300 }}
@@ -206,6 +207,7 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
               exit={{ y: 300 }}
               transition={{ type: "spring", damping: 25 }}
               onClick={e => e.stopPropagation()}
+              onTouchMove={e => e.stopPropagation()}
               style={{
                 background: "white", borderRadius: "24px 24px 0 0",
                 width: "100%", maxWidth: "480px", maxHeight: "70vh",
@@ -228,7 +230,7 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
               </div>
 
               {/* Scrollable content */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", paddingBottom: "calc(80px + env(safe-area-inset-bottom))" }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", paddingBottom: "calc(80px + env(safe-area-inset-bottom))", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }} onTouchMove={e => e.stopPropagation()}>
                 {/* Calorie summary */}
                 {logs[selectedDay] > 0 && (
                   <div style={{
