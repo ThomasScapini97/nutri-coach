@@ -352,17 +352,17 @@ export default function Chat() {
 
       <div
         className="flex-1 overflow-y-auto pb-[160px] md:pb-6 bg-mint"
-        style={{
-          paddingTop: 'calc(180px + env(safe-area-inset-top, 0px))',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-        }}
+        style={{ paddingTop: 'calc(180px + env(safe-area-inset-top, 0px))' }}
       >
-        <div className="max-w-4xl mx-auto space-y-5 px-4 pt-2 pb-6">
-          {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
-          {isLoading && <TypingIndicator />}
-          <div ref={messagesEndRef} />
+        <div
+          className="max-w-4xl mx-auto px-4"
+          style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', minHeight: '100%' }}
+        >
+          <div className="space-y-5 pt-2 pb-6">
+            {messages.map((msg) => <ChatBubble key={msg.id} message={msg} foodEntries={foodEntries} />)}
+            {isLoading && <TypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
       </div>
       {showScanner && (
