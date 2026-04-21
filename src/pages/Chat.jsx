@@ -36,6 +36,7 @@ export default function Chat() {
   const [pastSummaries, setPastSummaries] = useState([]);
   const messagesEndRef = useRef(null);
   const dashboardRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const [dashboardHeight, setDashboardHeight] = useState(170);
   const queryClient = useQueryClient();
   const handleSendRef = useRef(null);
@@ -117,9 +118,16 @@ export default function Chat() {
   useEffect(() => {
     const el = dashboardRef.current;
     if (!el) return;
+    let prevHeight = 0;
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
-        setDashboardHeight(entry.contentRect.height + 60);
+        const newHeight = entry.contentRect.height + 60;
+        const delta = newHeight - prevHeight;
+        if (prevHeight > 0 && messagesContainerRef.current && Math.abs(delta) > 2) {
+          messagesContainerRef.current.scrollTop += delta;
+        }
+        prevHeight = newHeight;
+        setDashboardHeight(newHeight);
       }
     });
     observer.observe(el);
@@ -365,6 +373,7 @@ export default function Chat() {
       </div>
 
       <div
+        ref={messagesContainerRef}
         className="flex-1 overflow-y-auto pb-[160px] md:pb-6 bg-mint"
         style={{ paddingTop: `calc(${dashboardHeight}px + env(safe-area-inset-top, 0px) + 48px)` }}
       >
