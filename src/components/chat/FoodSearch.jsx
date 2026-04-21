@@ -17,7 +17,7 @@ export default function FoodSearch({ onProductFound, onClose }) {
   }, []);
 
   const searchFood = async (q) => {
-    if (q.length < 2) { setResults([]); return; }
+    if (q.length < 3) { setResults([]); return; }
     setLoading(true);
     try {
       const res = await fetch(`/api/search-food?query=${encodeURIComponent(q)}`);
@@ -137,9 +137,23 @@ export default function FoodSearch({ onProductFound, onClose }) {
 
           {/* Results list */}
           <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
-            {!loading && query.length >= 2 && results.length === 0 && (
-              <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af", fontSize: "14px" }}>
-                No results found
+            {!loading && query.length === 0 && (
+              <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af" }}>
+                <Search style={{ width: "32px", height: "32px", margin: "0 auto 10px", opacity: 0.35 }} />
+                <p style={{ fontSize: "14px", margin: 0 }}>Search for a food to get started</p>
+              </div>
+            )}
+
+            {!loading && query.length > 0 && query.length < 3 && (
+              <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af", fontSize: "14px" }}>
+                Keep typing…
+              </div>
+            )}
+
+            {!loading && query.length >= 3 && results.length === 0 && (
+              <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af" }}>
+                <p style={{ fontSize: "22px", margin: "0 0 8px" }}>😕</p>
+                <p style={{ fontSize: "14px", margin: 0 }}>No results for "{query}"</p>
               </div>
             )}
 

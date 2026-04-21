@@ -138,7 +138,7 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   const { query } = req.query;
-  if (!query || query.length < 1) return res.status(400).json({ error: "Query too short" });
+  if (!query || query.length < 3) return res.status(400).json({ error: "Query too short", results: [] });
 
   const q = query.toLowerCase();
   const english = ITALIAN_TO_ENGLISH[q];
