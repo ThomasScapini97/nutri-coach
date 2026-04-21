@@ -28,9 +28,46 @@ const ITALIAN_TO_ENGLISH = {
   "coppa": "coppa salumi",
 };
 
+const QUERY_EXPANSIONS = {
+  "coca": "coca cola",
+  "coke": "coca cola",
+  "pepsi": "pepsi cola",
+  "nute": "nutella",
+  "nutel": "nutella",
+  "ferre": "ferrero",
+  "ferro": "ferrero rocher",
+  "kinde": "kinder",
+  "kinder": "kinder chocolate",
+  "oreo": "oreo cookies",
+  "pring": "pringles",
+  "chips": "potato chips",
+  "mcdo": "mcdonalds",
+  "mc ": "mcdonalds",
+  "red b": "red bull",
+  "gator": "gatorade",
+  "acqu": "acqua minerale",
+  "sanbitte": "san bitter",
+  "estath": "estathé",
+  "fanta": "fanta orange",
+  "sprite": "sprite lemon",
+  "amaro": "amaro",
+  "bitter": "bitter",
+  "yogurt": "yogurt",
+  "yog": "yogurt",
+};
+
+const expandQuery = (query) => {
+  const q = query.toLowerCase().trim();
+  if (QUERY_EXPANSIONS[q]) return QUERY_EXPANSIONS[q];
+  for (const [key, value] of Object.entries(QUERY_EXPANSIONS)) {
+    if (key.startsWith(q) && q.length >= 2) return value;
+  }
+  return query;
+};
+
 const searchUSDA = async (query) => {
   try {
-    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=${process.env.USDA_API_KEY}&pageSize=8&dataType=Foundation,SR%20Legacy,Branded`;
+    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=${process.env.USDA_API_KEY}&pageSize=15&dataType=Foundation,SR%20Legacy,Branded`;
     const response = await fetch(url, {
       signal: AbortSignal.timeout(3000),
     });
@@ -130,20 +167,22 @@ export default async function handler(req, res) {
   const { query } = req.query;
   if (!query || query.length < 2) return res.status(400).json({ error: "Query too short" });
 
-  try {
-    const [usdaResults, offResults] = await Promise.all([
-      searchUSDA(query),
-      searchOFF(query),
-    ]);
+  const expandedQuery = expandQuery(query);
+  const queries = expandedQuery !== query ? [query, expandedQuery] : [query];
 
-    // Merge: USDA first, then OFF — deduplicate by lowercase name
+  try {
+    const searchPromises = queries.flatMap(q => [searchUSDA(q), searchOFF(q)]);
+    const allResults = await Promise.all(searchPromises);
+
     const seen = new Set();
     const merged = [];
-    for (const item of [...usdaResults, ...offResults]) {
-      const key = item.name.toLowerCase().trim();
-      if (!seen.has(key)) {
-        seen.add(key);
-        merged.push(item);
+    for (const results of allResults) {
+      for (const item of results) {
+        const key = item.name.toLowerCase().trim();
+        if (!seen.has(key) && item.per100.calories > 0) {
+          seen.add(key);
+          merged.push(item);
+        }
       }
     }
 
