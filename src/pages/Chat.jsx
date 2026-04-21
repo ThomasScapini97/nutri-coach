@@ -118,18 +118,26 @@ export default function Chat() {
   useEffect(() => {
     const el = dashboardRef.current;
     if (!el) return;
-    let prevHeight = 0;
+
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
         const newHeight = entry.contentRect.height + 60;
-        const delta = newHeight - prevHeight;
-        if (prevHeight > 0 && messagesContainerRef.current && Math.abs(delta) > 2) {
-          messagesContainerRef.current.scrollTop += delta;
+        const container = messagesContainerRef.current;
+
+        if (container) {
+          const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+          setDashboardHeight(newHeight);
+          requestAnimationFrame(() => {
+            if (container) {
+              container.scrollTop = container.scrollHeight - container.clientHeight - scrollBottom;
+            }
+          });
+        } else {
+          setDashboardHeight(newHeight);
         }
-        prevHeight = newHeight;
-        setDashboardHeight(newHeight);
       }
     });
+
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
