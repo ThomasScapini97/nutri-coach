@@ -28,43 +28,6 @@ const ITALIAN_TO_ENGLISH = {
   "coppa": "coppa salumi",
 };
 
-const QUERY_EXPANSIONS = {
-  "coca": "coca cola",
-  "coke": "coca cola",
-  "pepsi": "pepsi cola",
-  "nute": "nutella",
-  "nutel": "nutella",
-  "ferre": "ferrero",
-  "ferro": "ferrero rocher",
-  "kinde": "kinder",
-  "kinder": "kinder chocolate",
-  "oreo": "oreo cookies",
-  "pring": "pringles",
-  "chips": "potato chips",
-  "mcdo": "mcdonalds",
-  "mc ": "mcdonalds",
-  "red b": "red bull",
-  "gator": "gatorade",
-  "acqu": "acqua minerale",
-  "sanbitte": "san bitter",
-  "estath": "estathé",
-  "fanta": "fanta orange",
-  "sprite": "sprite lemon",
-  "amaro": "amaro",
-  "bitter": "bitter",
-  "yogurt": "yogurt",
-  "yog": "yogurt",
-};
-
-const expandQuery = (query) => {
-  const q = query.toLowerCase().trim();
-  if (QUERY_EXPANSIONS[q]) return QUERY_EXPANSIONS[q];
-  for (const [key, value] of Object.entries(QUERY_EXPANSIONS)) {
-    if (key.startsWith(q) && q.length >= 2) return value;
-  }
-  return query;
-};
-
 const searchUSDA = async (query) => {
   try {
     const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=${process.env.USDA_API_KEY}&pageSize=15&dataType=Foundation,SR%20Legacy,Branded`;
@@ -112,7 +75,7 @@ const searchOFF = async (query) => {
   const trySearch = async (searchQuery, countryFilter = true) => {
     const q = encodeURIComponent(searchQuery);
     const cc = countryFilter ? "&lc=it&cc=it" : "";
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=10${cc}`;
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=15${cc}&fields=product_name,brands,nutriments,image_small_url,id,code`;
     const response = await fetch(url, {
       headers: { "User-Agent": "NutriCoach/1.0 (privacy@nutricoach.app)" },
       signal: AbortSignal.timeout(3000),
@@ -165,13 +128,15 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   const { query } = req.query;
-  if (!query || query.length < 2) return res.status(400).json({ error: "Query too short" });
-
-  const expandedQuery = expandQuery(query);
-  const queries = expandedQuery !== query ? [query, expandedQuery] : [query];
+  if (!query || query.length < 1) return res.status(400).json({ error: "Query too short" });
 
   try {
-    const searchPromises = queries.flatMap(q => [searchUSDA(q), searchOFF(q)]);
+    const english = ITALIAN_TO_ENGLISH[query.toLowerCase()];
+    const searchPromises = [searchUSDA(query), searchOFF(query)];
+    if (english && english !== query) {
+      searchPromises.push(searchUSDA(english));
+      searchPromises.push(searchOFF(english));
+    }
     const allResults = await Promise.all(searchPromises);
 
     const seen = new Set();
@@ -186,7 +151,15 @@ export default async function handler(req, res) {
       }
     }
 
-    res.setHeader("Cache-Control", "s-maxage=300");
+    // Sort: items whose name starts with query first
+    const q = query.toLowerCase();
+    merged.sort((a, b) => {
+      const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1;
+      const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1;
+      return aStarts - bStarts;
+    });
+
+    res.setHeader("Cache-Control", "s-maxage=60");
     return res.status(200).json({ results: merged.slice(0, 10) });
 
   } catch (error) {
