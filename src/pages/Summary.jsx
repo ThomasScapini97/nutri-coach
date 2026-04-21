@@ -493,7 +493,13 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pt-[110px] md:pt-0" style={{ paddingBottom: 'calc(220px + env(safe-area-inset-bottom))' }}>
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{
+          paddingTop: window.innerWidth < 768 ? 'calc(70px + env(safe-area-inset-top, 0px))' : '0px',
+          paddingBottom: 'calc(220px + env(safe-area-inset-bottom))',
+        }}
+      >
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
 
           {/* Hero calorie card */}
