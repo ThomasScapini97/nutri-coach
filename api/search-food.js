@@ -28,14 +28,14 @@ const ITALIAN_TO_ENGLISH = {
   "coppa": "coppa salumi",
 };
 
-const searchUSDA = async (query) => {
+const searchUSDA = async (query, filterQuery = null) => {
   try {
     const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=${process.env.USDA_API_KEY}&pageSize=50&dataType=Foundation,SR%20Legacy,Branded`;
     const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
     if (!response.ok) return [];
     const data = await response.json();
 
-    const q = query.toLowerCase();
+    const q = (filterQuery || query).toLowerCase();
 
     return (data.foods || [])
       .filter(food => {
@@ -73,8 +73,8 @@ const searchUSDA = async (query) => {
   }
 };
 
-const searchOFF = async (query) => {
-  const trySearch = async (searchQuery, countryFilter = true) => {
+const searchOFF = async (query, filterQuery = null) => {
+  const trySearch = async (searchQuery, countryFilter = true, overrideFilter = null) => {
     const q = encodeURIComponent(searchQuery);
     const cc = countryFilter ? "&lc=it&cc=it" : "";
     const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=30${cc}&fields=product_name,brands,nutriments,image_small_url,id,code`;
@@ -85,7 +85,7 @@ const searchOFF = async (query) => {
     if (!response.ok) return [];
     const data = await response.json();
 
-    const qLower = searchQuery.toLowerCase();
+    const qLower = (overrideFilter || searchQuery).toLowerCase();
 
     return (data.products || [])
       .filter(p => {
@@ -112,23 +112,23 @@ const searchOFF = async (query) => {
   };
 
   // Step 1: exact name, Italy
-  let results = await trySearch(query, true);
+  let results = await trySearch(query, true, filterQuery);
   if (results.length > 0) return results;
 
   // Step 2: English translation, Italy
   const english = ITALIAN_TO_ENGLISH[query.toLowerCase()];
   if (english) {
-    results = await trySearch(english, true);
+    results = await trySearch(english, true, filterQuery);
     if (results.length > 0) return results;
   }
 
   // Step 3: exact name, world
-  results = await trySearch(query, false);
+  results = await trySearch(query, false, filterQuery);
   if (results.length > 0) return results;
 
   // Step 4: English translation, world
   if (english) {
-    results = await trySearch(english, false);
+    results = await trySearch(english, false, filterQuery);
   }
 
   return results;
@@ -148,6 +148,12 @@ export default async function handler(req, res) {
     if (english && english !== query) {
       searchPromises.push(searchUSDA(english));
       searchPromises.push(searchOFF(english));
+    }
+    // Search with last char dropped so APIs return prefix-matched items (e.g. "barill" → fetch "bari", filter by "barill")
+    if (query.length > 3) {
+      const stem = query.slice(0, -1);
+      searchPromises.push(searchUSDA(stem, query));
+      searchPromises.push(searchOFF(stem, query));
     }
 
     const allResults = await Promise.all(searchPromises);
