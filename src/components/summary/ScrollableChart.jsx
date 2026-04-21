@@ -81,8 +81,26 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
     }
   }, [selectedDate]);
 
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, []);
+
+  const closeDayDetail = () => {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    closeDayDetail();
+  };
+
   const openDayDetail = async (dateStr) => {
     if (dateStr >= format(getToday(), "yyyy-MM-dd") && dateStr !== format(getToday(), "yyyy-MM-dd")) return;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
     setSelectedDay(dateStr);
     setDayEntries([]);
     setLoadingEntries(true);
@@ -198,7 +216,7 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center", overscrollBehavior: "contain" }}
-            onClick={() => setSelectedDay(null)}
+            onClick={() => closeDayDetail()}
             onTouchMove={e => e.stopPropagation()}
           >
             <motion.div
@@ -223,7 +241,7 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
                     </p>
                     <p style={{ fontSize: "11px", color: "#9ca3af", margin: 0 }}>Read only — past day</p>
                   </div>
-                  <button onClick={() => setSelectedDay(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <button onClick={() => closeDayDetail()} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <X style={{ width: "14px", height: "14px", color: "#6b7280" }} />
                   </button>
                 </div>
