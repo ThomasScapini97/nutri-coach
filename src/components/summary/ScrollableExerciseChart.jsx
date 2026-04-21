@@ -88,23 +88,25 @@ export default function ScrollableExerciseChart({ burnGoal = 300, selectedDate }
 
   useEffect(() => {
     return () => {
+      const scrollY = document.body.style.top;
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) window.scrollTo(0, parseInt(scrollY) * -1);
     };
   }, []);
 
   const closeDayDetail = () => {
+    const scrollY = document.body.style.top;
     document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    closeDayDetail();
+    document.body.style.top = '';
+    if (scrollY) window.scrollTo(0, parseInt(scrollY) * -1);
+    setSelectedDay(null);
   };
 
   const openDayDetail = async (dateStr) => {
+    const scrollY = window.scrollY;
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
+    document.body.style.top = `-${scrollY}px`;
     setSelectedDay(dateStr);
     setDayExercises([]);
     setLoadingEntries(true);
@@ -201,10 +203,10 @@ export default function ScrollableExerciseChart({ burnGoal = 300, selectedDate }
             onTouchMove={e => e.stopPropagation()}
           >
             <motion.div
-              initial={{ y: 300 }}
+              initial={{ y: "100%" }}
               animate={{ y: 0 }}
-              exit={{ y: 300 }}
-              transition={{ type: "spring", damping: 25 }}
+              exit={{ y: "100%" }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
               onClick={e => e.stopPropagation()}
               onTouchMove={e => e.stopPropagation()}
               style={{
