@@ -798,31 +798,27 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             className="w-full max-w-[480px] bg-white rounded-t-[28px] max-h-[85vh] flex flex-col"
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            style={{ y: sheetY }}
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 1 }}
-            dragTransition={{ bounceStiffness: 600, bounceDamping: 30 }}
-            onDragEnd={(_, info) => {
-              if (info.offset.y > 80 || info.velocity.y > 300) {
-                animate(sheetY, window.innerHeight, { duration: 0.25, ease: "easeIn" })
-                  .then(() => { setShowShare(false); sheetY.set(0); });
-              } else {
-                animate(sheetY, 0, { duration: 0.2, ease: "easeOut" });
-              }
-            }}
+            style={{ y: sheetY, touchAction: "pan-y" }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Handle bar — tap or drag to close */}
-            <div
+            {/* Handle bar — ONLY this element triggers close on drag */}
+            <motion.div
+              onPan={(_, info) => { if (info.offset.y > 0) sheetY.set(info.offset.y); }}
+              onPanEnd={(_, info) => {
+                if (info.offset.y > 80 || info.velocity.y > 300) {
+                  animate(sheetY, window.innerHeight, { duration: 0.25, ease: "easeIn" })
+                    .then(() => { setShowShare(false); sheetY.set(0); });
+                } else {
+                  animate(sheetY, 0, { duration: 0.2, ease: "easeOut" });
+                }
+              }}
               onClick={() => setShowShare(false)}
-              style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px", cursor: "grab", flexShrink: 0 }}
+              style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px", cursor: "grab", flexShrink: 0, touchAction: "none" }}
             >
               <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "#d1d5db" }} />
-            </div>
+            </motion.div>
 
-            {/* Scrollable content — stopPropagation prevents drag conflict */}
-            <div className="overflow-y-auto px-4 pb-10" onPointerDown={e => e.stopPropagation()}>
+            <div className="overflow-y-auto px-4 pb-10" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
 
             {/* Card preview */}
             <div className="rounded-[20px] p-4 space-y-3" style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>

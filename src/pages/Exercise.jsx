@@ -1131,31 +1131,27 @@ export default function Exercise() {
               className="w-full max-w-[480px] bg-white rounded-t-[28px] max-h-[85vh] flex flex-col"
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              style={{ y: sheetExerciseY }}
-              drag="y"
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 1 }}
-              dragTransition={{ bounceStiffness: 600, bounceDamping: 30 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 80 || info.velocity.y > 300) {
-                  animate(sheetExerciseY, window.innerHeight, { duration: 0.25, ease: "easeIn" })
-                    .then(() => { setShowShareSheet(false); sheetExerciseY.set(0); });
-                } else {
-                  animate(sheetExerciseY, 0, { duration: 0.2, ease: "easeOut" });
-                }
-              }}
+              style={{ y: sheetExerciseY, touchAction: "pan-y" }}
               onClick={e => e.stopPropagation()}
             >
-              {/* Handle bar */}
-              <div
+              {/* Handle bar — ONLY this element triggers close on drag */}
+              <motion.div
+                onPan={(_, info) => { if (info.offset.y > 0) sheetExerciseY.set(info.offset.y); }}
+                onPanEnd={(_, info) => {
+                  if (info.offset.y > 80 || info.velocity.y > 300) {
+                    animate(sheetExerciseY, window.innerHeight, { duration: 0.25, ease: "easeIn" })
+                      .then(() => { setShowShareSheet(false); sheetExerciseY.set(0); });
+                  } else {
+                    animate(sheetExerciseY, 0, { duration: 0.2, ease: "easeOut" });
+                  }
+                }}
                 onClick={() => setShowShareSheet(false)}
-                style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px", cursor: "grab", flexShrink: 0 }}
+                style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px", cursor: "grab", flexShrink: 0, touchAction: "none" }}
               >
                 <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "#d1d5db" }} />
-              </div>
+              </motion.div>
 
-              {/* Scrollable content */}
-              <div className="overflow-y-auto px-4 pb-10" onPointerDown={e => e.stopPropagation()}>
+              <div className="overflow-y-auto px-4 pb-10" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
                 <div className="rounded-[20px] p-4 space-y-3" style={{ background: "linear-gradient(135deg, #fff1f2, #ffe4e6)" }}>
                   <div className="flex items-center gap-3 pb-1">
                     <span className="text-2xl">🔥</span>
