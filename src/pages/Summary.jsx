@@ -966,16 +966,6 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                 );
               })}
 
-              {/* Burned calories */}
-              {burnedCalories > 0 && (
-                <div className="bg-white rounded-[14px] px-4 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span>🏃</span>
-                    <span className="text-sm font-medium text-forest">Exercise</span>
-                  </div>
-                  <span className="text-sm font-bold text-red-500">−{burnedCalories} kcal</span>
-                </div>
-              )}
             </div>
 
             {/* Share button — iOS style */}
