@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'r
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import AppLayout from './components/layout/AppLayout';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const Chat = lazy(() => import('./pages/Chat'));
 const Summary = lazy(() => import('./pages/Summary'));
@@ -83,9 +84,11 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <Suspense fallback={<PageLoader />}>
-            <AuthenticatedApp />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoader />}>
+              <AuthenticatedApp />
+            </Suspense>
+          </ErrorBoundary>
         </Router>
         <Toaster richColors />
       </QueryClientProvider>
