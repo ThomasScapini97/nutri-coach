@@ -661,26 +661,21 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                           transition={{ duration: 0.2, ease: "easeInOut" }}
                           style={{ overflow: "hidden" }}
                         >
-                          <div style={{
-                            display: "flex", flexDirection: "column",
-                            border: "0.5px solid rgba(0,0,0,0.06)", borderTop: "none",
-                            borderRadius: "0 0 14px 14px", overflow: "hidden",
-                          }}>
-                            {entries.map((group, idx) => (
-                              <div key={group.ids[0]} style={{ borderTop: idx > 0 ? "0.5px solid rgba(0,0,0,0.04)" : "none" }}>
-                                <FoodEntryItem
-                                  entry={{
-                                    ...group, id: group.ids[0],
-                                    calories: group.total_calories, carbs: group.total_carbs,
-                                    protein: group.total_protein, fats: group.total_fats,
-                                    fiber: group.total_fiber, grams: group.total_grams,
-                                  }}
-                                  quantity={group.quantity}
-                                  onAdd={() => handleAddEntry(group)}
-                                  onRemove={() => handleRemoveEntry(group)}
-                                  onUpdateGrams={(_entry, newGrams) => handleUpdateGrams({ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber, grams: group.total_grams }, newGrams)}
-                                />
-                              </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingTop: "6px" }}>
+                            {entries.map((group) => (
+                              <FoodEntryItem
+                                key={group.ids[0]}
+                                entry={{
+                                  ...group, id: group.ids[0],
+                                  calories: group.total_calories, carbs: group.total_carbs,
+                                  protein: group.total_protein, fats: group.total_fats,
+                                  fiber: group.total_fiber, grams: group.total_grams,
+                                }}
+                                quantity={group.quantity}
+                                onAdd={() => handleAddEntry(group)}
+                                onRemove={() => handleRemoveEntry(group)}
+                                onUpdateGrams={(_entry, newGrams) => handleUpdateGrams({ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber, grams: group.total_grams }, newGrams)}
+                              />
                             ))}
                           </div>
                         </motion.div>
