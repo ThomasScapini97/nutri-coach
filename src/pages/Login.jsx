@@ -14,7 +14,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "https://nutri-coach-ashy.vercel.app",
+        redirectTo: import.meta.env.VITE_APP_URL,
         queryParams: {
           prompt: "select_account",
         },
@@ -29,7 +29,7 @@ export default function Login() {
     try {
       if (isForgotPassword) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: "https://nutri-coach-ashy.vercel.app/reset-password",
+          redirectTo: `${import.meta.env.VITE_APP_URL}/reset-password`,
         });
         if (error) throw error;
         toast.success("Email sent! Check your inbox 📧");
