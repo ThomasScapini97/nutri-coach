@@ -248,6 +248,13 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     snack:     { emoji: "🍎", label: "Snack" },
   };
 
+  const MEAL_COLORS = {
+    breakfast: { bg: "#fef3c7", border: "#fde68a", text: "#92400e" },
+    lunch:     { bg: "#dbeafe", border: "#bfdbfe", text: "#1e40af" },
+    dinner:    { bg: "#ede9fe", border: "#ddd6fe", text: "#5b21b6" },
+    snack:     { bg: "#dcfce7", border: "#bbf7d0", text: "#166534" },
+  };
+
   const buildCardBlob = async (meal) => {
     const cardEl = cardRefs.current[meal];
     if (!cardEl) return null;
@@ -611,33 +618,33 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             </div>
             <div className="flex flex-col gap-3">
               {entriesByMeal.map(({ meal, entries }) => {
-                const { emoji, label } = MEAL_META[meal] || { emoji: "🍽", label: meal };
+                const { label } = MEAL_META[meal] || { label: meal };
                 const isCollapsed = collapsedMeals[meal];
                 const mealCalories = entries.reduce((s, e) => s + e.total_calories, 0);
+                const colors = MEAL_COLORS[meal] || { bg: "#f3f4f6", border: "#e5e7eb", text: "#374151" };
                 return (
                   <div key={meal}>
                     <button
                       onClick={() => toggleMeal(meal)}
                       style={{
                         width: "100%", display: "flex", alignItems: "center",
-                        justifyContent: "space-between", background: "white",
-                        border: "0.5px solid rgba(0,0,0,0.06)",
-                        borderRadius: isCollapsed ? "14px" : "14px 14px 0 0",
-                        padding: "10px 14px", cursor: "pointer", fontFamily: "inherit",
+                        justifyContent: "space-between", background: colors.bg,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: isCollapsed ? "12px" : "12px 12px 0 0",
+                        padding: "8px 12px", cursor: "pointer", fontFamily: "inherit",
                         transition: "border-radius 0.2s",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "18px" }}>{emoji}</span>
-                        <span style={{ fontSize: "13px", fontWeight: 600, color: "#1a3a22" }}>{label}</span>
-                        <span style={{ fontSize: "11px", color: "#9ca3af" }}>{entries.length} item{entries.length > 1 ? "s" : ""}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "12px", fontWeight: 600, color: colors.text }}>{label}</span>
+                        <span style={{ fontSize: "10px", color: colors.text, opacity: 0.7 }}>{entries.length} item{entries.length > 1 ? "s" : ""}</span>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626" }}>🔥 {Math.round(mealCalories)} kcal</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: 600, color: colors.text }}>{Math.round(mealCalories)} kcal</span>
                         <motion.span
                           animate={{ rotate: isCollapsed ? 0 : 180 }}
                           transition={{ duration: 0.2 }}
-                          style={{ fontSize: "12px", color: "#9ca3af", display: "inline-block" }}
+                          style={{ fontSize: "10px", color: colors.text, opacity: 0.7, display: "inline-block" }}
                         >▼</motion.span>
                       </div>
                     </button>
