@@ -115,6 +115,20 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     }, {}));
   }, [dayEntries]);
 
+  const [collapsedMeals, setCollapsedMeals] = useState({});
+  const toggleMeal = (meal) => setCollapsedMeals(prev => ({ ...prev, [meal]: !prev[meal] }));
+
+  const entriesByMeal = useMemo(() => {
+    const order = ["breakfast", "lunch", "dinner", "snack"];
+    const groups = {};
+    for (const entry of groupedEntries) {
+      const meal = entry.meal_type || "snack";
+      if (!groups[meal]) groups[meal] = [];
+      groups[meal].push(entry);
+    }
+    return order.filter(m => groups[m]?.length > 0).map(m => ({ meal: m, entries: groups[m] }));
+  }, [groupedEntries]);
+
   const handleAddEntry = async (group) => {
     if (!dayLog) return;
     try {
@@ -595,26 +609,76 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-[6px]">
-              {groupedEntries.length > 0 ? groupedEntries.map(group => (
-                  <FoodEntryItem
-                    key={group.ids[0]}
-                    entry={{
-                      ...group,
-                      id: group.ids[0],
-                      calories: group.total_calories,
-                      carbs: group.total_carbs,
-                      protein: group.total_protein,
-                      fats: group.total_fats,
-                      fiber: group.total_fiber,
-                      grams: group.total_grams,
-                    }}
-                    quantity={group.quantity}
-                    onAdd={() => handleAddEntry(group)}
-                    onRemove={() => handleRemoveEntry(group)}
-                    onUpdateGrams={(_entry, newGrams) => handleUpdateGrams({ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber, grams: group.total_grams }, newGrams)}
-                  />
-                )) : (
+            <div className="flex flex-col gap-3">
+              {entriesByMeal.map(({ meal, entries }) => {
+                const { emoji, label } = MEAL_META[meal] || { emoji: "🍽", label: meal };
+                const isCollapsed = collapsedMeals[meal];
+                const mealCalories = entries.reduce((s, e) => s + e.total_calories, 0);
+                return (
+                  <div key={meal}>
+                    <button
+                      onClick={() => toggleMeal(meal)}
+                      style={{
+                        width: "100%", display: "flex", alignItems: "center",
+                        justifyContent: "space-between", background: "white",
+                        border: "0.5px solid rgba(0,0,0,0.06)",
+                        borderRadius: isCollapsed ? "14px" : "14px 14px 0 0",
+                        padding: "10px 14px", cursor: "pointer", fontFamily: "inherit",
+                        transition: "border-radius 0.2s",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "18px" }}>{emoji}</span>
+                        <span style={{ fontSize: "13px", fontWeight: 600, color: "#1a3a22" }}>{label}</span>
+                        <span style={{ fontSize: "11px", color: "#9ca3af" }}>{entries.length} item{entries.length > 1 ? "s" : ""}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626" }}>🔥 {Math.round(mealCalories)} kcal</span>
+                        <motion.span
+                          animate={{ rotate: isCollapsed ? 0 : 180 }}
+                          transition={{ duration: 0.2 }}
+                          style={{ fontSize: "12px", color: "#9ca3af", display: "inline-block" }}
+                        >▼</motion.span>
+                      </div>
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {!isCollapsed && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          style={{ overflow: "hidden" }}
+                        >
+                          <div style={{
+                            display: "flex", flexDirection: "column",
+                            border: "0.5px solid rgba(0,0,0,0.06)", borderTop: "none",
+                            borderRadius: "0 0 14px 14px", overflow: "hidden",
+                          }}>
+                            {entries.map((group, idx) => (
+                              <div key={group.ids[0]} style={{ borderTop: idx > 0 ? "0.5px solid rgba(0,0,0,0.04)" : "none" }}>
+                                <FoodEntryItem
+                                  entry={{
+                                    ...group, id: group.ids[0],
+                                    calories: group.total_calories, carbs: group.total_carbs,
+                                    protein: group.total_protein, fats: group.total_fats,
+                                    fiber: group.total_fiber, grams: group.total_grams,
+                                  }}
+                                  quantity={group.quantity}
+                                  onAdd={() => handleAddEntry(group)}
+                                  onRemove={() => handleRemoveEntry(group)}
+                                  onUpdateGrams={(_entry, newGrams) => handleUpdateGrams({ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber, grams: group.total_grams }, newGrams)}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+              {entriesByMeal.length === 0 && (
                 <div className="text-center py-8 bg-white rounded-2xl border border-black/[0.06]">
                   <p className="text-[13px] text-gray-400 mb-1">{t("summary.noFoodLogged")}</p>
                   <p className="text-xs text-gray-400">{t("summary.headToChat")}</p>
