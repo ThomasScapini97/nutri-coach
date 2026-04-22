@@ -116,7 +116,6 @@ const caloriesConsumed = dayLog?.total_calories || 0;
   }, [dayEntries]);
 
   const [collapsedMeals, setCollapsedMeals] = useState({});
-  const [trendOpen, setTrendOpen] = useState(false);
   const toggleMeal = (meal) => setCollapsedMeals(prev => ({ ...prev, [meal]: !prev[meal] }));
 
   const entriesByMeal = useMemo(() => {
@@ -519,7 +518,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
         className="flex-1 overflow-y-auto"
         style={{
           paddingTop: window.innerWidth < 768 ? 'calc(70px + env(safe-area-inset-top, 0px))' : '0px',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom))',
+          paddingBottom: 'calc(220px + env(safe-area-inset-bottom))',
         }}
       >
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
@@ -695,78 +694,46 @@ const caloriesConsumed = dayLog?.total_calories || 0;
             </div>
           </motion.div>
 
-          {/* Trend chart — collapsible */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <button
-              onClick={() => setTrendOpen(prev => !prev)}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                background: "white",
-                border: "0.5px solid rgba(0,0,0,0.06)",
-                borderRadius: trendOpen ? "16px 16px 0 0" : "16px",
-                padding: "12px 14px",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                transition: "border-radius 0.2s",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <TrendingUp style={{ width: "14px", height: "14px", color: "#16a34a" }} />
-                <span style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22" }}>{t("summary.trend")}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ display: "flex", gap: "6px" }}>
-                  {[
-                    { color: "#16a34a", label: t("summary.onTrack") },
-                    { color: "#f59e0b", label: t("summary.close") },
-                    { color: "#ef4444", label: t("summary.offTrack") },
-                  ].map(({ color, label }) => (
-                    <div key={label} style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                      <div style={{ width: "6px", height: "6px", borderRadius: "2px", background: color }} />
-                      <span style={{ fontSize: "9px", color: "#9ca3af" }}>{label}</span>
-                    </div>
-                  ))}
+        </div>
+      </div>
+
+      {/* Trend chart — fixed above navbar */}
+      <div style={{
+        position: 'fixed',
+        bottom: 'calc(56px + env(safe-area-inset-bottom))',
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        padding: '0 16px 8px',
+        background: '#f0fcf3',
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '20px',
+          padding: '10px 16px',
+          border: '0.5px solid rgba(0,0,0,0.06)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+        }}>
+          <div className="flex items-center justify-between mb-[10px]">
+            <div className="flex items-center gap-[6px]">
+              <TrendingUp className="w-[14px] h-[14px] text-green-600" />
+              <span className="text-[13px] font-medium text-forest">{t("summary.trend")}</span>
+            </div>
+            <div className="flex gap-2">
+              {[
+                { color: "#16a34a", label: t("summary.onTrack") },
+                { color: "#f59e0b", label: t("summary.close") },
+                { color: "#ef4444", label: t("summary.offTrack") },
+                { color: "#e5e7eb", label: t("summary.noData") },
+              ].map(({ color, label }) => (
+                <div key={label} className="flex items-center gap-[3px]">
+                  <div className="w-[6px] h-[6px] rounded-[2px] shrink-0" style={{ background: color }} />
+                  <span className="text-[9px] text-gray-400">{label}</span>
                 </div>
-                <motion.span
-                  animate={{ rotate: trendOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  style={{ fontSize: "10px", color: "#9ca3af" }}
-                >▼</motion.span>
-              </div>
-            </button>
-
-            <AnimatePresence initial={false}>
-              {trendOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  style={{ overflow: "hidden" }}
-                >
-                  <div style={{
-                    background: "white",
-                    borderRadius: "0 0 16px 16px",
-                    padding: "10px 16px 14px",
-                    border: "0.5px solid rgba(0,0,0,0.06)",
-                    borderTop: "none",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                  }}>
-                    <ScrollableChart calorieGoal={calorieGoal} selectedDate={dateStr} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-
+              ))}
+            </div>
+          </div>
+          <ScrollableChart calorieGoal={calorieGoal} selectedDate={dateStr} />
         </div>
       </div>
 
