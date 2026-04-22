@@ -178,6 +178,8 @@ export default function Exercise() {
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === getToday();
 
+  const [burnedOpen, setBurnedOpen] = useState(true);
+
   // Sheet state
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [showSavePreset, setShowSavePreset] = useState(false);
@@ -650,7 +652,10 @@ export default function Exercise() {
         className="flex-1 overflow-y-auto md:pt-0"
         style={{
           paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(220px + env(safe-area-inset-bottom))',
+          paddingBottom: burnedOpen
+            ? 'calc(220px + env(safe-area-inset-bottom))'
+            : 'calc(90px + env(safe-area-inset-bottom))',
+          transition: 'padding-bottom 0.25s ease',
         }}
       >
         <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
@@ -840,7 +845,7 @@ export default function Exercise() {
         </div>
       </div>
 
-      {/* Bottom chart — fixed above navbar */}
+      {/* Bottom chart — fixed above navbar, collapsible */}
       <div style={{
         position: 'fixed',
         bottom: 'calc(56px + env(safe-area-inset-bottom))',
@@ -853,30 +858,69 @@ export default function Exercise() {
         <div style={{
           background: 'white',
           borderRadius: '20px',
-          padding: '10px 16px',
           border: '0.5px solid rgba(0,0,0,0.06)',
           boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+          maxWidth: '480px',
+          margin: '0 auto',
         }}>
-          <div className="flex items-center justify-between mb-[10px]">
-            <div className="flex items-center gap-[6px]">
-              <TrendingUp className="w-[14px] h-[14px] text-red-600" />
-              <span className="text-[13px] font-medium text-forest">{t("exercise.weeklyBurnedTitle")}</span>
+          <button
+            onClick={() => setBurnedOpen(prev => !prev)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 16px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <TrendingUp style={{ width: '14px', height: '14px', color: '#ef4444' }} />
+              <span style={{ fontSize: '13px', fontWeight: 500, color: '#1a3a22' }}>{t("exercise.weeklyBurnedTitle")}</span>
             </div>
-            <div className="flex gap-2">
-              {[
-                { color: "#16a34a", label: t("exercise.onTrack") },
-                { color: "#f59e0b", label: t("exercise.chartClose") },
-                { color: "#ef4444", label: t("exercise.offTrack") },
-                { color: "#e5e7eb", label: t("exercise.rest") },
-              ].map(({ color, label }) => (
-                <div key={label} className="flex items-center gap-[3px]">
-                  <div className="w-[6px] h-[6px] rounded-[2px] shrink-0" style={{ background: color }} />
-                  <span className="text-[9px] text-gray-400">{label}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {burnedOpen && (
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {[
+                    { color: "#16a34a", label: t("exercise.onTrack") },
+                    { color: "#f59e0b", label: t("exercise.chartClose") },
+                    { color: "#ef4444", label: t("exercise.offTrack") },
+                    { color: "#e5e7eb", label: t("exercise.rest") },
+                  ].map(({ color, label }) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '2px', background: color }} />
+                      <span style={{ fontSize: '9px', color: '#9ca3af' }}>{label}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+              <motion.span
+                animate={{ rotate: burnedOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ fontSize: '10px', color: '#9ca3af' }}
+              >▼</motion.span>
             </div>
-          </div>
-          <ScrollableExerciseChart burnGoal={burnGoal} selectedDate={dateStr} />
+          </button>
+
+          <AnimatePresence initial={false}>
+            {burnedOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                style={{ overflow: 'hidden' }}
+              >
+                <div style={{ padding: '0 16px 14px' }}>
+                  <ScrollableExerciseChart burnGoal={burnGoal} selectedDate={dateStr} userId={user?.id} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
