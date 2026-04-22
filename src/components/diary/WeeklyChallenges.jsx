@@ -24,6 +24,7 @@ export default function WeeklyChallenges() {
   useEffect(() => {
     if (!user?.id) return;
     loadChallenges();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const loadChallenges = async () => {

@@ -84,6 +84,7 @@ export default function ScrollableExerciseChart({ burnGoal = 300, selectedDate }
     const targetIndex = allDays.findIndex(d => d === targetDate);
     const idx = targetIndex >= 0 ? targetIndex : allDays.findIndex(d => d === format(getToday(), "yyyy-MM-dd"));
     scrollRef.current.scrollLeft = (idx - 4) * (BAR_WIDTH + BAR_GAP);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   useEffect(() => {

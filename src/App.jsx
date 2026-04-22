@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Toaster } from "sonner";
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClientInstance } from '@/lib/query-client';
@@ -37,6 +37,7 @@ const AuthenticatedApp = () => {
         setLoadingProfile(false);
       });
     } else if (!isLoadingAuth) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingProfile(false);
     }
   }, [user, isLoadingAuth]);

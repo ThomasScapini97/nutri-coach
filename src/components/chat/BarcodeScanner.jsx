@@ -18,6 +18,7 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
   useEffect(() => {
     startCamera();
     return () => stopCamera();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stopCamera = () => {
@@ -50,7 +51,7 @@ const startCamera = async () => {
       await reader.decodeFromConstraints(
         { video: { facingMode: { ideal: "environment" } } },
         videoRef.current,
-        async (result, err) => {
+        async (result, _err) => {
           if (result) {
             const code = result.getText();
             stopCamera();
@@ -87,7 +88,7 @@ const startCamera = async () => {
         setError("Product not found. Try searching by name.");
         setMode("search");
       }
-    } catch (e) {
+    } catch (_e) {
       if (!navigator.onLine) {
         setError("No internet connection. Check your connection and try again.");
       } else {

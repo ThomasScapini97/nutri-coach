@@ -71,6 +71,7 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
     if (!scrollRef.current) return;
     const todayIndex = allDays.findIndex(d => d === format(getToday(), "yyyy-MM-dd"));
     scrollRef.current.scrollLeft = (todayIndex - 4) * (BAR_WIDTH + BAR_GAP);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -79,6 +80,7 @@ export default function ScrollableChart({ calorieGoal = 2000, selectedDate }) {
     if (idx >= 0) {
       scrollRef.current.scrollLeft = Math.max(0, (idx - 3) * (BAR_WIDTH + BAR_GAP));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   useEffect(() => {

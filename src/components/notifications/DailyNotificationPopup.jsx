@@ -7,6 +7,7 @@ export default function DailyNotificationPopup({ evaluation, onClose }) {
   const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { if (evaluation) setIsVisible(true); }, [evaluation]);
 
   const handleClose = () => {
