@@ -242,6 +242,21 @@ const caloriesConsumed = dayLog?.total_calories || 0;
     });
   };
 
+  const handleChangeMealType = async (group, newMealType) => {
+    if (!dayLog || !newMealType || newMealType === group.meal_type) return;
+    const idsToUpdate = group.ids || [group.id];
+    try {
+      await Promise.all(idsToUpdate.map(id =>
+        supabase.from("food_entries").update({ meal_type: newMealType }).eq("id", id)
+      ));
+    } catch {
+      toast.error("Failed to update meal type.");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["foodEntries", dayLog.id] });
+    queryClient.invalidateQueries({ queryKey: ["foodlog"] });
+  };
+
   const MEAL_META = {
     breakfast: { emoji: "🌅", label: "Breakfast" },
     lunch:     { emoji: "☀️", label: "Lunch" },
@@ -675,6 +690,7 @@ const caloriesConsumed = dayLog?.total_calories || 0;
                                 onAdd={() => handleAddEntry(group)}
                                 onRemove={() => handleRemoveEntry(group)}
                                 onUpdateGrams={(_entry, newGrams) => handleUpdateGrams({ ...group, calories: group.total_calories, carbs: group.total_carbs, protein: group.total_protein, fats: group.total_fats, fiber: group.total_fiber, grams: group.total_grams }, newGrams)}
+                                onChangeMealType={(_entry, newMealType) => handleChangeMealType(group, newMealType)}
                               />
                             ))}
                           </div>
