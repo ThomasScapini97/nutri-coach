@@ -104,8 +104,6 @@ async function searchOpenFoodFacts(foodName) {
   return null;
 }
 
-// Estrai lista alimenti dal messaggio utente con AI leggera
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -152,9 +150,67 @@ export default async function handler(req, res) {
 
     const ALLOWED_MODELS = ["claude-haiku-4-5-20251001"];
     const safeModel = ALLOWED_MODELS.includes(model) ? model : "claude-haiku-4-5-20251001";
-    const safeMaxTokens = Math.min(Math.max(Number(max_tokens) || 1500, 100), 2000);
+    const safeMaxTokens = Math.min(Math.max(Number(max_tokens) || 1500, 100), 4000);
 
-    const enhancedSystem = system;
+    // Extract text from last user message
+    const lastUserMessage = messages[messages.length - 1];
+    const userText = typeof lastUserMessage?.content === "string"
+      ? lastUserMessage.content
+      : lastUserMessage?.content?.find(c => c.type === "text")?.text || "";
+
+    let offDataContext = "";
+
+    if (userText.length > 0) {
+      const words = userText.toLowerCase()
+        .replace(/[^\w\s]/g, " ")
+        .split(/\s+/)
+        .filter(w => w.length >= 3 && !/^\d+$/.test(w));
+
+      const bigrams = [];
+      for (let i = 0; i < words.length - 1; i++) {
+        bigrams.push(`${words[i]} ${words[i + 1]}`);
+      }
+
+      const candidates = [...bigrams, ...words].slice(0, 3);
+
+      const offResults = await Promise.all(
+        candidates.map(term => searchOpenFoodFacts(term))
+      );
+
+      const found = offResults.filter(Boolean);
+
+      if (found.length > 0) {
+        offDataContext = "\n\n**REAL NUTRITIONAL DATA FROM DATABASE (use these exact values):**\n";
+        found.forEach(item => {
+          offDataContext += `- ${item.name}: ${item.per100.calories} kcal/100g, ${item.per100.protein}g protein, ${item.per100.carbs}g carbs, ${item.per100.fats}g fat, ${item.per100.fiber}g fiber\n`;
+        });
+        offDataContext += "These are verified values — always prefer these over your estimates.\n";
+      }
+
+      // USDA fallback if OFF found nothing
+      if (offDataContext === "" && process.env.USDA_API_KEY) {
+        const usdaWords = words.filter(w => w.length >= 4).slice(0, 2);
+        for (const word of usdaWords) {
+          try {
+            const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(word)}&api_key=${process.env.USDA_API_KEY}&pageSize=3&dataType=Foundation,SR%20Legacy,Branded`;
+            const usdaRes = await fetch(usdaUrl, { signal: AbortSignal.timeout(2000) });
+            if (usdaRes.ok) {
+              const usdaData = await usdaRes.json();
+              const food = usdaData.foods?.[0];
+              if (food) {
+                const getNutrient = (id) => food.foodNutrients?.find(n => n.nutrientId === id)?.value || 0;
+                const cal = Math.round(getNutrient(1008));
+                if (cal > 0) {
+                  offDataContext += `\n\n**USDA DATA for ${food.description}:** ${cal} kcal/100g, ${Math.round(getNutrient(1003) * 10) / 10}g protein, ${Math.round(getNutrient(1005) * 10) / 10}g carbs, ${Math.round(getNutrient(1004) * 10) / 10}g fat\n`;
+                }
+              }
+            }
+          } catch { /* silent */ }
+        }
+      }
+    }
+
+    const enhancedSystem = offDataContext ? system + offDataContext : system;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
