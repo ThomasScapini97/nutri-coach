@@ -228,7 +228,9 @@ export default function Chat() {
 
       const foods = Array.isArray(result.foods) ? result.foods : [];
       const burnedCalories = result.burned_calories || 0;
-      const isRedirect = result.redirect_to_summary === true;
+      const MODIFY_KEYWORDS = ['rimuovi', 'cancella', 'elimina', 'togli', 'delete', 'remove', 'löschen', 'supprimer', 'eliminar', 'apaga', 'excluir'];
+      const userWantsModify = !imageBase64 && MODIFY_KEYWORDS.some(kw => text.toLowerCase().includes(kw));
+      const isRedirect = result.redirect_to_summary === true || (userWantsModify && foods.length === 0 && burnedCalories === 0);
       const assistantMessage = { id: crypto.randomUUID(), role: isRedirect ? "redirect" : "assistant", content: isRedirect ? t('chat.redirectToSummary') : result.message, timestamp: new Date().toISOString(), nutrition: null };
 
       if (isRedirect) {
