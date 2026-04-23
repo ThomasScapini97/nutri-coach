@@ -239,7 +239,7 @@ export default function Chat() {
         if (todayLog?.id) {
           await supabase.from('messages').insert([
             { foodlog_id: todayLog.id, role: userMessage.role, content: userMessage.content, timestamp: userMessage.timestamp },
-            { foodlog_id: todayLog.id, role: 'assistant', content: assistantMessage.content, timestamp: assistantMessage.timestamp },
+            { foodlog_id: todayLog.id, role: 'redirect', content: assistantMessage.content, timestamp: assistantMessage.timestamp },
           ]);
         }
         return;
