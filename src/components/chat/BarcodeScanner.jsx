@@ -1,13 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Camera, Search, AlertCircle } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
 import { supabase } from "@/lib/supabase";
 
 export default function BarcodeScanner({ onProductFound, onClose }) {
-  const [mode, setMode] = useState("camera");
-  const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
-  const [results, setResults] = useState([]);
   const [error, setError] = useState(null);
   const [cameraError, setCameraError] = useState(null);
   const [scanning, setScanning] = useState(false);
@@ -29,18 +26,15 @@ export default function BarcodeScanner({ onProductFound, onClose }) {
     }
   };
 
-const startCamera = async () => {
-    setMode("camera");
+  const startCamera = async () => {
     setCameraError(null);
     setError(null);
     setScanning(false);
 
     try {
-      // Prima chiedi esplicitamente i permessi fotocamera
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: "environment" } }
       });
-      // Ferma subito lo stream — lo gestirà zxing
       stream.getTracks().forEach(t => t.stop());
 
       const { BrowserMultiFormatReader } = await import("@zxing/library");
@@ -66,7 +60,7 @@ const startCamera = async () => {
       if (e.name === "NotAllowedError") {
         setCameraError("Camera permission denied. Please allow camera access in your browser settings.");
       } else {
-        setCameraError("Camera not available. Please use the search instead.");
+        setCameraError("Camera not available.");
       }
     }
   };
@@ -128,14 +122,12 @@ const startCamera = async () => {
     setSearching(true);
     setError(null);
     try {
-      // 1. Check local database first
       const localProduct = await checkLocalDatabase(barcode);
       if (localProduct) {
         handleSelectProduct({ ...localProduct, source: 'local_db' });
         return;
       }
 
-      // 2. Not found locally — search OFF
       const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`, {
         headers: { "User-Agent": "NutriCoach/1.0 (privacy@nutricoach.app)" },
       });
@@ -148,19 +140,16 @@ const startCamera = async () => {
           handleSelectProduct({ ...parsed, brand: product.brands || "", source: 'off' });
         } else {
           setError("Product found but nutritional data is incomplete.");
-          setMode("search");
         }
       } else {
-        setError("Product not found. Try searching by name.");
-        setMode("search");
+        setError("Product not found. Try entering the food manually in chat.");
       }
     } catch (_e) {
       if (!navigator.onLine) {
         setError("No internet connection. Check your connection and try again.");
       } else {
-        setError("OpenFoodFacts service is unavailable. Try again in a few minutes or enter the food manually in chat.");
+        setError("OpenFoodFacts service is unavailable. Try again in a few minutes.");
       }
-      setMode("search");
     } finally {
       setSearching(false);
     }
@@ -181,32 +170,6 @@ const startCamera = async () => {
       },
       serving: p.serving_size || "100g",
     };
-  };
-
-  const searchByName = async () => {
-    if (!searchQuery.trim()) return;
-    setSearching(true);
-    setError(null);
-    setResults([]);
-    try {
-      const res = await fetch(
-        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=8&fields=product_name,nutriments,serving_size,brands`
-      );
-      const data = await res.json();
-      const parsed = (data.products || [])
-        .map(p => ({ ...parseProduct(p), brand: p.brands || "" }))
-        .filter(p => p && p.name && p.per100.calories > 0);
-      if (parsed.length === 0) setError("No products found. Try a different search term.");
-      setResults(parsed);
-    } catch {
-      if (!navigator.onLine) {
-        setError("No internet connection. Check your connection and try again.");
-      } else {
-        setError("OpenFoodFacts service is unavailable. You can still enter the food manually in chat.");
-      }
-    } finally {
-      setSearching(false);
-    }
   };
 
   const handleSelectProduct = (product) => {
@@ -239,8 +202,8 @@ const startCamera = async () => {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 12px", borderBottom: "0.5px solid #f3f4f6" }}>
           <div>
-            <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22" }}>Add food</p>
-            <p style={{ fontSize: "11px", color: "#9ca3af" }}>Scan barcode or search by name</p>
+            <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22" }}>Scan barcode</p>
+            <p style={{ fontSize: "11px", color: "#9ca3af" }}>Point the camera at a product barcode</p>
           </div>
           <button onClick={() => { stopCamera(); onClose(); }} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <X style={{ width: "16px", height: "16px", color: "#6b7280" }} />
@@ -248,121 +211,44 @@ const startCamera = async () => {
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
-
-          {/* Mode selector */}
-          {!mode && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <button onClick={startCamera} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", borderRadius: "16px", border: "0.5px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}>
-                <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Camera style={{ width: "20px", height: "20px", color: "#16a34a" }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: "14px", fontWeight: 500, color: "#1a3a22", marginBottom: "2px" }}>Scan barcode</p>
-                  <p style={{ fontSize: "12px", color: "#9ca3af" }}>Works on all browsers including Safari</p>
-                </div>
-              </button>
-              <button onClick={() => setMode("search")} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", borderRadius: "16px", border: "0.5px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}>
-                <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Search style={{ width: "20px", height: "20px", color: "#3b82f6" }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: "14px", fontWeight: 500, color: "#1a3a22", marginBottom: "2px" }}>Search by name</p>
-                  <p style={{ fontSize: "12px", color: "#9ca3af" }}>Type a food or product name</p>
-                </div>
+          {cameraError ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "24px 0" }}>
+              <AlertCircle style={{ width: "32px", height: "32px", color: "#ef4444" }} />
+              <p style={{ fontSize: "13px", color: "#6b7280", textAlign: "center" }}>{cameraError}</p>
+              <button onClick={startCamera} style={{ fontSize: "13px", color: "#16a34a", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}>
+                Try again →
               </button>
             </div>
-          )}
-
-          {/* Camera mode */}
-          {mode === "camera" && (
+          ) : searching ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "24px 0" }}>
+              <Spinner size="lg" />
+              <p style={{ fontSize: "13px", color: "#9ca3af" }}>Looking up product...</p>
+            </div>
+          ) : (
             <div>
-              {cameraError ? (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "24px 0" }}>
-                  <AlertCircle style={{ width: "32px", height: "32px", color: "#ef4444" }} />
-                  <p style={{ fontSize: "13px", color: "#6b7280", textAlign: "center" }}>{cameraError}</p>
-                  <button onClick={() => { setMode("search"); setCameraError(null); }} style={{ fontSize: "13px", color: "#16a34a", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}>
-                    Switch to search →
-                  </button>
-                </div>
-              ) : searching ? (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "24px 0" }}>
-                  <Spinner size="lg" />
-                  <p style={{ fontSize: "13px", color: "#9ca3af" }}>Looking up product...</p>
-                </div>
-              ) : (
-                <div>
-                  <div style={{ position: "relative", borderRadius: "16px", overflow: "hidden", background: "#000", aspectRatio: "4/3" }}>
-                    <video ref={videoRef} style={{ width: "100%", height: "100%", objectFit: "cover" }} playsInline muted />
-                    {scanning && (
-                      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <div style={{ width: "60%", height: "25%", border: "2px solid #16a34a", borderRadius: "8px", boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)" }} />
-                      </div>
-                    )}
-                    <p style={{ position: "absolute", bottom: "12px", left: 0, right: 0, textAlign: "center", fontSize: "12px", color: "white", opacity: 0.8 }}>
-                      Point at a barcode
-                    </p>
+              <div style={{ position: "relative", borderRadius: "16px", overflow: "hidden", background: "#000", aspectRatio: "4/3" }}>
+                <video ref={videoRef} style={{ width: "100%", height: "100%", objectFit: "cover" }} playsInline muted />
+                {scanning && (
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: "60%", height: "25%", border: "2px solid #16a34a", borderRadius: "8px", boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)" }} />
                   </div>
-                  {error && <p style={{ fontSize: "12px", color: "#ef4444", marginTop: "10px", textAlign: "center" }}>{error}</p>}
-                </div>
-              )}
-              <button onClick={() => { stopCamera(); setMode("search"); setError(null); }} style={{ marginTop: "12px", fontSize: "12px", color: "#9ca3af", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", width: "100%", textAlign: "center" }}>
-                Search by name instead →
-              </button>
-            </div>
-          )}
-
-          {/* Search mode */}
-          {mode === "search" && (
-            <div>
-              <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
-                <input
-                  type="text" value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && searchByName()}
-                  placeholder="e.g. Nutella, Greek yogurt..."
-                  autoFocus
-                  style={{ flex: 1, background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a3a22", outline: "none", fontFamily: "inherit" }}
-                />
-                <button onClick={searchByName} disabled={searching || !searchQuery.trim()} style={{ background: "#16a34a", color: "white", border: "none", borderRadius: "10px", padding: "10px 16px", fontSize: "13px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit", opacity: searching || !searchQuery.trim() ? 0.6 : 1, display: "flex", alignItems: "center", gap: "6px" }}>
-                  {searching ? <Spinner size="sm" /> : <Search style={{ width: "14px", height: "14px" }} />}
-                  Search
-                </button>
+                )}
+                <p style={{ position: "absolute", bottom: "12px", left: 0, right: 0, textAlign: "center", fontSize: "12px", color: "white", opacity: 0.8 }}>
+                  Point at a barcode
+                </p>
               </div>
-
               {error && (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px", background: "#fef2f2", borderRadius: "10px", marginBottom: "10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px", background: "#fef2f2", borderRadius: "10px", marginTop: "10px" }}>
                   <AlertCircle style={{ width: "14px", height: "14px", color: "#ef4444", flexShrink: 0 }} />
                   <p style={{ fontSize: "12px", color: "#dc2626" }}>{error}</p>
                 </div>
               )}
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {results.map((product, i) => (
-                  <button key={i} onClick={() => handleSelectProduct(product)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: "12px", border: "0.5px solid #e5e7eb", background: "white", cursor: "pointer", fontFamily: "inherit", textAlign: "left", width: "100%" }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: "13px", fontWeight: 500, color: "#1a3a22", marginBottom: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{product.name}</p>
-                      {product.brand && <p style={{ fontSize: "11px", color: "#9ca3af" }}>{product.brand}</p>}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, marginLeft: "10px" }}>
-                      <div style={{ textAlign: "right" }}>
-                        <p style={{ fontSize: "14px", fontWeight: 500, color: "#dc2626" }}>{product.per100.calories}</p>
-                        <p style={{ fontSize: "10px", color: "#9ca3af" }}>kcal/100g</p>
-                      </div>
-                      <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px" }}>+</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <button onClick={() => { setMode(null); setResults([]); setError(null); setSearchQuery(""); }} style={{ marginTop: "12px", fontSize: "12px", color: "#9ca3af", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", width: "100%", textAlign: "center" }}>
-                ← Back
-              </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Popup grammi */}
+      {/* Grams popup */}
       {selectedProduct && (
         <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
           <div style={{ background: "white", borderRadius: "20px", padding: "20px", width: "100%", maxWidth: "320px" }}>
