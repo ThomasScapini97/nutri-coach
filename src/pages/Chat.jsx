@@ -226,7 +226,20 @@ export default function Chat() {
 
       const foods = Array.isArray(result.foods) ? result.foods : [];
       const burnedCalories = result.burned_calories || 0;
-      const assistantMessage = { id: crypto.randomUUID(), role: "assistant", content: result.message, timestamp: new Date().toISOString(), nutrition: null };
+      const isRedirect = result.redirect_to_summary === true;
+      const assistantMessage = { id: crypto.randomUUID(), role: isRedirect ? "redirect" : "assistant", content: result.message, timestamp: new Date().toISOString(), nutrition: null };
+
+      if (isRedirect) {
+        setMessages(prev => [...prev, assistantMessage]);
+        setIsLoading(false);
+        if (todayLog?.id) {
+          await supabase.from('messages').insert([
+            { foodlog_id: todayLog.id, role: userMessage.role, content: userMessage.content, timestamp: userMessage.timestamp },
+            { foodlog_id: todayLog.id, role: 'assistant', content: assistantMessage.content, timestamp: assistantMessage.timestamp },
+          ]);
+        }
+        return;
+      }
 
       let currentLogId = todayLog?.id;
       if (!currentLogId) {

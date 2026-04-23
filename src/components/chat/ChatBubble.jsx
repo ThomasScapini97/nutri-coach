@@ -8,6 +8,34 @@ const ChatBubble = memo(function ChatBubble({ message, foodEntries }) {
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
 
+  // Redirect to Summary — card ambra
+  if (message.role === "redirect") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        style={{ display: "flex", justifyContent: "center", padding: "4px 16px" }}
+      >
+        <div style={{
+          background: "#fffbeb",
+          border: "1px solid #fcd34d",
+          borderRadius: "14px",
+          padding: "10px 14px",
+          maxWidth: "88%",
+          display: "flex",
+          gap: "8px",
+          alignItems: "flex-start",
+        }}>
+          <span style={{ fontSize: "14px", flexShrink: 0, marginTop: "1px" }}>✏️</span>
+          <span style={{ fontSize: "12px", color: "#92400e", lineHeight: 1.5 }}>
+            <ReactMarkdown className="[&>p]:inline [&>p]:m-0">{message.content}</ReactMarkdown>
+          </span>
+        </div>
+      </motion.div>
+    );
+  }
+
   // Messaggio di sistema — riga grigia centrata
   if (isSystem) {
     return (

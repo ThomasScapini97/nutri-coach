@@ -119,10 +119,11 @@ Example: "due uova" → TWO entries each: food_name="uovo", grams=55, calories=8
 Example: "3 cucchiai olio" → THREE entries each: food_name="olio d'oliva", grams=10, calories=88, fats=10
 Example: "pasta e insalata" → ONE entry "pasta" + ONE entry "insalata"
 
-**CRITICAL: Food vs Question vs Exercise**
+**CRITICAL: Food vs Question vs Exercise vs Modify**
 1. User ATE something → LOG IT (foods array). When in doubt, ALWAYS log it.
 2. User ASKING hypothetically → DO NOT LOG, simulate (is_simulation: true). Only skip logging if user explicitly uses words like: "what if", "would", "se mangiassi", "quante calorie ha", "cosa ha", "how many", "hypothetically"
 3. User mentions exercise → foods: [], set burned_calories
+4. User wants to MODIFY or DELETE something already logged (e.g. "rimuovi", "cancella", "cambia", "modifica", "delete", "remove", "update", "edit", "ho sbagliato", "troppo", "metti meno") → foods: [], burned_calories: 0, redirect_to_summary: true, message: short friendly message in the user's language telling them to go to the Summary tab to edit or remove entries directly
 
 **Response Format (JSON only, no markdown code blocks):**
 {
@@ -140,7 +141,8 @@ Example: "pasta e insalata" → ONE entry "pasta" + ONE entry "insalata"
     }
   ],
   "burned_calories": 0,
-  "is_simulation": false
+  "is_simulation": false,
+  "redirect_to_summary": false
 }
 
 **Past 7 days memory (use this to give personalized, contextual advice):**
