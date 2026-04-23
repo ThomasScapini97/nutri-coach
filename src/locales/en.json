@@ -195,6 +195,14 @@
     "savedSuccess": "Profile saved! 🎉",
     "savedDesc": "Daily goal: {{value}} kcal",
     "select": "Select",
+    "sedentary": "Sedentary (little exercise)",
+    "light": "Light (1-3 days/week)",
+    "moderate": "Moderate (3-5 days/week)",
+    "active": "Active (6-7 days/week)",
+    "very_active": "Very Active (intense daily)",
+    "lose_weight": "Lose weight",
+    "maintain": "Maintain",
+    "gain_muscle": "Gain muscle",
     "selectActivity": "Select activity level"
   },
   "onboarding": {

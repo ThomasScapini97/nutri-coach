@@ -195,6 +195,14 @@
     "savedSuccess": "Profil gespeichert! 🎉",
     "savedDesc": "Tagesziel: {{value}} kcal",
     "select": "Auswählen",
+    "sedentary": "Sitzend (wenig Bewegung)",
+    "light": "Leicht (1-3 Tage/Woche)",
+    "moderate": "Moderat (3-5 Tage/Woche)",
+    "active": "Aktiv (6-7 Tage/Woche)",
+    "very_active": "Sehr aktiv (intensiv)",
+    "lose_weight": "Abnehmen",
+    "maintain": "Gewicht halten",
+    "gain_muscle": "Muskeln aufbauen",
     "selectActivity": "Aktivitätsniveau auswählen"
   },
   "onboarding": {

@@ -13,18 +13,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-const ACTIVITY_LEVELS = [
-  { value: "sedentary", label: "Sedentary (little exercise)" },
-  { value: "light", label: "Light (1-3 days/week)" },
-  { value: "moderate", label: "Moderate (3-5 days/week)" },
-  { value: "active", label: "Active (6-7 days/week)" },
-  { value: "very_active", label: "Very Active (intense daily)" },
-];
+const ACTIVITY_LEVELS = ["sedentary", "light", "moderate", "active", "very_active"];
 
 const GOALS = [
-  { value: "lose_weight", label: "Lose weight", emoji: "🎯" },
-  { value: "maintain", label: "Maintain", emoji: "⚖️" },
-  { value: "gain_muscle", label: "Gain muscle", emoji: "💪" },
+  { value: "lose_weight", emoji: "🎯" },
+  { value: "maintain", emoji: "⚖️" },
+  { value: "gain_muscle", emoji: "💪" },
 ];
 
 const CHAT_STYLE_OPTIONS = [
@@ -269,7 +263,7 @@ export default function Profile() {
                 <SelectValue placeholder={t("profile.selectActivity")} />
               </SelectTrigger>
               <SelectContent position="popper" side="bottom" sideOffset={4} className="bg-white border border-gray-200 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-[9999] overflow-hidden">
-                {ACTIVITY_LEVELS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                {ACTIVITY_LEVELS.map(l => <SelectItem key={l} value={l}>{t(`profile.${l}`)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -285,7 +279,7 @@ export default function Profile() {
                   }}
                 >
                   <span className="text-[20px]">{g.emoji}</span>
-                  <span className="text-[10px] text-center" style={{ color: form.goal === g.value ? "#15803d" : "#6b7280", fontWeight: form.goal === g.value ? 500 : 400 }}>{g.label}</span>
+                  <span className="text-[10px] text-center" style={{ color: form.goal === g.value ? "#15803d" : "#6b7280", fontWeight: form.goal === g.value ? 500 : 400 }}>{t(`profile.${g.value}`)}</span>
                 </button>
               ))}
             </div>

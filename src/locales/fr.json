@@ -195,6 +195,14 @@
     "savedSuccess": "Profil sauvegardé ! 🎉",
     "savedDesc": "Objectif quotidien : {{value}} kcal",
     "select": "Sélectionner",
+    "sedentary": "Sédentaire (peu d'exercice)",
+    "light": "Léger (1-3 jours/sem.)",
+    "moderate": "Modéré (3-5 jours/sem.)",
+    "active": "Actif (6-7 jours/sem.)",
+    "very_active": "Très actif (intensif)",
+    "lose_weight": "Perdre du poids",
+    "maintain": "Maintenir",
+    "gain_muscle": "Prendre du muscle",
     "selectActivity": "Sélectionner le niveau d'activité"
   },
   "onboarding": {
