@@ -310,5 +310,8 @@
     "min": "min",
     "g": "g",
     "addG": "+ ajouter g"
+  },
+  "chat": {
+    "redirectToSummary": "Pour modifier ou supprimer un aliment enregistré, allez dans l'onglet **Résumé** et utilisez les contrôles directement."
   }
 }

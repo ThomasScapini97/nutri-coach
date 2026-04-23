@@ -310,5 +310,8 @@
     "min": "min",
     "g": "g",
     "addG": "+ adicionar g"
+  },
+  "chat": {
+    "redirectToSummary": "Para editar ou remover um alimento registado, vá ao separador **Resumo** e use os controlos diretamente."
   }
 }

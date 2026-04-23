@@ -310,5 +310,8 @@
     "min": "min",
     "g": "g",
     "addG": "+ add g"
+  },
+  "chat": {
+    "redirectToSummary": "To edit or remove a logged food, go to the **Summary** tab and use the controls directly."
   }
 }

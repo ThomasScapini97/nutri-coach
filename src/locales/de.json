@@ -310,5 +310,8 @@
     "min": "Min",
     "g": "g",
     "addG": "+ g hinzufügen"
+  },
+  "chat": {
+    "redirectToSummary": "Um eine protokollierte Mahlzeit zu bearbeiten oder zu löschen, gehe zum Tab **Zusammenfassung** und nutze die Steuerelemente direkt."
   }
 }

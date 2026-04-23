@@ -310,5 +310,8 @@
     "min": "min",
     "g": "g",
     "addG": "+ aggiungi g"
+  },
+  "chat": {
+    "redirectToSummary": "Per modificare o eliminare un alimento già loggato, vai nel tab **Riepilogo** e usa i controlli direttamente."
   }
 }

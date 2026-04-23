@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,6 +27,7 @@ const WELCOME_MESSAGE = {
 };
 
 export default function Chat() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { setChatInputProps } = useChatContext();
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
@@ -227,7 +229,7 @@ export default function Chat() {
       const foods = Array.isArray(result.foods) ? result.foods : [];
       const burnedCalories = result.burned_calories || 0;
       const isRedirect = result.redirect_to_summary === true;
-      const assistantMessage = { id: crypto.randomUUID(), role: isRedirect ? "redirect" : "assistant", content: result.message, timestamp: new Date().toISOString(), nutrition: null };
+      const assistantMessage = { id: crypto.randomUUID(), role: isRedirect ? "redirect" : "assistant", content: isRedirect ? t('chat.redirectToSummary') : result.message, timestamp: new Date().toISOString(), nutrition: null };
 
       if (isRedirect) {
         setMessages(prev => [...prev, assistantMessage]);
