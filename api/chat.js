@@ -104,6 +104,31 @@ async function searchOpenFoodFacts(foodName) {
   return null;
 }
 
+async function checkProductDatabase(foodName) {
+  try {
+    const { data } = await supabase
+      .from('product_database')
+      .select('product_name, brand, calories_100g, protein_100g, carbs_100g, fats_100g, fiber_100g')
+      .ilike('product_name', `%${foodName}%`)
+      .order('scan_count', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data || !data.calories_100g) return null;
+    return {
+      name: `${data.product_name}${data.brand ? ` (${data.brand})` : ''}`,
+      per100: {
+        calories: Math.round(data.calories_100g),
+        protein: Math.round((data.protein_100g || 0) * 10) / 10,
+        carbs: Math.round((data.carbs_100g || 0) * 10) / 10,
+        fats: Math.round((data.fats_100g || 0) * 10) / 10,
+        fiber: Math.round((data.fiber_100g || 0) * 10) / 10,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -173,15 +198,20 @@ export default async function handler(req, res) {
 
       const candidates = [...bigrams, ...words].slice(0, 3);
 
-      const offResults = await Promise.all(
-        candidates.map(term => searchOpenFoodFacts(term))
-      );
+      const [localResults, offResults] = await Promise.all([
+        Promise.all(candidates.map(term => checkProductDatabase(term))),
+        Promise.all(candidates.map(term => searchOpenFoodFacts(term))),
+      ]);
 
-      const found = offResults.filter(Boolean);
+      const localFound = localResults.filter(Boolean);
+      const offFound = offResults.filter(Boolean);
 
-      if (found.length > 0) {
+      if (localFound.length > 0 || offFound.length > 0) {
         offDataContext = "\n\n**REAL NUTRITIONAL DATA FROM DATABASE (use these exact values):**\n";
-        found.forEach(item => {
+        localFound.forEach(item => {
+          offDataContext += `- ${item.name} [verified]: ${item.per100.calories} kcal/100g, ${item.per100.protein}g protein, ${item.per100.carbs}g carbs, ${item.per100.fats}g fat, ${item.per100.fiber}g fiber\n`;
+        });
+        offFound.forEach(item => {
           offDataContext += `- ${item.name}: ${item.per100.calories} kcal/100g, ${item.per100.protein}g protein, ${item.per100.carbs}g carbs, ${item.per100.fats}g fat, ${item.per100.fiber}g fiber\n`;
         });
         offDataContext += "These are verified values — always prefer these over your estimates.\n";

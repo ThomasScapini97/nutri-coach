@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Camera, Search, AlertCircle } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
+import { supabase } from "@/lib/supabase";
 
 export default function BarcodeScanner({ onProductFound, onClose }) {
   const [mode, setMode] = useState("camera");
@@ -70,16 +71,81 @@ const startCamera = async () => {
     }
   };
 
+  const checkLocalDatabase = async (barcode) => {
+    const { data } = await supabase
+      .from('product_database')
+      .select('*')
+      .eq('barcode', barcode)
+      .maybeSingle();
+    if (!data) return null;
+    supabase.from('product_database').update({
+      scan_count: data.scan_count + 1,
+      updated_at: new Date().toISOString(),
+    }).eq('barcode', barcode);
+    return {
+      name: data.product_name,
+      brand: data.brand || "",
+      serving: "100g",
+      per100: {
+        calories: data.calories_100g || 0,
+        protein: data.protein_100g || 0,
+        carbs: data.carbs_100g || 0,
+        fats: data.fats_100g || 0,
+        fiber: data.fiber_100g || 0,
+      },
+    };
+  };
+
+  const saveToLocalDatabase = async (barcode, product) => {
+    try {
+      const n = product.nutriments || {};
+      await supabase.from('product_database').upsert({
+        barcode,
+        product_name: product.product_name || product.product_name_en || barcode,
+        brand: product.brands || null,
+        category: product.categories_tags?.[0]?.replace('en:', '') || null,
+        country: 'IT',
+        image_url: product.image_small_url || product.image_url || null,
+        calories_100g: n["energy-kcal_100g"] || (n["energy_100g"] || 0) / 4.184 || null,
+        protein_100g: n["proteins_100g"] || null,
+        carbs_100g: n["carbohydrates_100g"] || null,
+        sugars_100g: n["sugars_100g"] || null,
+        fats_100g: n["fat_100g"] || null,
+        saturated_fats_100g: n["saturated-fat_100g"] || null,
+        fiber_100g: n["fiber_100g"] || null,
+        sodium_100g: n["sodium_100g"] || null,
+        allergens: product.allergens || product.allergens_tags?.join(', ') || null,
+        source: 'off',
+        confidence: 0.85,
+        scan_count: 1,
+      }, { onConflict: 'barcode' });
+    } catch (e) {
+      console.error('Failed to save to local database:', e);
+    }
+  };
+
   const fetchByBarcode = async (barcode) => {
     setSearching(true);
     setError(null);
     try {
-      const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+      // 1. Check local database first
+      const localProduct = await checkLocalDatabase(barcode);
+      if (localProduct) {
+        handleSelectProduct({ ...localProduct, source: 'local_db' });
+        return;
+      }
+
+      // 2. Not found locally — search OFF
+      const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`, {
+        headers: { "User-Agent": "NutriCoach/1.0 (privacy@nutricoach.app)" },
+      });
       const data = await res.json();
       if (data.status === 1 && data.product) {
-        const product = parseProduct(data.product);
-        if (product) {
-          handleSelectProduct(product);
+        const product = data.product;
+        saveToLocalDatabase(barcode, product);
+        const parsed = parseProduct(product);
+        if (parsed) {
+          handleSelectProduct({ ...parsed, brand: product.brands || "", source: 'off' });
         } else {
           setError("Product found but nutritional data is incomplete.");
           setMode("search");
@@ -301,6 +367,11 @@ const startCamera = async () => {
         <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
           <div style={{ background: "white", borderRadius: "20px", padding: "20px", width: "100%", maxWidth: "320px" }}>
             <p style={{ fontSize: "15px", fontWeight: 500, color: "#1a3a22", marginBottom: "4px" }}>{selectedProduct.name}</p>
+            {selectedProduct.source && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 8px", borderRadius: "20px", marginBottom: "8px", fontSize: "10px", fontWeight: 500, background: selectedProduct.source === 'local_db' ? "#dcfce7" : "#f3f4f6", color: selectedProduct.source === 'local_db' ? "#16a34a" : "#6b7280" }}>
+                {selectedProduct.source === 'local_db' ? "✅ From NutriCoach DB" : "🌐 From Open Food Facts"}
+              </div>
+            )}
             <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "16px" }}>{selectedProduct.per100.calories} kcal per 100g</p>
 
             <label style={{ fontSize: "11px", color: "#9ca3af", letterSpacing: "0.3px", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
