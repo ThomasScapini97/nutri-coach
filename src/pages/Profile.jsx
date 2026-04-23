@@ -27,9 +27,9 @@ const GOALS = [
   { value: "gain_muscle", label: "Gain muscle", emoji: "💪" },
 ];
 
-const CHAT_STYLES = [
-  { value: "concise", label: "Concise", emoji: "⚡", sub: "Short and to the point" },
-  { value: "detailed", label: "Detailed", emoji: "🧑‍🏫", sub: "In-depth advice" },
+const CHAT_STYLE_OPTIONS = [
+  { value: "concise", emoji: "⚡" },
+  { value: "detailed", emoji: "🧑‍🏫" },
 ];
 
 function calculateCalorieGoal(profile) {
@@ -333,7 +333,7 @@ export default function Profile() {
           </div>
           <div className="p-[10px_12px_12px]">
             <div className="flex gap-2">
-              {CHAT_STYLES.map(s => (
+              {CHAT_STYLE_OPTIONS.map(s => (
                 <button key={s.value} onClick={() => setForm({ ...form, chat_style: s.value })}
                   className="flex-1 py-3 px-2 rounded-[14px] cursor-pointer font-[inherit] text-center"
                   style={{
@@ -342,8 +342,8 @@ export default function Profile() {
                   }}
                 >
                   <div className="text-[22px] mb-1">{s.emoji}</div>
-                  <p className="text-[13px] font-medium m-0" style={{ color: form.chat_style === s.value ? "#15803d" : "#1a3a22" }}>{s.label}</p>
-                  <p className="text-[10px] text-gray-400 m-0">{s.sub}</p>
+                  <p className="text-[13px] font-medium m-0" style={{ color: form.chat_style === s.value ? "#15803d" : "#1a3a22" }}>{t(`profile.${s.value}`)}</p>
+                  <p className="text-[10px] text-gray-400 m-0">{t(`profile.${s.value}Desc`)}</p>
                 </button>
               ))}
             </div>
