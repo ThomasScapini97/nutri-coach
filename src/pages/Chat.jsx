@@ -74,7 +74,10 @@ export default function Chat() {
     initialData: [],
   });
 
-  const streak = profile?.current_streak || 0;
+  const today = getToday();
+  const yesterday = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]; })();
+  const lastStreakDate = profile?.last_streak_date;
+  const streak = (lastStreakDate === today || lastStreakDate === yesterday) ? (profile?.current_streak || 0) : 0;
 
   const { data: chatMessages } = useQuery({
     queryKey: ["messages", todayLog?.id],

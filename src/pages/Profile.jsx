@@ -12,6 +12,7 @@ import Spinner from "@/components/ui/Spinner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { getToday } from "@/lib/nutritionUtils";
 
 const ACTIVITY_LEVELS = ["sedentary", "light", "moderate", "active", "very_active"];
 
@@ -154,6 +155,11 @@ export default function Profile() {
 
   const userName = profile?.display_name || user?.email?.split("@")[0] || "You";
 
+  const today = getToday();
+  const yesterday = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]; })();
+  const lastStreakDate = profile?.last_streak_date;
+  const streak = (lastStreakDate === today || lastStreakDate === yesterday) ? (profile?.current_streak || 0) : 0;
+
   const inputCls = "w-full bg-gray-50 border border-gray-200 rounded-lg py-[7px] px-[10px] text-[14px] text-forest outline-none font-[inherit]";
   const labelCls = "text-[10px] text-gray-400 tracking-[0.3px] uppercase mb-[5px] block";
 
@@ -170,11 +176,11 @@ export default function Profile() {
           >✨</div>
           <p className="text-[17px] font-medium text-forest mt-[2px] m-0">{userName}</p>
           <p className="text-[11px] text-gray-400 m-0">{user?.email}</p>
-          {(profile?.current_streak > 0 || profile?.longest_streak > 0) && (
+          {(streak > 0 || profile?.longest_streak > 0) && (
             <div className="flex gap-2 mt-[6px]">
-              {profile?.current_streak > 0 && (
+              {streak > 0 && (
                 <span className="text-[11px] px-3 py-[3px] rounded-full font-medium" style={{ background: "#fff7ed", border: "0.5px solid #fed7aa", color: "#ea580c" }}>
-                  🔥 {t("profile.currentStreak", { value: profile.current_streak })}
+                  🔥 {t("profile.currentStreak", { value: streak })}
                 </span>
               )}
               {profile?.longest_streak > 0 && (
