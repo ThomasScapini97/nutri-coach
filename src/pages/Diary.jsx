@@ -4,31 +4,76 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { format, subDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minus, Plus, Calendar, X } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { getToday } from "@/lib/nutritionUtils";
 import WeeklyChallenges from "@/components/diary/WeeklyChallenges";
 
 const MOODS = [
-  { value: 1, emoji: "😔", label: "Bad" },
-  { value: 2, emoji: "😐", label: "Meh" },
-  { value: 3, emoji: "🙂", label: "Good" },
-  { value: 4, emoji: "😄", label: "Great" },
-  { value: 5, emoji: "🤩", label: "Amazing" },
+  {
+    value: 1, label: "Bad",
+    color: "#dc2626", bg: "#fee2e2", selectedBg: "#fecaca",
+    icon: (color) => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M16 16s-1.5-2-4-2-4 2-4 2"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
+    )
+  },
+  {
+    value: 2, label: "Meh",
+    color: "#c2410c", bg: "#fed7aa", selectedBg: "#fdba74",
+    icon: (color) => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="8" y1="15" x2="16" y2="15"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
+    )
+  },
+  {
+    value: 3, label: "Good",
+    color: "#16a34a", bg: "#bbf7d0", selectedBg: "#86efac",
+    icon: (color) => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 13s1.5 2 4 2 4-2 4-2"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
+    )
+  },
+  {
+    value: 4, label: "Great",
+    color: "#059669", bg: "#d1fae5", selectedBg: "#a7f3d0",
+    icon: (color) => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 13s1.5 3 4 3 4-3 4-3"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
+    )
+  },
+  {
+    value: 5, label: "Amazing",
+    color: "#ca8a04", bg: "#fef9c3", selectedBg: "#fef08a",
+    icon: (color) => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 13s1.5 3 4 3 4-3 4-3"/>
+        <path d="M9 8.5c0 0 .5 1 1.5 1s1.5-1 1.5-1"/>
+        <path d="M13 8.5c0 0 .5 1 1.5 1s1.5-1 1.5-1"/>
+      </svg>
+    )
+  },
 ];
 
-const SCALES = [
-  { key: "energy", label: "Energy", emoji: "⚡", color: "#f59e0b" },
-  { key: "sleep_quality", label: "Sleep quality", emoji: "😴", color: "#3b82f6" },
-  { key: "stress", label: "Stress", emoji: "🧠", color: "#ef4444" },
-];
-
-
-const emptyForm = {
-  mood: null, energy: null, sleep_quality: null, stress: null, notes: "",
-  weight: "",
-};
+const emptyForm = { mood: null, notes: "", weight: "" };
 
 function SkeletonDiary() {
   return (
@@ -37,7 +82,7 @@ function SkeletonDiary() {
         <div style={{ height: "16px", background: "#f3f4f6", borderRadius: "8px", width: "40%", marginBottom: "16px" }} />
         <div style={{ height: "48px", background: "#f3f4f6", borderRadius: "8px", width: "60%", margin: "0 auto 16px" }} />
         <div style={{ height: "8px", background: "#f3f4f6", borderRadius: "8px", marginBottom: "8px" }} />
-        <div style={{ height: "120px", background: "#f3f4f6", borderRadius: "8px" }} />
+        <div style={{ height: "80px", background: "#f3f4f6", borderRadius: "8px" }} />
       </div>
       <div className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden p-4 animate-pulse">
         <div style={{ height: "16px", background: "#f3f4f6", borderRadius: "8px", width: "50%", marginBottom: "16px" }} />
@@ -46,7 +91,7 @@ function SkeletonDiary() {
             <div key={i} style={{ flex: 1, height: "60px", background: "#f3f4f6", borderRadius: "10px" }} />
           ))}
         </div>
-        <div style={{ height: "80px", background: "#f3f4f6", borderRadius: "8px" }} />
+        <div style={{ height: "40px", background: "#f3f4f6", borderRadius: "8px" }} />
       </div>
       <div className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden p-4 animate-pulse">
         <div style={{ height: "16px", background: "#f3f4f6", borderRadius: "8px", width: "60%", marginBottom: "16px" }} />
@@ -76,6 +121,9 @@ export default function Diary() {
   const [weightGoal, setWeightGoal] = useState(null);
   const [startWeight, setStartWeight] = useState(null);
   const [pageReady, setPageReady] = useState(false);
+  const [weekMoods, setWeekMoods] = useState([]);
+  const [showNotesHistory, setShowNotesHistory] = useState(false);
+  const [pastNotes, setPastNotes] = useState([]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -102,9 +150,6 @@ export default function Diary() {
       if (data) {
         setForm({
           mood: data.mood || null,
-          energy: data.energy || null,
-          sleep_quality: data.sleep_quality || null,
-          stress: data.stress || null,
           notes: data.notes || "",
           weight: data.weight ? String(data.weight) : (prevWeight ? String(prevWeight) : ""),
         });
@@ -119,6 +164,26 @@ export default function Diary() {
 
   useEffect(() => { setPageReady(false); }, [dateStr]);
 
+  // 7-day mood strip
+  useEffect(() => {
+    if (!user?.id) return;
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return format(d, "yyyy-MM-dd");
+    });
+    supabase
+      .from("diary_entries")
+      .select("date, mood")
+      .eq("user_id", user.id)
+      .in("date", days)
+      .then(({ data }) => {
+        const map = {};
+        (data || []).forEach(d => { map[d.date] = d.mood; });
+        setWeekMoods(days.map(date => ({ date, mood: map[date] || null })));
+      });
+  }, [user?.id, dateStr]);
+
   // Auto-save with 800ms debounce
   useEffect(() => {
     if (isPast || isLoadingRef.current || !user?.id) return;
@@ -126,8 +191,8 @@ export default function Diary() {
     debounceRef.current = setTimeout(async () => {
       const payload = {
         user_id: user.id, date: dateStr,
-        mood: form.mood, energy: form.energy,
-        sleep_quality: form.sleep_quality, stress: form.stress,
+        mood: form.mood,
+        energy: null, sleep_quality: null, stress: null,
         notes: form.notes || null,
         weight: form.weight ? Number(form.weight) : null,
         waist: null, hips: null, chest: null, arm: null, thigh: null,
@@ -146,7 +211,7 @@ export default function Diary() {
       .gte("date", from).lte("date", getToday()).not("weight", "is", null).order("date")
       .then(({ data }) => {
         setChartData((data || []).map(d => ({
-          date: format(new Date(d.date + "T12:00:00"), chartRange <= 7 ? "EEE" : chartRange <= 30 ? "d MMM" : "MMM yy"),
+          date: format(new Date(d.date + "T12:00:00"), "d MMM"),
           weight: Number(d.weight),
         })));
       });
@@ -167,6 +232,22 @@ export default function Diary() {
     setForm(f => ({ ...f, weight: String(newVal) }));
   };
 
+  const loadPastNotes = async () => {
+    const { data } = await supabase
+      .from("diary_entries")
+      .select("date, mood, notes")
+      .eq("user_id", user.id)
+      .not("notes", "is", null)
+      .neq("notes", "")
+      .order("date", { ascending: false })
+      .limit(30);
+    setPastNotes(data || []);
+  };
+
+  const handleOpenHistory = () => {
+    setShowNotesHistory(true);
+    loadPastNotes();
+  };
 
   const weightDiff = form.weight && lastWeight
     ? (Number(form.weight) - Number(lastWeight)).toFixed(1)
@@ -182,15 +263,10 @@ export default function Diary() {
     const goal = Number(weightGoal);
     const start = Number(startWeight);
     if (start === goal) return null;
-
     const losing = goal < start;
-    let raw;
-    if (losing) {
-      raw = ((start - current) / (start - goal)) * 100;
-    } else {
-      raw = ((current - start) / (goal - start)) * 100;
-    }
-
+    const raw = losing
+      ? ((start - current) / (start - goal)) * 100
+      : ((current - start) / (goal - start)) * 100;
     return Math.min(Math.max(raw, 0), 100);
   })();
 
@@ -340,56 +416,112 @@ export default function Diary() {
             </div>
           </motion.div>
 
-          {/* Wellness card */}
+          {/* Mood card */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
             className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden"
             style={{ opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto" }}
           >
-            <div className="flex items-center gap-2 px-[14px] py-[10px] border-b border-gray-100">
-              <div className="w-[26px] h-[26px] rounded-[7px] bg-amber-100 flex items-center justify-center text-[13px]">😊</div>
-              <span className="text-xs font-medium text-forest">{t("diary.howFeeling")}</span>
-              {isPast && <span className="text-[10px] text-gray-400 ml-auto">{t("diary.readOnly")}</span>}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid rgba(0,0,0,0.06)" }}>
+              <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#fef9c3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>😊</div>
+              <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>{t("diary.howFeeling")}</span>
+              {isPast && <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>{t("diary.readOnly")}</span>}
             </div>
 
-            <div className="flex gap-[6px] px-3 py-[10px] border-b border-gray-100">
-              {MOODS.map(m => (
-                <button key={m.value} onClick={() => setForm(f => ({ ...f, mood: m.value }))}
-                  className="flex-1 flex flex-col items-center gap-[3px] py-2 px-[2px] rounded-[10px] cursor-pointer font-[inherit]"
-                  style={{
-                    border: form.mood === m.value ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                    background: form.mood === m.value ? "#f0fdf4" : "#f9fafb",
-                  }}
-                >
-                  <span className="text-[18px]">{m.emoji}</span>
-                  <span className="text-[8px]" style={{ color: form.mood === m.value ? "#16a34a" : "#9ca3af" }}>{m.label}</span>
-                </button>
-              ))}
+            {/* Mood selector */}
+            <div style={{ display: "flex", gap: "6px", padding: "12px 14px", borderBottom: "0.5px solid rgba(0,0,0,0.06)" }}>
+              {MOODS.map(m => {
+                const selected = form.mood === m.value;
+                return (
+                  <button
+                    key={m.value}
+                    onClick={() => setForm(f => ({ ...f, mood: m.value }))}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "8px 4px",
+                      borderRadius: "12px",
+                      border: selected ? `1.5px solid ${m.color}` : "0.5px solid #e5e7eb",
+                      background: selected ? m.bg : "#f9fafb",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <div style={{
+                      width: "32px", height: "32px", borderRadius: "50%",
+                      background: selected ? m.selectedBg : m.bg,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      {m.icon(m.color)}
+                    </div>
+                    <span style={{ fontSize: "9px", color: selected ? m.color : "#9ca3af", fontWeight: selected ? 500 : 400 }}>
+                      {m.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            {SCALES.map(scale => (
-              <div key={scale.key} className="px-[14px] py-2 border-b border-gray-100 flex items-center justify-between gap-[10px]">
-                <span className="text-[11px] text-gray-500 whitespace-nowrap">{scale.emoji} {scale.label}</span>
-                <div className="flex gap-[5px] flex-1 justify-end">
-                  {[1, 2, 3, 4, 5].map(v => (
-                    <button key={v} onClick={() => setForm(f => ({ ...f, [scale.key]: v }))}
-                      className="w-7 h-7 rounded-full border-none cursor-pointer text-[11px] font-semibold font-[inherit]"
-                      style={{
-                        background: form[scale.key] >= v ? scale.color : "#f3f4f6",
-                        color: form[scale.key] >= v ? "white" : "#9ca3af",
-                      }}
-                    >{v}</button>
-                  ))}
-                </div>
+            {/* 7-day mood strip */}
+            <div style={{ padding: "10px 14px" }}>
+              <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Last 7 days</span>
+              <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>
+                {weekMoods.map(({ date, mood }) => {
+                  const m = MOODS.find(x => x.value === mood);
+                  const todayDate = date === getToday();
+                  const dayLabel = format(new Date(date + "T12:00:00"), "EEE");
+                  return (
+                    <div key={date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
+                      <div style={{
+                        width: todayDate ? "30px" : "26px",
+                        height: todayDate ? "30px" : "26px",
+                        borderRadius: "50%",
+                        background: m ? m.bg : "#f3f4f6",
+                        border: todayDate ? `2px solid ${m ? m.color : "#e5e7eb"}` : "0.5px solid transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {m ? (
+                          <div style={{ transform: "scale(0.7)" }}>{m.icon(m.color)}</div>
+                        ) : (
+                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#e5e7eb" }} />
+                        )}
+                      </div>
+                      <span style={{ fontSize: "8px", color: todayDate ? (m?.color || "#9ca3af") : "#9ca3af", fontWeight: todayDate ? 500 : 400 }}>
+                        {todayDate ? "Today" : dayLabel}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
+            </div>
+          </motion.div>
 
-            <div className="p-[10px_14px]">
+          {/* Notes card */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}
+            className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden"
+            style={{ opacity: isPast ? 0.6 : 1, pointerEvents: isPast ? "none" : "auto" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderBottom: "0.5px solid rgba(0,0,0,0.06)" }}>
+              <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>📓</div>
+              <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>Daily notes</span>
+              <button
+                onClick={handleOpenHistory}
+                style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px", background: "#f9fafb", borderRadius: "8px", padding: "4px 8px", cursor: "pointer", border: "0.5px solid #e5e7eb", fontFamily: "inherit" }}
+              >
+                <Calendar style={{ width: "12px", height: "12px", color: "#6b7280" }} />
+                <span style={{ fontSize: "10px", color: "#6b7280" }}>History</span>
+              </button>
+            </div>
+            <div style={{ padding: "10px 14px" }}>
               <textarea
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder={t("diary.notesPlaceholder")}
                 rows={3}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-[10px] py-[6px] text-[13px] text-forest outline-none font-[inherit] resize-none leading-relaxed"
+                style={{ width: "100%", background: "#f9fafb", border: "0.5px solid #e5e7eb", borderRadius: "10px", padding: "10px", fontSize: "13px", color: "#1a3a22", outline: "none", fontFamily: "inherit", resize: "none", lineHeight: "1.5", boxSizing: "border-box" }}
               />
             </div>
           </motion.div>
@@ -397,10 +529,65 @@ export default function Diary() {
           {/* Weekly challenges */}
           <WeeklyChallenges />
 
-
         </div>
         )}
       </div>
+
+      {/* Notes history bottom sheet */}
+      <AnimatePresence>
+        {showNotesHistory && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 60 }}
+              onClick={() => setShowNotesHistory(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "white", borderRadius: "24px 24px 0 0", maxHeight: "70vh", display: "flex", flexDirection: "column", zIndex: 61 }}
+            >
+              <div style={{ padding: "16px", borderBottom: "0.5px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                <p style={{ margin: 0, fontWeight: 600, fontSize: "15px", color: "#1a3a22" }}>📓 Notes history</p>
+                <button onClick={() => setShowNotesHistory(false)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <X style={{ width: "14px", height: "14px", color: "#6b7280" }} />
+                </button>
+              </div>
+              <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                {pastNotes.length === 0 ? (
+                  <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "13px", marginTop: "24px" }}>No notes yet</p>
+                ) : pastNotes.map((entry) => {
+                  const m = MOODS.find(x => x.value === entry.mood);
+                  return (
+                    <div key={entry.date} style={{ background: "#f9fafb", borderRadius: "14px", padding: "12px 14px", border: "0.5px solid #e5e7eb" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          {m && (
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: m.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <div style={{ transform: "scale(0.6)" }}>{m.icon(m.color)}</div>
+                            </div>
+                          )}
+                          <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>
+                            {format(new Date(entry.date + "T12:00:00"), "EEEE, MMM d")}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => { setSelectedDate(new Date(entry.date + "T12:00:00")); setShowNotesHistory(false); }}
+                          style={{ fontSize: "10px", color: "#16a34a", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
+                        >
+                          Go to day →
+                        </button>
+                      </div>
+                      <p style={{ fontSize: "13px", color: "#374151", margin: 0, lineHeight: "1.5" }}>{entry.notes}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
