@@ -36,6 +36,34 @@ const emptyForm = {
   weight: "",
 };
 
+function SkeletonDiary() {
+  return (
+    <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
+      <div className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden p-4 animate-pulse">
+        <div style={{ height: "16px", background: "#f3f4f6", borderRadius: "8px", width: "40%", marginBottom: "16px" }} />
+        <div style={{ height: "48px", background: "#f3f4f6", borderRadius: "8px", width: "60%", margin: "0 auto 16px" }} />
+        <div style={{ height: "8px", background: "#f3f4f6", borderRadius: "8px", marginBottom: "8px" }} />
+        <div style={{ height: "120px", background: "#f3f4f6", borderRadius: "8px" }} />
+      </div>
+      <div className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden p-4 animate-pulse">
+        <div style={{ height: "16px", background: "#f3f4f6", borderRadius: "8px", width: "50%", marginBottom: "16px" }} />
+        <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+          {[1,2,3,4,5].map(i => (
+            <div key={i} style={{ flex: 1, height: "60px", background: "#f3f4f6", borderRadius: "10px" }} />
+          ))}
+        </div>
+        <div style={{ height: "80px", background: "#f3f4f6", borderRadius: "8px" }} />
+      </div>
+      <div className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden p-4 animate-pulse">
+        <div style={{ height: "16px", background: "#f3f4f6", borderRadius: "8px", width: "60%", marginBottom: "16px" }} />
+        {[1,2,3].map(i => (
+          <div key={i} style={{ height: "48px", background: "#f3f4f6", borderRadius: "10px", marginBottom: "8px" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Diary() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -52,6 +80,7 @@ export default function Diary() {
   const [lastWeight, setLastWeight] = useState(null);
   const [weightGoal, setWeightGoal] = useState(null);
   const [startWeight, setStartWeight] = useState(null);
+  const [pageReady, setPageReady] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -90,8 +119,10 @@ export default function Diary() {
     };
 
     isLoadingRef.current = true;
-    loadData().then(() => { isLoadingRef.current = false; });
+    loadData().then(() => { isLoadingRef.current = false; setPageReady(true); });
   }, [dateStr, user?.id]);
+
+  useEffect(() => { setPageReady(false); }, [dateStr]);
 
   // Auto-save with 800ms debounce
   useEffect(() => {
@@ -201,6 +232,7 @@ export default function Diary() {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto pb-nav" style={{ paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))' }}>
+        {!pageReady ? <SkeletonDiary /> : (
         <div className="max-w-[480px] mx-auto p-4 flex flex-col gap-[10px]">
 
           {/* Weight card */}
@@ -385,6 +417,7 @@ export default function Diary() {
 
 
         </div>
+        )}
       </div>
     </div>
   );
