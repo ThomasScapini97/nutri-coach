@@ -74,6 +74,7 @@ export default function Diary() {
   const [form, setForm] = useState(emptyForm);
   const [saved, setSaved] = useState(false);
   const [chartRange, setChartRange] = useState(30);
+  const [chartRefreshTrigger, setChartRefreshTrigger] = useState(0);
   const isLoadingRef = useRef(true);
   const debounceRef = useRef(null);
   const [chartData, setChartData] = useState([]);
@@ -139,7 +140,7 @@ export default function Diary() {
       };
       const { error } = await supabase.from("diary_entries").upsert(payload, { onConflict: "user_id,date" });
       if (error) { toast.error("Error saving entry"); }
-      else { setSaved(true); setTimeout(() => setSaved(false), 2000); }
+      else { setSaved(true); setTimeout(() => setSaved(false), 2000); setChartRefreshTrigger(prev => prev + 1); }
     }, 800);
     return () => clearTimeout(debounceRef.current);
   }, [form, isPast, user?.id, dateStr]);
@@ -155,7 +156,7 @@ export default function Diary() {
           weight: Number(d.weight),
         })));
       });
-  }, [chartRange, user?.id, dateStr, form.weight]);
+  }, [chartRange, user?.id, dateStr, chartRefreshTrigger]);
 
   const navigateDay = (dir) => {
     setSelectedDate(prev => {
