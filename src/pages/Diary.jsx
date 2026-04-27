@@ -24,12 +24,6 @@ const SCALES = [
   { key: "stress", label: "Stress", emoji: "🧠", color: "#ef4444" },
 ];
 
-const CHART_RANGES = [
-  { label: "7D", days: 7 },
-  { label: "1M", days: 30 },
-  { label: "6M", days: 180 },
-  { label: "1Y", days: 365 },
-];
 
 const emptyForm = {
   mood: null, energy: null, sleep_quality: null, stress: null, notes: "",
@@ -73,7 +67,7 @@ export default function Diary() {
   const isPast = !isToday;
   const [form, setForm] = useState(emptyForm);
   const [saved, setSaved] = useState(false);
-  const [chartRange, setChartRange] = useState(30);
+  const chartRange = 30;
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState(0);
   const isLoadingRef = useRef(true);
   const debounceRef = useRef(null);
@@ -249,57 +243,63 @@ export default function Diary() {
             </div>
 
             {/* Weight +/- controls */}
-            <div className="flex items-center justify-center gap-4 px-[14px] pt-[14px] pb-2">
-              <button onClick={() => adjustWeight(-0.1)} className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 cursor-pointer flex items-center justify-center p-0">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "12px 14px 8px" }}>
+              <button onClick={() => adjustWeight(-0.1)} className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center cursor-pointer p-0">
                 <Minus className="w-4 h-4 text-gray-500" />
               </button>
-              <div className="text-center">
-                {weightDiff !== null && (
-                  <div className="mb-1 flex flex-col items-center gap-[2px]">
-                    <span className="text-[11px] font-medium px-2 py-[2px] rounded-full"
-                      style={{
-                        background: Number(weightDiff) < 0 ? "#dcfce7" : Number(weightDiff) > 0 ? "#fee2e2" : "#f3f4f6",
-                        color: Number(weightDiff) < 0 ? "#16a34a" : Number(weightDiff) > 0 ? "#dc2626" : "#9ca3af",
-                      }}
-                    >
-                      {Number(weightDiff) > 0 ? "+" : ""}{weightDiff} kg
-                    </span>
-                    <span className="text-[9px] text-gray-400">{t("diary.vsYesterday")}</span>
-                  </div>
-                )}
+              <div style={{ textAlign: "center", minWidth: "120px" }}>
                 <input
                   type="number"
                   value={form.weight}
                   onChange={e => setForm(f => ({ ...f, weight: e.target.value }))}
                   placeholder="—"
-                  className="bg-transparent border-none outline-none text-[36px] font-semibold text-forest w-[100px] text-center font-[inherit] block"
+                  className="bg-transparent border-none outline-none text-[36px] font-semibold text-forest w-[100px] text-center font-[inherit] block mx-auto"
                 />
-                <div className="text-xs text-gray-400 -mt-1">kg</div>
+                <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "-4px" }}>kg</div>
               </div>
-              <button onClick={() => adjustWeight(0.1)} className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 cursor-pointer flex items-center justify-center p-0">
+              <button onClick={() => adjustWeight(0.1)} className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center cursor-pointer p-0">
                 <Plus className="w-4 h-4 text-gray-500" />
               </button>
             </div>
 
+            {/* Compact info row */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "8px", flexWrap: "wrap" }}>
+              {weightDiff !== null && (
+                <span style={{
+                  fontSize: "11px", fontWeight: 500, padding: "2px 8px", borderRadius: "20px",
+                  background: Number(weightDiff) < 0 ? "#dcfce7" : Number(weightDiff) > 0 ? "#fee2e2" : "#f3f4f6",
+                  color: Number(weightDiff) < 0 ? "#16a34a" : Number(weightDiff) > 0 ? "#dc2626" : "#9ca3af",
+                }}>
+                  {Number(weightDiff) > 0 ? "+" : ""}{weightDiff} kg vs yesterday
+                </span>
+              )}
+              {!goalReached && toGoal !== null && (
+                <span style={{ fontSize: "11px", color: "#6b7280", background: "#f3f4f6", padding: "2px 8px", borderRadius: "20px" }}>
+                  🎯 {Math.abs(Number(toGoal)).toFixed(1)} kg to go
+                </span>
+              )}
+              {goalReached && (
+                <span style={{ fontSize: "11px", color: "#16a34a", background: "#dcfce7", padding: "2px 8px", borderRadius: "20px" }}>
+                  🎉 Goal reached!
+                </span>
+              )}
+            </div>
+
             {/* Progress bar toward goal */}
             {weightProgress !== null && (
-              <div className="mx-[14px] mb-3 rounded-xl px-3 py-[10px] border"
+              <div className="mx-[14px] mb-2 rounded-xl px-3 py-[8px] border"
                 style={{
                   background: goalReached ? "#dcfce7" : "#f0fdf4",
                   borderColor: goalReached ? "#bbf7d0" : "#e5e7eb",
                 }}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px]" style={{ color: goalReached ? "#16a34a" : "#6b7280" }}>
-                    {goalReached ? t("diary.goalReached") : `🎯 ${t("diary.goalWeight", { value: weightGoal })}`}
+                <div className="flex items-center justify-between mb-[4px]">
+                  <span style={{ fontSize: "10px", color: goalReached ? "#16a34a" : "#6b7280" }}>
+                    Start: {startWeight} kg → Goal: {weightGoal} kg
                   </span>
-                  {!goalReached && toGoal !== null && (
-                    <span className="text-[11px] font-semibold text-green-600">
-                      {t("diary.kgToGo", { value: Math.abs(Number(toGoal)).toFixed(1) })}
-                    </span>
-                  )}
+                  <span style={{ fontSize: "10px", fontWeight: 600, color: "#16a34a" }}>{Math.round(weightProgress)}%</span>
                 </div>
-                <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="bg-gray-200 rounded-full h-[5px] overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${weightProgress}%` }}
@@ -307,11 +307,6 @@ export default function Diary() {
                     className="h-full rounded-full"
                     style={{ background: goalReached ? "#16a34a" : "#22c55e" }}
                   />
-                </div>
-                <div className="flex justify-between items-center mt-[6px]">
-                  <span className="text-[9px] text-gray-400">{t("diary.startWeight", { value: startWeight })}</span>
-                  <span className="text-[10px] text-green-600 font-semibold">{Math.round(weightProgress)}%</span>
-                  <span className="text-[9px] text-gray-400">{t("diary.goalWeight", { value: weightGoal })}</span>
                 </div>
               </div>
             )}
@@ -321,7 +316,7 @@ export default function Diary() {
             {/* Weight chart */}
             <div className="p-[10px_14px_8px]">
               {chartData.length > 1 ? (
-                <div className="h-[120px]">
+                <div className="h-[80px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#9ca3af" }} />
@@ -338,24 +333,10 @@ export default function Diary() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="h-[60px] flex items-center justify-center text-gray-400 text-[11px] text-center">
+                <div className="h-[48px] flex items-center justify-center text-gray-400 text-[11px] text-center">
                   {t("diary.logWeightHint")}
                 </div>
               )}
-            </div>
-
-            {/* Range selector */}
-            <div className="flex gap-[6px] justify-center px-[14px] pb-[14px]">
-              {CHART_RANGES.map(r => (
-                <button key={r.label} onClick={() => setChartRange(r.days)}
-                  className="px-[10px] py-[3px] rounded-full text-[10px] font-medium cursor-pointer font-[inherit]"
-                  style={{
-                    border: chartRange === r.days ? "1.5px solid #16a34a" : "0.5px solid #e5e7eb",
-                    background: chartRange === r.days ? "#f0fdf4" : "#f9fafb",
-                    color: chartRange === r.days ? "#16a34a" : "#9ca3af",
-                  }}
-                >{r.label}</button>
-              ))}
             </div>
           </motion.div>
 
