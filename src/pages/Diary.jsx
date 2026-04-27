@@ -155,7 +155,7 @@ export default function Diary() {
           weight: Number(d.weight),
         })));
       });
-  }, [chartRange, user?.id, dateStr]);
+  }, [chartRange, user?.id, dateStr, form.weight]);
 
   const navigateDay = (dir) => {
     setSelectedDate(prev => {
