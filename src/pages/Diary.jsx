@@ -122,6 +122,7 @@ export default function Diary() {
   const [startWeight, setStartWeight] = useState(null);
   const [pageReady, setPageReady] = useState(false);
   const [weekMoods, setWeekMoods] = useState([]);
+  const [moodHistoryDays, setMoodHistoryDays] = useState(7);
   const [showNotesHistory, setShowNotesHistory] = useState(false);
   const [pastNotes, setPastNotes] = useState([]);
 
@@ -164,12 +165,12 @@ export default function Diary() {
 
   useEffect(() => { setPageReady(false); }, [dateStr]);
 
-  // 7-day mood strip
+  // Mood strip
   useEffect(() => {
     if (!user?.id) return;
-    const days = Array.from({ length: 7 }, (_, i) => {
+    const days = Array.from({ length: moodHistoryDays }, (_, i) => {
       const d = new Date();
-      d.setDate(d.getDate() - (6 - i));
+      d.setDate(d.getDate() - (moodHistoryDays - 1 - i));
       return format(d, "yyyy-MM-dd");
     });
     supabase
@@ -182,7 +183,14 @@ export default function Diary() {
         (data || []).forEach(d => { map[d.date] = d.mood; });
         setWeekMoods(days.map(date => ({ date, mood: map[date] || null })));
       });
-  }, [user?.id, dateStr]);
+  }, [user?.id, dateStr, moodHistoryDays]);
+
+  const handleMoodSelect = (value) => {
+    setForm(f => ({ ...f, mood: value }));
+    setWeekMoods(prev => prev.map(d =>
+      d.date === getToday() ? { ...d, mood: value } : d
+    ));
+  };
 
   // Auto-save with 800ms debounce
   useEffect(() => {
@@ -434,7 +442,7 @@ export default function Diary() {
                 return (
                   <button
                     key={m.value}
-                    onClick={() => setForm(f => ({ ...f, mood: m.value }))}
+                    onClick={() => handleMoodSelect(m.value)}
                     style={{
                       flex: 1,
                       display: "flex",
@@ -465,10 +473,17 @@ export default function Diary() {
               })}
             </div>
 
-            {/* 7-day mood strip */}
+            {/* Mood strip */}
             <div style={{ padding: "10px 14px" }}>
-              <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Last 7 days</span>
-              <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>
+              <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>
+                {moodHistoryDays === 7 ? "Last 7 days" : "Last 30 days"}
+              </span>
+              <div style={{
+                display: "flex", gap: "4px", marginTop: "8px",
+                overflowX: moodHistoryDays > 7 ? "auto" : "visible",
+                paddingBottom: moodHistoryDays > 7 ? "4px" : "0",
+                scrollbarWidth: "none",
+              }}>
                 {weekMoods.map(({ date, mood }) => {
                   const m = MOODS.find(x => x.value === mood);
                   const todayDate = date === getToday();
@@ -496,6 +511,12 @@ export default function Diary() {
                   );
                 })}
               </div>
+              <button
+                onClick={() => setMoodHistoryDays(prev => prev === 7 ? 30 : 7)}
+                style={{ marginTop: "8px", fontSize: "10px", color: "#16a34a", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", width: "100%", textAlign: "center" }}
+              >
+                {moodHistoryDays === 7 ? "See last 30 days →" : "← Show less"}
+              </button>
             </div>
           </motion.div>
 
