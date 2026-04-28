@@ -186,9 +186,14 @@ export default function Diary() {
   }, [user?.id, dateStr]);
 
   useEffect(() => {
-    if (moodStripRef.current) {
-      moodStripRef.current.scrollLeft = moodStripRef.current.scrollWidth;
-    }
+    if (!moodStripRef.current) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (moodStripRef.current) {
+          moodStripRef.current.scrollLeft = moodStripRef.current.scrollWidth;
+        }
+      });
+    });
   }, [weekMoods]);
 
   const handleMoodSelect = (value) => {
