@@ -122,6 +122,7 @@ export default function Diary() {
   const [startWeight, setStartWeight] = useState(null);
   const [pageReady, setPageReady] = useState(false);
   const [weekMoods, setWeekMoods] = useState([]);
+  const moodStripRef = useRef(null);
   const [showNotesHistory, setShowNotesHistory] = useState(false);
   const [pastNotes, setPastNotes] = useState([]);
 
@@ -169,7 +170,7 @@ export default function Diary() {
     if (!user?.id) return;
     const days = Array.from({ length: 30 }, (_, i) => {
       const d = new Date();
-      d.setDate(d.getDate() - i);
+      d.setDate(d.getDate() - (29 - i));
       return format(d, "yyyy-MM-dd");
     });
     supabase
@@ -184,6 +185,11 @@ export default function Diary() {
       });
   }, [user?.id, dateStr]);
 
+  useEffect(() => {
+    if (moodStripRef.current) {
+      moodStripRef.current.scrollLeft = moodStripRef.current.scrollWidth;
+    }
+  }, [weekMoods]);
 
   const handleMoodSelect = (value) => {
     setForm(f => ({ ...f, mood: value }));
@@ -477,8 +483,9 @@ export default function Diary() {
             <div style={{ padding: "10px 14px" }}>
               <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: 500 }}>Last 30 days</span>
               <div
+                ref={moodStripRef}
                 style={{
-                  display: "flex", gap: "10px", marginTop: "8px",
+                  display: "flex", gap: "18px", marginTop: "8px",
                   overflowX: "auto", paddingBottom: "4px",
                   scrollbarWidth: "none", msOverflowStyle: "none",
                   WebkitOverflowScrolling: "touch",
