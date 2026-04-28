@@ -482,13 +482,14 @@ export default function Diary() {
                   overflowX: "auto", paddingBottom: "4px",
                   scrollbarWidth: "none", msOverflowStyle: "none",
                   WebkitOverflowScrolling: "touch",
+                  direction: "rtl",
                 }}
               >
                 {weekMoods.map(({ date, mood }) => {
                   const m = MOODS.find(x => x.value === mood);
                   const todayDate = date === getToday();
                   return (
-                    <div key={date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
+                    <div key={date} style={{ direction: "ltr", display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
                       <div style={{
                         width: todayDate ? "28px" : "24px",
                         height: todayDate ? "28px" : "24px",
