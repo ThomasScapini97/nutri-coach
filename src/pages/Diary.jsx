@@ -583,7 +583,7 @@ export default function Diary() {
                             </div>
                           )}
                           <span style={{ fontSize: "12px", fontWeight: 500, color: "#1a3a22" }}>
-                            {format(new Date(entry.date + "T12:00:00"), "EEEE, MMM d")}
+                            {format(new Date(entry.date + "T12:00:00"), "EEEE, MMM d, yyyy")}
                           </span>
                         </div>
                         <button
