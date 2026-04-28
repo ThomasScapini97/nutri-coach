@@ -25,7 +25,7 @@ const MOODS = [
   },
   {
     value: 2, label: "Meh",
-    color: "#c2410c", bg: "#fed7aa", selectedBg: "#fdba74",
+    color: "#ea580c", bg: "#ffedd5", selectedBg: "#fed7aa",
     icon: (color) => (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"/>
@@ -37,7 +37,7 @@ const MOODS = [
   },
   {
     value: 3, label: "Good",
-    color: "#16a34a", bg: "#bbf7d0", selectedBg: "#86efac",
+    color: "#d97706", bg: "#fef3c7", selectedBg: "#fde68a",
     icon: (color) => (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"/>
@@ -49,7 +49,7 @@ const MOODS = [
   },
   {
     value: 4, label: "Great",
-    color: "#059669", bg: "#d1fae5", selectedBg: "#a7f3d0",
+    color: "#16a34a", bg: "#dcfce7", selectedBg: "#bbf7d0",
     icon: (color) => (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"/>
@@ -61,7 +61,7 @@ const MOODS = [
   },
   {
     value: 5, label: "Amazing",
-    color: "#ca8a04", bg: "#fef9c3", selectedBg: "#fef08a",
+    color: "#059669", bg: "#d1fae5", selectedBg: "#a7f3d0",
     icon: (color) => (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"/>
