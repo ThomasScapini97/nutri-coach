@@ -51,6 +51,8 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState(null);
   const [form, setForm] = useState({
     age: "", weight: "", height: "", gender: "",
     activity_level: "", goal: "", chat_style: "concise",
@@ -65,6 +67,12 @@ export default function Profile() {
     },
     enabled: !!user?.id,
   });
+
+  useEffect(() => {
+    if (profile?.display_name) {
+      setDisplayName(profile.display_name);
+    }
+  }, [profile]);
 
   useEffect(() => {
     if (profile) {
@@ -82,6 +90,21 @@ export default function Profile() {
       });
     }
   }, [profile]);
+
+  const checkUsernameAvailability = async () => {
+    if (!displayName.trim() || displayName === profile?.display_name) {
+      setUsernameStatus(null);
+      return;
+    }
+    setUsernameStatus("checking");
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("user_id")
+      .eq("display_name", displayName.trim())
+      .neq("user_id", user.id)
+      .maybeSingle();
+    setUsernameStatus(data ? "taken" : "available");
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -105,6 +128,7 @@ export default function Profile() {
       weight_goal: form.weight_goal ? Number(form.weight_goal) : null,
       calorie_goal: calorieGoal, protein_goal: proteinGoal,
       fats_goal: fatsGoal, carbs_goal: carbsGoal,
+      display_name: displayName.trim() || null,
     }, { onConflict: "user_id" });
 
     setSaving(false);
@@ -251,6 +275,47 @@ export default function Profile() {
               <label className={labelCls}>{t("profile.weightGoal")}</label>
               <input type="number" placeholder="65" value={form.weight_goal} onChange={e => setForm({ ...form, weight_goal: e.target.value })} className={inputCls} />
             </div>
+            <div className="bg-white p-[10px_12px] col-span-2">
+              <label style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.3px", display: "block", marginBottom: "6px" }}>
+                Username (shown in leaderboard)
+              </label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={e => {
+                  const val = e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, "");
+                  setDisplayName(val);
+                  setUsernameStatus(null);
+                }}
+                placeholder="e.g. thomas_fit"
+                maxLength={30}
+                onBlur={checkUsernameAvailability}
+                style={{
+                  width: "100%",
+                  background: "#f9fafb",
+                  border: `0.5px solid ${usernameStatus === "taken" ? "#ef4444" : usernameStatus === "available" ? "#16a34a" : "#e5e7eb"}`,
+                  borderRadius: "10px",
+                  padding: "10px 14px",
+                  fontSize: "14px",
+                  color: "#1a3a22",
+                  outline: "none",
+                  fontFamily: "inherit",
+                  boxSizing: "border-box",
+                }}
+              />
+              {usernameStatus === "taken" && (
+                <p style={{ fontSize: "11px", color: "#ef4444", marginTop: "4px" }}>❌ Username already taken</p>
+              )}
+              {usernameStatus === "available" && (
+                <p style={{ fontSize: "11px", color: "#16a34a", marginTop: "4px" }}>✅ Username available</p>
+              )}
+              {usernameStatus === "checking" && (
+                <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Checking...</p>
+              )}
+              <p style={{ fontSize: "10px", color: "#9ca3af", marginTop: "4px" }}>
+                Only letters, numbers, dots and underscores. Max 30 characters.
+              </p>
+            </div>
           </div>
         </motion.div>
 
@@ -388,9 +453,9 @@ export default function Profile() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
           className="flex flex-col gap-2"
         >
-          <Button onClick={handleSave} disabled={saving || !formValid}
+          <Button onClick={handleSave} disabled={saving || !formValid || usernameStatus === "taken"}
             className="w-full bg-green-600 text-white rounded-[14px] py-[13px] text-[14px] font-medium border-none flex items-center justify-center gap-[7px]"
-            style={{ opacity: (!formValid || saving) ? 0.6 : 1 }}
+            style={{ opacity: (!formValid || saving || usernameStatus === "taken") ? 0.6 : 1 }}
           >
             {saving ? <Spinner size="sm" /> : <Save className="w-4 h-4" />}
             {t("profile.saveProfile")}
