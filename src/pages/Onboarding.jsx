@@ -51,6 +51,8 @@ export default function Onboarding({ onComplete }) {
   const [saving, setSaving] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [privacyError, setPrivacyError] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState(null);
   const [form, setForm] = useState({
     display_name: "",
     age: "", weight: "", height: "", gender: "",
@@ -58,22 +60,34 @@ export default function Onboarding({ onComplete }) {
     active_days_goal: 3, burn_goal: 300, weight_goal: "",
   });
 
-  const TOTAL_STEPS = 6;
+  const TOTAL_STEPS = 7;
 
   const goNext = () => { setDir(1); setStep(s => s + 1); };
   const goPrev = () => { setDir(-1); setStep(s => s - 1); };
 
+  const checkUsernameAvailability = async () => {
+    if (!displayName.trim()) return;
+    setUsernameStatus("checking");
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("user_id")
+      .eq("display_name", displayName.trim())
+      .maybeSingle();
+    setUsernameStatus(data ? "taken" : "available");
+  };
+
   const canNext = () => {
     if (step === 0) return form.display_name.trim().length >= 2;
-    if (step === 1) {
+    if (step === 1) return displayName.trim().length >= 3 && usernameStatus === "available";
+    if (step === 2) {
       const age = Number(form.age);
       const weight = Number(form.weight);
       const height = Number(form.height);
       return form.gender && age >= 10 && age <= 100 && weight >= 30 && weight <= 250 && height >= 120 && height <= 230;
     }
-    if (step === 2) return !!form.activity_level;
-    if (step === 3) return !!form.goal && !!form.chat_style;
-    if (step === 4) return form.active_days_goal > 0 && form.burn_goal > 0;
+    if (step === 3) return !!form.activity_level;
+    if (step === 4) return !!form.goal && !!form.chat_style;
+    if (step === 5) return form.active_days_goal > 0 && form.burn_goal > 0;
     return true;
   };
 
@@ -90,7 +104,7 @@ export default function Onboarding({ onComplete }) {
 
     const { error } = await supabase.from('user_profiles').upsert({
       user_id: user.id,
-      display_name: form.display_name.trim(),
+      display_name: displayName.trim() || form.display_name.trim() || null,
       age: Number(form.age), weight: Number(form.weight),
       height: Number(form.height), gender: form.gender,
       activity_level: form.activity_level, goal: form.goal,
@@ -133,7 +147,85 @@ export default function Onboarding({ onComplete }) {
       />
     </div>,
 
-    /* Step 1 — Personal details */
+    /* Step 1 — Username */
+    <div key="username" style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+      <div style={{ textAlign: "center", marginBottom: "24px" }}>
+        <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏆</div>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>
+          Choose your username
+        </h2>
+        <p style={{ fontSize: "13px", color: "#9ca3af" }}>
+          This is how you'll appear in the leaderboard
+        </p>
+      </div>
+
+      <input
+        type="text"
+        value={displayName}
+        onChange={e => {
+          const val = e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, "");
+          setDisplayName(val);
+          setUsernameStatus(null);
+        }}
+        placeholder="e.g. thomas_fit"
+        maxLength={30}
+        onBlur={checkUsernameAvailability}
+        style={{
+          width: "100%",
+          background: "#f9fafb",
+          border: `1.5px solid ${usernameStatus === "taken" ? "#ef4444" : usernameStatus === "available" ? "#16a34a" : "#e5e7eb"}`,
+          borderRadius: "14px",
+          padding: "14px 16px",
+          fontSize: "16px",
+          color: "#1a3a22",
+          outline: "none",
+          fontFamily: "inherit",
+          boxSizing: "border-box",
+        }}
+      />
+
+      {usernameStatus === "checking" && (
+        <p style={{ fontSize: "12px", color: "#9ca3af", marginTop: "8px" }}>Checking availability...</p>
+      )}
+      {usernameStatus === "available" && (
+        <p style={{ fontSize: "12px", color: "#16a34a", marginTop: "8px" }}>✅ Username available!</p>
+      )}
+      {usernameStatus === "taken" && (
+        <p style={{ fontSize: "12px", color: "#ef4444", marginTop: "8px" }}>❌ Already taken — try another one</p>
+      )}
+
+      <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "8px" }}>
+        Only letters, numbers, dots and underscores. You can change it later in your profile.
+      </p>
+
+      {usernameStatus === "taken" && displayName.length > 0 && (
+        <div style={{ marginTop: "12px" }}>
+          <p style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px" }}>Try one of these:</p>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {[
+              `${displayName}_${Math.floor(Math.random() * 90 + 10)}`,
+              `${displayName}.fit`,
+              `${displayName}_nt`,
+            ].map(suggestion => (
+              <button
+                key={suggestion}
+                onClick={() => { setDisplayName(suggestion); setUsernameStatus(null); }}
+                style={{
+                  background: "#f0fdf4", border: "0.5px solid #bbf7d0",
+                  borderRadius: "8px", padding: "6px 12px",
+                  fontSize: "12px", color: "#16a34a",
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>,
+
+    /* Step 2 — Personal details */
     <div key="personal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>📋</div>
@@ -174,7 +266,7 @@ export default function Onboarding({ onComplete }) {
       </div>
     </div>,
 
-    /* Step 2 — Activity level */
+    /* Step 3 — Activity level */
     <div key="activity" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏃</div>
@@ -200,7 +292,7 @@ export default function Onboarding({ onComplete }) {
       </div>
     </div>,
 
-    /* Step 3 — Goal + chat style */
+    /* Step 4 — Goal + chat style */
     <div key="goal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🎯</div>
@@ -243,7 +335,7 @@ export default function Onboarding({ onComplete }) {
       </div>
     </div>,
 
-    /* Step 4 — Fitness goals */
+    /* Step 5 — Fitness goals */
     <div key="fitness" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏋️</div>
@@ -289,7 +381,7 @@ export default function Onboarding({ onComplete }) {
       </div>
     </div>,
 
-    /* Step 5 — Disclaimer */
+    /* Step 6 — Disclaimer */
     <div key="disclaimer" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>📌</div>
