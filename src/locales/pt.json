@@ -131,6 +131,10 @@
     "weekOf": "Semana de {{date}} · reinicia toda segunda-feira",
     "noScores": "Sem pontuações esta semana — seja o primeiro! 🚀",
     "you": "você",
+    "pointsSystem": "Como funcionam os pontos",
+    "bonusAllWeekly": "Complete todos os 6 desafios semanais",
+    "bonusAllWeeklyDesc": "Termine cada desafio semanal para ganhar o bônus",
+    "maxPointsWeek": "Máx 18 pts por semana (6 semanais + 10 bônus + 2 diários)",
     "challenges": {
       "log": {
         "title": "Registrar todo dia",

@@ -18,6 +18,7 @@ export default function WeeklyChallenges() {
   const [loading, setLoading] = useState(true);
   const [weekStart, setWeekStart] = useState("");
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showPointsInfo, setShowPointsInfo] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
 
@@ -122,6 +123,18 @@ export default function WeeklyChallenges() {
         <div className="flex items-center gap-2 px-[14px] py-[10px] border-b border-gray-100">
           <div className="w-[26px] h-[26px] rounded-[7px] bg-yellow-100 flex items-center justify-center text-[13px]">🏆</div>
           <span className="text-xs font-medium text-forest">Weekly Challenges</span>
+          <button
+            onClick={() => setShowPointsInfo(true)}
+            style={{
+              width: "18px", height: "18px", borderRadius: "50%",
+              background: "#f3f4f6", border: "0.5px solid #e5e7eb",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", fontSize: "10px", color: "#9ca3af",
+              fontWeight: 600, fontFamily: "inherit", flexShrink: 0,
+            }}
+          >
+            i
+          </button>
           <span
             className="ml-auto text-[10px] font-medium px-2 py-[2px] rounded-full"
             style={{
@@ -223,6 +236,82 @@ export default function WeeklyChallenges() {
           </button>
         </div>
       </motion.div>
+
+      {/* Points info popup */}
+      <AnimatePresence>
+        {showPointsInfo && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowPointsInfo(false)}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1000 }}
+            />
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              style={{
+                position: "fixed", bottom: 0, left: 0, right: 0,
+                background: "white", borderRadius: "24px 24px 0 0",
+                zIndex: 1001, padding: "20px 16px 32px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <p style={{ fontSize: "15px", fontWeight: 600, color: "#1a3a22", margin: 0 }}>
+                  {t("diary.pointsSystem")}
+                </p>
+                <button
+                  onClick={() => setShowPointsInfo(false)}
+                  style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#f3f4f6", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  <X style={{ width: "14px", height: "14px", color: "#6b7280" }} />
+                </button>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "#fffbeb", borderRadius: "12px", border: "0.5px solid #fde68a" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "16px" }}>⚡</span>
+                    <span style={{ fontSize: "13px", color: "#1a3a22" }}>{t("diary.dailyChallenge")}</span>
+                  </div>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#f59e0b" }}>+2 pts</span>
+                </div>
+
+                {[
+                  { emoji: "📋", key: "diary.challenges.log.title" },
+                  { emoji: "💧", key: "diary.challenges.hydration.title" },
+                  { emoji: "🥩", key: "diary.challenges.protein.title" },
+                  { emoji: "🎯", key: "diary.challenges.calories.title" },
+                  { emoji: "🏃", key: "diary.challenges.exercise.title" },
+                  { emoji: "📓", key: "diary.challenges.wellness.title" },
+                ].map(({ emoji, key }) => (
+                  <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "#f9fafb", borderRadius: "12px", border: "0.5px solid #e5e7eb" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "16px" }}>{emoji}</span>
+                      <span style={{ fontSize: "13px", color: "#1a3a22" }}>{t(key)}</span>
+                    </div>
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "#16a34a" }}>+1 pt</span>
+                  </div>
+                ))}
+
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "#f0fdf4", borderRadius: "12px", border: "1.5px solid #bbf7d0", marginTop: "4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "16px" }}>🏆</span>
+                    <div>
+                      <p style={{ fontSize: "13px", fontWeight: 600, color: "#1a3a22", margin: 0 }}>{t("diary.bonusAllWeekly")}</p>
+                      <p style={{ fontSize: "10px", color: "#9ca3af", margin: 0 }}>{t("diary.bonusAllWeeklyDesc")}</p>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#16a34a" }}>+10 pts</span>
+                </div>
+
+                <div style={{ textAlign: "center", marginTop: "8px" }}>
+                  <p style={{ fontSize: "11px", color: "#9ca3af", margin: 0 }}>{t("diary.maxPointsWeek")}</p>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Leaderboard modal */}
       <AnimatePresence>

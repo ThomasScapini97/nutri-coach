@@ -131,6 +131,10 @@
     "weekOf": "Week of {{date}} · resets every Monday",
     "noScores": "No scores yet this week — be the first! 🚀",
     "you": "you",
+    "pointsSystem": "How points work",
+    "bonusAllWeekly": "Complete all 6 weekly challenges",
+    "bonusAllWeeklyDesc": "Finish every weekly challenge to earn the bonus",
+    "maxPointsWeek": "Max 18 pts per week (6 weekly + 10 bonus + 2 daily)",
     "challenges": {
       "log": {
         "title": "Log every day",

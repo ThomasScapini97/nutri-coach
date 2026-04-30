@@ -131,6 +131,10 @@
     "weekOf": "Woche vom {{date}} · wird jeden Montag zurückgesetzt",
     "noScores": "Noch keine Punkte diese Woche — sei der Erste! 🚀",
     "you": "du",
+    "pointsSystem": "Wie Punkte funktionieren",
+    "bonusAllWeekly": "Alle 6 Wochenaufgaben abschließen",
+    "bonusAllWeeklyDesc": "Schließe jede Wochenaufgabe ab, um den Bonus zu verdienen",
+    "maxPointsWeek": "Max 18 Pkt pro Woche (6 wöchentlich + 10 Bonus + 2 täglich)",
     "challenges": {
       "log": {
         "title": "Jeden Tag erfassen",
