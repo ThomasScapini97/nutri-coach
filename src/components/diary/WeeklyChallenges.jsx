@@ -126,14 +126,20 @@ export default function WeeklyChallenges() {
           <button
             onClick={() => setShowPointsInfo(true)}
             style={{
-              width: "18px", height: "18px", borderRadius: "50%",
-              background: "#f3f4f6", border: "0.5px solid #e5e7eb",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", fontSize: "10px", color: "#9ca3af",
-              fontWeight: 600, fontFamily: "inherit", flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              background: "#f0fdf4",
+              border: "0.5px solid #bbf7d0",
+              borderRadius: "20px",
+              padding: "3px 8px",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              flexShrink: 0,
             }}
           >
-            i
+            <span style={{ fontSize: "10px", fontWeight: 600, color: "#16a34a" }}>pts</span>
+            <span style={{ fontSize: "10px", color: "#16a34a", fontWeight: 700 }}>?</span>
           </button>
           <span
             className="ml-auto text-[10px] font-medium px-2 py-[2px] rounded-full"
