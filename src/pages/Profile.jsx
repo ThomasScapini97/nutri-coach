@@ -100,7 +100,7 @@ export default function Profile() {
     const { data } = await supabase
       .from("user_profiles")
       .select("user_id")
-      .eq("display_name", displayName.trim())
+      .eq("display_name", displayName.trim().toLowerCase())
       .neq("user_id", user.id)
       .maybeSingle();
     setUsernameStatus(data ? "taken" : "available");
@@ -128,7 +128,7 @@ export default function Profile() {
       weight_goal: form.weight_goal ? Number(form.weight_goal) : null,
       calorie_goal: calorieGoal, protein_goal: proteinGoal,
       fats_goal: fatsGoal, carbs_goal: carbsGoal,
-      display_name: displayName.trim() || null,
+      display_name: displayName.trim().toLowerCase() || null,
     }, { onConflict: "user_id" });
 
     setSaving(false);

@@ -66,14 +66,25 @@ export default function Onboarding({ onComplete }) {
   const goPrev = () => { setDir(-1); setStep(s => s - 1); };
 
   const checkUsernameAvailability = async () => {
-    if (!displayName.trim()) return;
+    if (!displayName.trim() || displayName.trim().length < 3) return;
     setUsernameStatus("checking");
-    const { data } = await supabase
-      .from("user_profiles")
-      .select("user_id")
-      .eq("display_name", displayName.trim())
-      .maybeSingle();
-    setUsernameStatus(data ? "taken" : "available");
+    try {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("user_id")
+        .eq("display_name", displayName.trim().toLowerCase())
+        .maybeSingle();
+      if (error) {
+        console.error("Username check error:", error);
+        setUsernameStatus("available");
+        return;
+      }
+      const currentUserId = (await supabase.auth.getUser()).data?.user?.id;
+      setUsernameStatus(data && data.user_id !== currentUserId ? "taken" : "available");
+    } catch (e) {
+      console.error("Username check failed:", e);
+      setUsernameStatus("available");
+    }
   };
 
   const canNext = () => {
@@ -104,7 +115,7 @@ export default function Onboarding({ onComplete }) {
 
     const { error } = await supabase.from('user_profiles').upsert({
       user_id: user.id,
-      display_name: displayName.trim() || form.display_name.trim() || null,
+      display_name: displayName.trim().toLowerCase() || null,
       age: Number(form.age), weight: Number(form.weight),
       height: Number(form.height), gender: form.gender,
       activity_level: form.activity_level, goal: form.goal,
