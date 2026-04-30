@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { updateWeeklyScore } from "@/lib/weeklyScores";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
@@ -377,6 +378,7 @@ export default function Exercise() {
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       queryClient.invalidateQueries({ queryKey: ["messages", logId] });
 
+      updateWeeklyScore(user.id);
       toast.success(`${selectedExercise.emoji} ${selectedExercise.name} logged! 🔥`, { description: `${calories} kcal burned` });
       setShowAddSheet(false);
       resetForm();

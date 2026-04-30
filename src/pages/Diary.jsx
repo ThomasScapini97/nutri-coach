@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, Minus, Plus, Calendar, X } from "lucide-reac
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { getToday } from "@/lib/nutritionUtils";
+import { updateWeeklyScore } from "@/lib/weeklyScores";
 import WeeklyChallenges from "@/components/diary/WeeklyChallenges";
 
 const MOODS = [
@@ -207,7 +208,7 @@ export default function Diary() {
       };
       const { error } = await supabase.from("diary_entries").upsert(payload, { onConflict: "user_id,date" });
       if (error) { toast.error("Error saving entry"); }
-      else { setSaved(true); setTimeout(() => setSaved(false), 2000); setChartRefreshTrigger(prev => prev + 1); }
+      else { setSaved(true); setTimeout(() => setSaved(false), 2000); setChartRefreshTrigger(prev => prev + 1); updateWeeklyScore(user.id); }
     }, 800);
     return () => clearTimeout(debounceRef.current);
   }, [form, isPast, user?.id, dateStr]);

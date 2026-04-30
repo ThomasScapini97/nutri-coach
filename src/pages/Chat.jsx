@@ -16,6 +16,7 @@ import { recalculateTotals, FIBER_GOAL, getToday } from "@/lib/nutritionUtils";
 import { generateDailySummary, loadPastSummaries } from "@/lib/dailySummary";
 import { AI_MAX_TOKENS, CHAT_HISTORY_LIMIT } from "@/lib/constants";
 import { updateStreak } from "@/lib/streakUtils";
+import { updateWeeklyScore } from "@/lib/weeklyScores";
 import BarcodeScanner from "../components/chat/BarcodeScanner";
 import buildSystemPrompt from "@/lib/buildSystemPrompt";
 
@@ -302,7 +303,10 @@ export default function Chat() {
         { foodlog_id: currentLogId, role: assistantMessage.role, content: assistantMessage.content, timestamp: assistantMessage.timestamp, nutrition: assistantMessage.nutrition || null },
       ]);
 
-      if (foods.length > 0) await updateStreak(supabase, user.id, getToday());
+      if (foods.length > 0) {
+        await updateStreak(supabase, user.id, getToday());
+        updateWeeklyScore(user.id);
+      }
 
       queryClient.invalidateQueries({ queryKey: ["foodlog"] });
       queryClient.invalidateQueries({ queryKey: ["foodEntries", currentLogId] });

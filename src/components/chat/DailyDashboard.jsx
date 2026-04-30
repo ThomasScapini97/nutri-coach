@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { WATER_GOAL } from "@/lib/constants";
+import { updateWeeklyScore } from "@/lib/weeklyScores";
 
 const MacroProgressMini = ({ label, value, max, unit, icon: Icon, color = "primary" }) => {
   const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;
@@ -68,6 +69,7 @@ export default function DailyDashboard({ todayLog, calorieGoal, proteinGoal, car
       await supabase.from("food_logs").update({ water_glasses: newCount }).eq("id", logId);
     }
     onWaterUpdate?.();
+    updateWeeklyScore(userId);
     setWaterLoading(false);
   };
 
