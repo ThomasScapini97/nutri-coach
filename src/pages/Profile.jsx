@@ -154,6 +154,11 @@ export default function Profile() {
     setDeleting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Session expired. Please log in again.");
+        setDeleting(false);
+        return;
+      }
       const res = await fetch("/api/delete-account", {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}` },

@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { format } from "date-fns";
 import { getToday } from "@/lib/nutritionUtils";
-import { WATER_GOAL } from "@/lib/constants";
+import { WATER_GOAL, CHALLENGE_TARGETS, CALORIES_TOLERANCE } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -63,17 +63,17 @@ export default function WeeklyChallenges() {
     const proteinDays = foodLogs.filter(l => (l.total_protein || 0) >= proteinGoal).length;
     const calorieDays = foodLogs.filter(l => {
       const cal = l.total_calories || 0;
-      return cal >= calorieGoal - 150 && cal <= calorieGoal + 150;
+      return cal >= calorieGoal - CALORIES_TOLERANCE && cal <= calorieGoal + CALORIES_TOLERANCE;
     }).length;
     const diaryCount = diaryDays.length;
 
     const built = [
-      { id: "log", emoji: "📋", title: t("diary.challenges.log.title"), desc: t("diary.challenges.log.desc"), current: loggedDays, target: 5, color: "#16a34a", bg: "#f0fdf4" },
-      { id: "hydration", emoji: "💧", title: t("diary.challenges.hydration.title"), desc: t("diary.challenges.hydration.desc", { goal: WATER_GOAL }), current: hydrationDays, target: 5, color: "#3b82f6", bg: "#eff6ff" },
-      { id: "protein", emoji: "🥩", title: t("diary.challenges.protein.title"), desc: t("diary.challenges.protein.desc", { goal: proteinGoal }), current: proteinDays, target: 4, color: "#f59e0b", bg: "#fffbeb" },
-      { id: "calories", emoji: "🎯", title: t("diary.challenges.calories.title"), desc: t("diary.challenges.calories.desc"), current: calorieDays, target: 4, color: "#8b5cf6", bg: "#f5f3ff" },
-      { id: "exercise", emoji: "🏃", title: t("diary.challenges.exercise.title"), desc: t("diary.challenges.exercise.desc"), current: exerciseDays, target: 3, color: "#ef4444", bg: "#fef2f2" },
-      { id: "diary", emoji: "📓", title: t("diary.challenges.wellness.title"), desc: t("diary.challenges.wellness.desc"), current: diaryCount, target: 4, color: "#ec4899", bg: "#fdf2f8" },
+      { id: "log", emoji: "📋", title: t("diary.challenges.log.title"), desc: t("diary.challenges.log.desc"), current: loggedDays, target: CHALLENGE_TARGETS.log, color: "#16a34a", bg: "#f0fdf4" },
+      { id: "hydration", emoji: "💧", title: t("diary.challenges.hydration.title"), desc: t("diary.challenges.hydration.desc", { goal: WATER_GOAL }), current: hydrationDays, target: CHALLENGE_TARGETS.hydration, color: "#3b82f6", bg: "#eff6ff" },
+      { id: "protein", emoji: "🥩", title: t("diary.challenges.protein.title"), desc: t("diary.challenges.protein.desc", { goal: proteinGoal }), current: proteinDays, target: CHALLENGE_TARGETS.protein, color: "#f59e0b", bg: "#fffbeb" },
+      { id: "calories", emoji: "🎯", title: t("diary.challenges.calories.title"), desc: t("diary.challenges.calories.desc"), current: calorieDays, target: CHALLENGE_TARGETS.calories, color: "#8b5cf6", bg: "#f5f3ff" },
+      { id: "exercise", emoji: "🏃", title: t("diary.challenges.exercise.title"), desc: t("diary.challenges.exercise.desc"), current: exerciseDays, target: CHALLENGE_TARGETS.exercise, color: "#ef4444", bg: "#fef2f2" },
+      { id: "diary", emoji: "📓", title: t("diary.challenges.wellness.title"), desc: t("diary.challenges.wellness.desc"), current: diaryCount, target: CHALLENGE_TARGETS.diary, color: "#ec4899", bg: "#fdf2f8" },
     ];
 
     const todayLogged = foodLogs.some(l => l.date === today && (l.total_calories || 0) > 0);

@@ -54,13 +54,12 @@ export default function Onboarding({ onComplete }) {
   const [displayName, setDisplayName] = useState("");
   const [usernameStatus, setUsernameStatus] = useState(null);
   const [form, setForm] = useState({
-    display_name: "",
     age: "", weight: "", height: "", gender: "",
     activity_level: "", goal: "", chat_style: "concise",
     active_days_goal: 3, burn_goal: 300, weight_goal: "",
   });
 
-  const TOTAL_STEPS = 7;
+  const TOTAL_STEPS = 6;
 
   const goNext = () => { setDir(1); setStep(s => s + 1); };
   const goPrev = () => { setDir(-1); setStep(s => s - 1); };
@@ -87,17 +86,16 @@ export default function Onboarding({ onComplete }) {
   };
 
   const canNext = () => {
-    if (step === 0) return form.display_name.trim().length >= 2;
-    if (step === 1) return displayName.trim().length >= 3 && usernameStatus === "available";
-    if (step === 2) {
+    if (step === 0) return displayName.trim().length >= 3 && usernameStatus === "available";
+    if (step === 1) {
       const age = Number(form.age);
       const weight = Number(form.weight);
       const height = Number(form.height);
       return form.gender && age >= 10 && age <= 100 && weight >= 30 && weight <= 250 && height >= 120 && height <= 230;
     }
-    if (step === 3) return !!form.activity_level;
-    if (step === 4) return !!form.goal && !!form.chat_style;
-    if (step === 5) return form.active_days_goal > 0 && form.burn_goal > 0;
+    if (step === 2) return !!form.activity_level;
+    if (step === 3) return !!form.goal && !!form.chat_style;
+    if (step === 4) return form.active_days_goal > 0 && form.burn_goal > 0;
     return true;
   };
 
@@ -140,24 +138,7 @@ export default function Onboarding({ onComplete }) {
   ];
 
   const steps = [
-    /* Step 0 — Name */
-    <div key="name" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "56px", marginBottom: "12px" }}>👋</div>
-        <h2 style={{ fontSize: "24px", fontWeight: 600, color: "#1a3a22", marginBottom: "8px" }}>{t("onboarding.step0.title")}</h2>
-        <p style={{ fontSize: "14px", color: "#9ca3af" }}>{t("onboarding.step0.subtitle")}</p>
-      </div>
-      <input
-        type="text" placeholder={t("onboarding.step0.placeholder")}
-        value={form.display_name}
-        onChange={e => setForm({ ...form, display_name: e.target.value })}
-        onKeyDown={e => e.key === "Enter" && canNext() && goNext()}
-        autoFocus
-        className={`${inputCls} text-xl text-center py-4`}
-      />
-    </div>,
-
-    /* Step 1 — Username */
+    /* Step 0 — Username */
     <div key="username" style={{ display: "flex", flexDirection: "column", gap: "0" }}>
       <div style={{ textAlign: "center", marginBottom: "24px" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏆</div>
@@ -235,7 +216,7 @@ export default function Onboarding({ onComplete }) {
       )}
     </div>,
 
-    /* Step 2 — Personal details */
+    /* Step 1 — Personal details */
     <div key="personal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>📋</div>
@@ -276,7 +257,7 @@ export default function Onboarding({ onComplete }) {
       </div>
     </div>,
 
-    /* Step 3 — Activity level */
+    /* Step 2 — Activity level */
     <div key="activity" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏃</div>
@@ -302,7 +283,7 @@ export default function Onboarding({ onComplete }) {
       </div>
     </div>,
 
-    /* Step 4 — Goal + chat style */
+    /* Step 3 — Goal + chat style */
     <div key="goal" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🎯</div>
@@ -345,7 +326,7 @@ export default function Onboarding({ onComplete }) {
       </div>
     </div>,
 
-    /* Step 5 — Fitness goals */
+    /* Step 4 — Fitness goals */
     <div key="fitness" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>🏋️</div>
@@ -391,7 +372,7 @@ export default function Onboarding({ onComplete }) {
       </div>
     </div>,
 
-    /* Step 6 — Disclaimer */
+    /* Step 5 — Disclaimer */
     <div key="disclaimer" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "56px", marginBottom: "12px" }}>📌</div>

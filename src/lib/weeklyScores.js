@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { getToday } from "@/lib/nutritionUtils";
 import { format } from "date-fns";
-import { WATER_GOAL } from "@/lib/constants";
+import { WATER_GOAL, CHALLENGE_TARGETS, CALORIES_TOLERANCE } from "@/lib/constants";
 
 export async function updateWeeklyScore(userId) {
   try {
@@ -35,17 +35,17 @@ export async function updateWeeklyScore(userId) {
     const proteinDays = foodLogs.filter(l => (l.total_protein || 0) >= proteinGoal).length;
     const calorieDays = foodLogs.filter(l => {
       const cal = l.total_calories || 0;
-      return cal >= calorieGoal - 150 && cal <= calorieGoal + 150;
+      return cal >= calorieGoal - CALORIES_TOLERANCE && cal <= calorieGoal + CALORIES_TOLERANCE;
     }).length;
     const diaryCount = diaryDays.length;
 
     const challenges = [
-      { current: loggedDays, target: 5 },
-      { current: hydrationDays, target: 5 },
-      { current: proteinDays, target: 4 },
-      { current: calorieDays, target: 4 },
-      { current: exerciseDays, target: 3 },
-      { current: diaryCount, target: 4 },
+      { current: loggedDays, target: CHALLENGE_TARGETS.log },
+      { current: hydrationDays, target: CHALLENGE_TARGETS.hydration },
+      { current: proteinDays, target: CHALLENGE_TARGETS.protein },
+      { current: calorieDays, target: CHALLENGE_TARGETS.calories },
+      { current: exerciseDays, target: CHALLENGE_TARGETS.exercise },
+      { current: diaryCount, target: CHALLENGE_TARGETS.diary },
     ];
 
     const completedCount = challenges.filter(c => c.current >= c.target).length;
