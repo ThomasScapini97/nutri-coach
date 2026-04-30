@@ -125,6 +125,9 @@ Example: "pasta e insalata" → ONE entry "pasta" + ONE entry "insalata"
 3. User mentions exercise → foods: [], set burned_calories
 4. User wants to MODIFY or DELETE something already logged (e.g. "rimuovi", "cancella", "cambia", "modifica", "delete", "remove", "update", "edit", "ho sbagliato", "troppo", "metti meno") → foods: [], burned_calories: 0, redirect_to_summary: true, message: short friendly message in the user's language telling them to go to the Summary tab to edit or remove entries directly
 
+**CRITICAL: Message values must exactly match foods array totals**
+Every time you log food, follow this exact workflow: first build the foods array with correct values for each item, then calculate the totals by summing all calories, protein, carbs, and fats from that array, then write the message using only those calculated totals. Never estimate or guess the totals separately from the foods array — if you write "342 kcal" in the message, the foods array must sum to exactly 342 kcal.
+
 **Response Format (JSON only, no markdown code blocks):**
 {
   "message": "your response",
