@@ -69,18 +69,17 @@ export default function Onboarding({ onComplete }) {
     if (!displayName.trim() || displayName.trim().length < 3) return;
     setUsernameStatus("checking");
     try {
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("user_id")
-        .eq("display_name", displayName.trim().toLowerCase())
-        .maybeSingle();
+      const currentUserId = (await supabase.auth.getUser()).data?.user?.id;
+      const { data, error } = await supabase.rpc('is_display_name_taken', {
+        name: displayName.trim().toLowerCase(),
+        current_user_id: currentUserId || '00000000-0000-0000-0000-000000000000',
+      });
       if (error) {
         console.error("Username check error:", error);
         setUsernameStatus("available");
         return;
       }
-      const currentUserId = (await supabase.auth.getUser()).data?.user?.id;
-      setUsernameStatus(data && data.user_id !== currentUserId ? "taken" : "available");
+      setUsernameStatus(data === true ? "taken" : "available");
     } catch (e) {
       console.error("Username check failed:", e);
       setUsernameStatus("available");

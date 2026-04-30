@@ -92,18 +92,26 @@ export default function Profile() {
   }, [profile]);
 
   const checkUsernameAvailability = async () => {
-    if (!displayName.trim() || displayName === profile?.display_name) {
+    if (!displayName.trim() || displayName.trim().toLowerCase() === profile?.display_name) {
       setUsernameStatus(null);
       return;
     }
     setUsernameStatus("checking");
-    const { data } = await supabase
-      .from("user_profiles")
-      .select("user_id")
-      .eq("display_name", displayName.trim().toLowerCase())
-      .neq("user_id", user.id)
-      .maybeSingle();
-    setUsernameStatus(data ? "taken" : "available");
+    try {
+      const { data, error } = await supabase.rpc('is_display_name_taken', {
+        name: displayName.trim().toLowerCase(),
+        current_user_id: user.id,
+      });
+      if (error) {
+        console.error("Username check error:", error);
+        setUsernameStatus("available");
+        return;
+      }
+      setUsernameStatus(data === true ? "taken" : "available");
+    } catch (e) {
+      console.error("Username check failed:", e);
+      setUsernameStatus("available");
+    }
   };
 
   const handleSave = async () => {
