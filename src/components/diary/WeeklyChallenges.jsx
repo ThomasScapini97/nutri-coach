@@ -128,18 +128,21 @@ export default function WeeklyChallenges() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "4px",
+              justifyContent: "center",
+              width: "20px",
+              height: "20px",
               background: "#f0fdf4",
               border: "0.5px solid #bbf7d0",
-              borderRadius: "20px",
-              padding: "3px 8px",
+              borderRadius: "50%",
               cursor: "pointer",
               fontFamily: "inherit",
               flexShrink: 0,
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "#16a34a",
             }}
           >
-            <span style={{ fontSize: "10px", fontWeight: 600, color: "#16a34a" }}>pts</span>
-            <span style={{ fontSize: "10px", color: "#16a34a", fontWeight: 700 }}>?</span>
+            i
           </button>
           <span
             className="ml-auto text-[10px] font-medium px-2 py-[2px] rounded-full"
