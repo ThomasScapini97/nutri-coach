@@ -19,6 +19,7 @@ export default function WeeklyChallenges() {
   const [weekStart, setWeekStart] = useState("");
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showPointsInfo, setShowPointsInfo] = useState(false);
+  const [weeklyOpen, setWeeklyOpen] = useState(true);
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
 
@@ -189,47 +190,91 @@ export default function WeeklyChallenges() {
             </div>
           </div>
 
-          {/* Weekly challenges */}
-          <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500, paddingLeft: "2px", marginTop: "4px" }}>{t("diary.thisWeek")}</span>
-
-          {challenges.map((c) => {
-            const done = c.current >= c.target;
-            const pct = Math.min((c.current / c.target) * 100, 100);
-            return (
-              <div
-                key={c.id}
-                className="rounded-[12px] px-3 py-[10px]"
-                style={{
-                  background: done ? c.bg : "#f9fafb",
-                  border: `0.5px solid ${done ? c.color + "33" : "#e5e7eb"}`,
-                }}
+          {/* Weekly challenges — collapsible */}
+          <button
+            onClick={() => setWeeklyOpen(prev => !prev)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              padding: "4px 2px",
+              marginTop: "4px",
+            }}
+          >
+            <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500 }}>
+              {t("diary.thisWeek")}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: "10px", color: "#9ca3af" }}>
+                {completed}/{challenges.length}
+              </span>
+              <motion.span
+                animate={{ rotate: weeklyOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ fontSize: "10px", color: "#9ca3af", display: "inline-block" }}
               >
-                <div className="flex items-center gap-2 mb-[6px]">
-                  <span className="text-[15px]">{c.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[12px] font-semibold text-forest truncate">{c.title}</span>
-                      {done ? (
-                        <span className="text-[10px] font-semibold shrink-0" style={{ color: c.color }}>✓ Done!</span>
-                      ) : (
-                        <span className="text-[10px] text-gray-400 shrink-0">{c.current}/{c.target}</span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-gray-400">{c.desc}</span>
-                  </div>
+                ▼
+              </motion.span>
+            </div>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {weeklyOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                style={{ overflow: "hidden" }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "4px" }}>
+                  {challenges.map((c) => {
+                    const done = c.current >= c.target;
+                    const pct = Math.min((c.current / c.target) * 100, 100);
+                    return (
+                      <div
+                        key={c.id}
+                        className="rounded-[12px] px-3 py-[10px]"
+                        style={{
+                          background: done ? c.bg : "#f9fafb",
+                          border: `0.5px solid ${done ? c.color + "33" : "#e5e7eb"}`,
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-[6px]">
+                          <span className="text-[15px]">{c.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[12px] font-semibold text-forest truncate">{c.title}</span>
+                              {done ? (
+                                <span className="text-[10px] font-semibold shrink-0" style={{ color: c.color }}>✓ Done!</span>
+                              ) : (
+                                <span className="text-[10px] text-gray-400 shrink-0">{c.current}/{c.target}</span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-gray-400">{c.desc}</span>
+                          </div>
+                        </div>
+                        <div className="bg-gray-200 rounded-full h-[5px] overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.6, ease: "easeOut" }}
+                            className="h-full rounded-full"
+                            style={{ background: c.color }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="bg-gray-200 rounded-full h-[5px] overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
-                    className="h-full rounded-full"
-                    style={{ background: c.color }}
-                  />
-                </div>
-              </div>
-            );
-          })}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Leaderboard button */}
           <button
