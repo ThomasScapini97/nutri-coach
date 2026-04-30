@@ -84,13 +84,19 @@ export default function WeeklyChallenges() {
     const points = completedCount + (completedCount === built.length ? 10 : 0) + (todayLogged ? 2 : 0);
     const displayName = profile?.display_name || user.email?.split("@")[0] || "Anonymous";
 
-    supabase.from("weekly_scores").upsert({
+    const { error: scoreError } = await supabase.from("weekly_scores").upsert({
       user_id: user.id,
       display_name: displayName,
       week_start: ws,
       challenges_completed: completedCount,
       points,
     }, { onConflict: "user_id,week_start" });
+
+    if (scoreError) {
+      console.error("weekly_scores upsert error:", scoreError);
+    } else {
+      console.log("weekly_scores saved successfully:", { points, completedCount });
+    }
   };
 
   const loadLeaderboard = async () => {
